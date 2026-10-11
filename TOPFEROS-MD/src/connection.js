@@ -21,6 +21,14 @@ const config = require("./config");
 
 const sessionManager = require("./sessionManager");
 
+const {
+  handleMessage
+} = require("./messageHandler");
+
+const {
+  attachStatusHandler
+} = require("./statusHandler");
+
 /*
 |--------------------------------------------------------------------------
 | LOGGER
