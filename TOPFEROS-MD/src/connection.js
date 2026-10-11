@@ -1,4 +1,3 @@
-
 "use strict";
 
 const path = require("path");
@@ -566,26 +565,25 @@ async function sendWelcomeMessage(
 | WAIT FOR PAIRING READY
 |--------------------------------------------------------------------------
 */
-
-function waitForPairingReady(sock, sessionId, timeoutMs = 60000) {
+function waitForPairingReady(
+  sock,
+  sessionId,
+  timeoutMs = 5000
+) {
   return new Promise((resolve, reject) => {
     let finished = false;
 
-    const timer = setTimeout(() => {
-      finish(
-        new Error(
-          "Koneksyon WhatsApp la pa pare apre 10 segonn. Eseye ankò."
-        )
-      );
-    }, timeoutMs);
-
     function cleanup() {
       clearTimeout(timer);
-      sock.ev.off("connection.update", onUpdate);
+      sock.ev.off(
+        "connection.update",
+        onUpdate
+      );
     }
 
     function finish(error) {
       if (finished) return;
+
       finished = true;
       cleanup();
 
@@ -598,31 +596,52 @@ function waitForPairingReady(sock, sessionId, timeoutMs = 60000) {
 
     function onUpdate(update) {
       if (update.connection === "close") {
-        const disconnectError = update.lastDisconnect?.error;
-        const statusCode = disconnectError?.output?.statusCode;
+        const disconnectError =
+          update.lastDisconnect?.error;
+
+        const statusCode =
+          disconnectError?.output?.statusCode;
+
         const detail =
           disconnectError?.message ||
           "Pa gen detay sou erè koneksyon an.";
 
         finish(
           new Error(
-            `WhatsApp fèmen koneksyon an. Status=${statusCode || "unknown"}. ${detail}`
+            `WhatsApp fèmen koneksyon an. Status=${
+              statusCode || "unknown"
+            }. ${detail}`
           )
         );
       }
     }
 
-    const current = activeSessions.get(sessionId);
+    const current =
+      activeSessions.get(sessionId);
 
-    if (!current || current.sock !== sock) {
-      finish(new Error("Sesyon WhatsApp la pa aktif ankò."));
+    if (
+      !current ||
+      current.sock !== sock
+    ) {
+      finish(
+        new Error(
+          "Sesyon WhatsApp la pa aktif ankò."
+        )
+      );
+
       return;
     }
 
-    sock.ev.on("connection.update", onUpdate);
+    sock.ev.on(
+      "connection.update",
+      onUpdate
+    );
+
+    const timer = setTimeout(() => {
+      finish();
+    }, timeoutMs);
   });
 }
-
 /*
 |--------------------------------------------------------------------------
 | CONNECT SESSION
@@ -850,8 +869,7 @@ const session = {
   }
 );
 
-  /*
-   |--------------------------------------------------------------------------
+  /* |--------------------------------------------------------------------------
    | STATUS HANDLER
    |--------------------------------------------------------------------------
    */
@@ -885,8 +903,7 @@ const session = {
     );
   }
 
-  /*
-   |--------------------------------------------------------------------------
+  /* |--------------------------------------------------------------------------
    | CONNECTION UPDATE
    |--------------------------------------------------------------------------
    */
@@ -1145,8 +1162,7 @@ const session = {
     }
   );
 
-  /*
-   |--------------------------------------------------------------------------
+  /* |--------------------------------------------------------------------------
    | NORMAL MESSAGE EVENTS
    |--------------------------------------------------------------------------
    */
@@ -1269,7 +1285,6 @@ async function pairSession(number) {
 
     activeSessions.delete(sessionId);
   }
-
   manuallyStopped.delete(sessionId);
 
   try {
