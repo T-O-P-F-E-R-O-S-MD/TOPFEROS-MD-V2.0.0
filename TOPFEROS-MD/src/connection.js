@@ -17,6 +17,10 @@ const {
   fetchLatestBaileysVersion
 } = baileys;
 
+const config = require("./config");
+
+const sessionManager = require("./sessionManager");
+
 /*
 |--------------------------------------------------------------------------
 | LOGGER
