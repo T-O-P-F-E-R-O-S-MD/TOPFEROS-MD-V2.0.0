@@ -22,7 +22,7 @@
   "author": "TOPFEROS MD",
   "license": "MIT",
   "dependencies": {
-    "@whiskeysockets/baileys": "npm:@dexterid/baileys@2.2.9",
+    "@whiskeysockets/baileys": "6.7.23",
     "@google/genai": "^1.21.0",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
