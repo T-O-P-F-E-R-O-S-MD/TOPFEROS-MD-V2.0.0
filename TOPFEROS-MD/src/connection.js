@@ -569,12 +569,17 @@ async function sendWelcomeMessage(
 | WAIT FOR PAIRING READY
 |--------------------------------------------------------------------------
 */
-function waitForPairingReady(sock, sessionId, timeoutMs = 1500) {
+
+function waitForPairingReady(sock, sessionId, timeoutMs = 60000) {
   return new Promise((resolve, reject) => {
     let finished = false;
 
     const timer = setTimeout(() => {
-      finish();
+      finish(
+        new Error(
+          "Koneksyon WhatsApp la pa pare apre 10 segonn. Eseye ankò."
+        )
+      );
     }, timeoutMs);
 
     function cleanup() {
@@ -600,28 +605,24 @@ function waitForPairingReady(sock, sessionId, timeoutMs = 1500) {
         const statusCode = disconnectError?.output?.statusCode;
         const detail =
           disconnectError?.message ||
-          "Pa gen plis detay nan erè WhatsApp la.";
+          "Pa gen detay sou erè koneksyon an.";
 
         finish(
           new Error(
-            `WhatsApp fèmen koneksyon an anvan kòd pairing lan. ` +
-              `Status=${statusCode || "unknown"}. Detay: ${detail}`
+            `WhatsApp fèmen koneksyon an. Status=${statusCode || "unknown"}. ${detail}`
           )
         );
       }
     }
 
-    sock.ev.on("connection.update", onUpdate);
-
     const current = activeSessions.get(sessionId);
 
     if (!current || current.sock !== sock) {
-      finish(
-        new Error(
-          "Sesyon WhatsApp la pa aktif ankò. Eseye mande yon nouvo kòd."
-        )
-      );
+      finish(new Error("Sesyon WhatsApp la pa aktif ankò."));
+      return;
     }
+
+    sock.ev.on("connection.update", onUpdate);
   });
 }
 
