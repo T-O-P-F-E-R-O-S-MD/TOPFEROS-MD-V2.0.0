@@ -1,14 +1,13 @@
+
 "use strict";
 
 const path = require("path");
 const fs = require("fs");
 const pino = require("pino");
 
-const baileys =
-  require("@whiskeysockets/baileys");
+const baileys = require("@whiskeysockets/baileys");
 
-const makeWASocket =
-  baileys.default;
+const makeWASocket = baileys.default;
 
 const {
   DisconnectReason,
@@ -17,20 +16,6 @@ const {
   makeCacheableSignalKeyStore,
   fetchLatestBaileysVersion
 } = baileys;
-
-const config =
-  require("./config");
-
-const sessionManager =
-  require("./sessionManager");
-
-const {
-  handleMessage
-} = require("./messageHandler");
-
-const {
-  attachStatusHandler
-} = require("./statusHandler");
 
 /*
 |--------------------------------------------------------------------------
