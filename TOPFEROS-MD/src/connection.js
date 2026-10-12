@@ -4,6 +4,8 @@ const path = require("path");
 const fs = require("fs");
 const pino = require("pino");
 
+const { translatePayload } = require("./whatsappTranslator");
+
 const baileys = require("@whiskeysockets/baileys");
 
 const makeWASocket = baileys.default;
@@ -814,6 +816,44 @@ async function connectSession(
     makeWASocket(
       socketConfig
     );
+
+
+  // Tradui mesaj WhatsApp k ap soti yo dapre lang panel la.
+  const originalSendMessage = sock.sendMessage.bind(sock);
+
+  sock.sendMessage = async function (jid, content, sendOptions) {
+    try {
+      const selectedLanguage =
+        settingPanel.getPanelLanguage(sessionId);
+
+      if (
+        content &&
+        typeof content === "object" &&
+        (
+          typeof content.text === "string" ||
+          typeof content.caption === "string"
+        )
+      ) {
+        const translatedContent = await translatePayload(
+          content,
+          selectedLanguage
+        );
+
+        return originalSendMessage(
+          jid,
+          translatedContent,
+          sendOptions
+        );
+      }
+    } catch (error) {
+      logger.warn(
+        { err: error, sessionId },
+        "Outgoing translation failed."
+      );
+    }
+
+    return originalSendMessage(jid, content, sendOptions);
+  };
 
   /*
    * Store session.
