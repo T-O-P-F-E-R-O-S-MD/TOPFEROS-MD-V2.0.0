@@ -8,26 +8,15 @@ const pino = require("pino");
 
 const connection = require("./src/connection");
 const sessionManager = require("./src/sessionManager");
+const loadCommands = require("./commands");
 
 const logger = pino({
-  level:
-    process.env.LOG_LEVEL ||
-    "info"
+  level: process.env.LOG_LEVEL || "info"
 });
 
 /*
 |--------------------------------------------------------------------------
 | WEB PANEL
-|--------------------------------------------------------------------------
-|
-| panel/server.js se sèl web server V2 la.
-|
-| Li jere:
-|   /
-|   /setting
-|   /api/*
-|
-| index.js pa kreye yon dezyèm Express server.
 |--------------------------------------------------------------------------
 */
 
@@ -37,52 +26,24 @@ require("./panel/server");
 |--------------------------------------------------------------------------
 | RESTORE STORED SESSIONS
 |--------------------------------------------------------------------------
-|
-| Lè aplikasyon an demare:
-|
-| 1. Kreye/verifye sessions directory.
-| 2. Chèche sèlman session folders ki gen nimewo.
-| 3. Verifye creds.json egziste.
-| 4. Reconnect chak session avèk connection.js.
-|
-| Credentials yo pa efase.
-|--------------------------------------------------------------------------
 */
 
 async function restoreSessions() {
   const sessionsDir =
     sessionManager.ensureSessionsDirectory();
 
-  const entries =
-    await fs.promises.readdir(
-      sessionsDir,
-      {
-        withFileTypes: true
-      }
-    );
+  const entries = await fs.promises.readdir(
+    sessionsDir,
+    { withFileTypes: true }
+  );
 
-  const sessionIds =
-    entries
-      .filter(
-        (entry) =>
-          entry.isDirectory()
-      )
-      .map(
-        (entry) =>
-          entry.name
-      )
-      .filter(
-        (name) =>
-          /^\d{8,15}$/.test(name)
-      );
+  const sessionIds = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => /^\d{8,15}$/.test(name));
 
-  if (
-    sessionIds.length === 0
-  ) {
-    logger.info(
-      "ℹ️ No stored WhatsApp sessions to restore."
-    );
-
+  if (sessionIds.length === 0) {
+    logger.info("ℹ️ No stored WhatsApp sessions to restore.");
     return;
   }
 
@@ -90,41 +51,29 @@ async function restoreSessions() {
     `🔄 Restoring ${sessionIds.length} stored WhatsApp session(s)...`
   );
 
-  for (
-    const sessionId of
-      sessionIds
-  ) {
-    const sessionPath =
-      path.join(
-        sessionsDir,
-        sessionId
-      );
+  for (const sessionId of sessionIds) {
+    const sessionPath = path.join(
+      sessionsDir,
+      sessionId
+    );
 
-    const credentialsPath =
-      path.join(
-        sessionPath,
-        "creds.json"
-      );
+    const credentialsPath = path.join(
+      sessionPath,
+      "creds.json"
+    );
 
-    if (
-      !fs.existsSync(
-        credentialsPath
-      )
-    ) {
+    if (!fs.existsSync(credentialsPath)) {
       logger.warn(
         `[${sessionId}] ⚠️ Session skipped: creds.json not found.`
       );
-
       continue;
     }
 
     try {
-      await connection.connectSession(
-        sessionId
-      );
+      await connection.connectSession(sessionId);
 
       logger.info(
-        `[${sessionId}] 🟢 Stored WhatsApp session restored.`
+        `[${sessionId}] 🟢 Stored WhatsApp session restoration requested.`
       );
     } catch (error) {
       logger.error(
@@ -144,18 +93,11 @@ async function restoreSessions() {
 |--------------------------------------------------------------------------
 | GRACEFUL SHUTDOWN
 |--------------------------------------------------------------------------
-|
-| Lè Render voye SIGTERM/SIGINT:
-| - Fèmen sessions yo pwòp
-| - Pa efase credentials
-|--------------------------------------------------------------------------
 */
 
 let shuttingDown = false;
 
-async function shutdown(
-  signal
-) {
+async function shutdown(signal) {
   if (shuttingDown) {
     return;
   }
@@ -187,19 +129,13 @@ async function shutdown(
   }
 }
 
-process.once(
-  "SIGTERM",
-  () => {
-    shutdown("SIGTERM");
-  }
-);
+process.once("SIGTERM", () => {
+  shutdown("SIGTERM");
+});
 
-process.once(
-  "SIGINT",
-  () => {
-    shutdown("SIGINT");
-  }
-);
+process.once("SIGINT", () => {
+  shutdown("SIGINT");
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -211,6 +147,18 @@ async function startApplication() {
   try {
     logger.info(
       "🚀 Starting TOPFEROS MD V2.0.0..."
+    );
+
+    if (typeof loadCommands !== "function") {
+      throw new TypeError(
+        'commands/index.js must export a loadCommands function.'
+      );
+    }
+
+    const loadedCommands = loadCommands();
+
+    logger.info(
+      `📚 Command loader completed. Result: ${loadedCommands}`
     );
 
     await restoreSessions();
