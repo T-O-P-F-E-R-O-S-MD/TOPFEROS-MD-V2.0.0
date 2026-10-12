@@ -1,3 +1,4 @@
+
 "use strict";
 
 // ╔════════════════════════════════════════════════════╗
@@ -7,9 +8,13 @@
 
 const fs = require("fs");
 const path = require("path");
+const pino = require("pino");
 
-// Dosye kote fichye kòmand yo ye
 const COMMANDS_DIR = __dirname;
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || "info"
+});
 
 function loadCommands() {
   console.log(
@@ -27,14 +32,12 @@ function loadCommands() {
     .readdirSync(COMMANDS_DIR, {
       withFileTypes: true
     })
-    .filter((entry) => {
-      return (
-        entry.isFile() &&
-        entry.name.endsWith(".js") &&
-        entry.name !== "index.js" &&
-        !entry.name.startsWith("_")
-      );
-    })
+    .filter((entry) =>
+      entry.isFile() &&
+      entry.name.endsWith(".js") &&
+      entry.name !== "index.js" &&
+      !entry.name.startsWith("_")
+    )
     .map((entry) => entry.name)
     .sort();
 
@@ -48,7 +51,16 @@ function loadCommands() {
     );
 
     try {
-      require(filePath);
+      const commandModule = require(filePath);
+
+      // Rele init() pou modil ki bezwen
+      // anrejistre kòmand yo nan messageHandler.
+      if (typeof commandModule.init === "function") {
+        commandModule.init({
+          logger
+        });
+      }
+
       loaded++;
 
       console.log(
