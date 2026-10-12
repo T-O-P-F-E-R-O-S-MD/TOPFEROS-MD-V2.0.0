@@ -1,9 +1,7 @@
+
 "use strict";
 
-// ╔════════════════════════════════════════════════════╗
-// ║              🦁 TOPFEROS MD V2.0.0               ║
-// ║                 VIEW ONCE SERVICE                ║
-// ╚════════════════════════════════════════════════════╝
+// TOPFEROS MD V2.0.0 — View Once Service
 
 function unwrapMessage(message) {
   if (!message || typeof message !== "object") {
@@ -12,7 +10,7 @@ function unwrapMessage(message) {
 
   let current = message;
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 10; i += 1) {
     if (current.ephemeralMessage?.message) {
       current = current.ephemeralMessage.message;
       continue;
@@ -41,8 +39,13 @@ function getViewOnceMessage(message) {
   ];
 
   for (const key of wrappers) {
-    if (current[key]?.message) {
-      return current[key].message;
+    const wrapped = current[key];
+
+    if (
+      wrapped?.message &&
+      typeof wrapped.message === "object"
+    ) {
+      return wrapped.message;
     }
   }
 
@@ -86,7 +89,7 @@ function getQuotedMessage(message) {
   const queue = [root];
   const visited = new Set();
 
-  while (queue.length) {
+  while (queue.length > 0) {
     const current = queue.shift();
 
     if (
@@ -119,76 +122,84 @@ function getQuotedMessage(message) {
   return null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| VV2 COMMAND — TOPFEROS MD
-|--------------------------------------------------------------------------
-*/
-
 async function vv2Command(ctx) {
-  const quoted = getQuotedMessage(ctx.message);
+  const quoted = getQuotedMessage(ctx?.message);
 
   if (!quoted) {
-    await ctx.send(
+    await ctx?.send?.(
       "❌ Mwen pa jwenn mesaj ou site a. Reponn mesaj la avèk .vv2."
     );
 
-    return { success: false };
-  }
-
-  const content = getViewOnceMessage(quoted);
-
-  if (!content) {
-    await ctx.send(
-      "❌ Mwen pa kapab konfime estrikti View Once mesaj sa a."
-    );
-
-    return { success: false };
-  }
-
-  await ctx.send(
-    "✅ Mwen idantifye estrikti View Once la. Dekodaj medya a pa fèt nan fonksyon sa a."
-  );
-
-  return { success: true };
-}
-
-async function vvvCommand(ctx) {
-  if (ctx.isGroup) {
-    await ctx.send("❌ Sèvi ak .vvv nan DM bot la.");
-    return { success: false };
-  }
-
-  const quoted = getQuotedMessage(ctx.message);
-
-  if (!quoted) {
-    await ctx.send("❌ Mwen pa jwenn mesaj site a.");
-    return { success: false };
-  }
-
-  const content = getViewOnceMessage(quoted);
-
-  if (!content) {
-    await ctx.send("❌ Mwen pa kapab konfime estrikti View Once mesaj sa a.");
-    return { success: false };
+    return {
+      success: false,
+      reason: "quoted-message-not-found"
+    };
   }
 
   const media = getViewOnceMedia(quoted);
 
-  await ctx.send(
-    [
-      "╭━━〔 🦁 TOPFEROS MD 〕━━╮",
-      "┃ 🔎 VIEW ONCE DETECTOR",
-      "┃ 🔐 View Once: YES",
-      `┃ 📁 Type: ${media?.type || "OTHER"}`,
-      "╰━━━━━━━━━━━━━━━━━━━━━━╯",
-      "🦁 TECH BY TOPFEROS MD 🐑"
-    ].join("\n")
-  );
+  if (!media) {
+    await ctx?.send?.(
+      "❌ Mwen pa kapab konfime estrikti View Once mesaj sa a."
+    );
+
+    return {
+      success: false,
+      reason: "not-view-once"
+    };
+  }
+
+  await ctx?.send?.([
+    "╭━━〔 🦁 TOPFEROS MD 〕━━╮",
+    "┃ 🔎 VIEW ONCE DETECTED",
+    "┃ 🔐 Kontni an rete pwoteje",
+    `┃ 📁 Kalite: ${media.type}`,
+    "╰━━━━━━━━━━━━━━━━━━━━━━╯",
+    "🦁 TECH BY TOPFEROS MD 🐑"
+  ].join("\n"));
 
   return {
     success: true,
-    type: media?.type || "other"
+    type: media.type,
+    inspected: true
+  };
+}
+
+async function vvvCommand(ctx) {
+  if (ctx?.isGroup) {
+    await ctx?.send?.(
+      "❌ Sèvi ak .vvv nan DM bot la."
+    );
+
+    return {
+      success: false,
+      reason: "group-chat-not-supported"
+    };
+  }
+
+  return vv2Command(ctx);
+}
+
+async function handleAutoViewOnce(_sock, message) {
+  const media = getViewOnceMedia(
+    message?.message || message
+  );
+
+  if (!media) {
+    return {
+      success: false,
+      ignored: true,
+      reason: "not-view-once"
+    };
+  }
+
+  // Kite medya View Once la entak.
+  // Pa telechaje oswa redistribye li otomatikman.
+  return {
+    success: false,
+    ignored: true,
+    reason: "view-once-media-left-untouched",
+    type: media.type
   };
 }
 
