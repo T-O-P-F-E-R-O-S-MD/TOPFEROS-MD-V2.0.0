@@ -1144,18 +1144,19 @@ async function handleMessage(
      */
 
     if (
-      isFromBot(
-        message,
-        sock
-      )
-    ) {
-      return {
-        success: false,
-        ignored: true,
-        reason:
-          "Message originated from bot."
-      };
-    }
+  !message?.key?.fromMe &&
+  isFromBot(
+    message,
+    sock
+  )
+) {
+  return {
+    success: false,
+    ignored: true,
+    reason:
+      "Message originated from bot."
+  };
+}
 
     const jid =
       getChatJid(message);
