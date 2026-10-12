@@ -1325,6 +1325,43 @@ async function handleMessage(
         message.message
       );
 
+/*
+|--------------------------------------------------------------------------
+| COMMANDS: SAVE / SEND WITHOUT PREFIX
+|--------------------------------------------------------------------------
+*/
+
+const plainCommand =
+  (messageText || "").trim().toLowerCase();
+
+if (
+  !message?.key?.fromMe &&
+  ["save", "send"].includes(plainCommand)
+) {
+  const found = findCommand(plainCommand);
+
+  if (found) {
+    const context = buildContext(
+      sock,
+      message,
+      {
+        command: plainCommand,
+        args: [],
+        text: "",
+        prefix: ""
+      }
+    );
+
+    await found.command.handler(context);
+
+    return {
+      success: true,
+      command: plainCommand,
+      sessionId: sessionId || null
+    };
+  }
+}
+
     if (
       !messageText
     ) {
@@ -1531,6 +1568,32 @@ function getCommands() {
 
   return result;
 }
+
+/*
+|--------------------------------------------------------------------------
+| COMMANDS: SAVE / SEND
+|--------------------------------------------------------------------------
+*/
+
+registerCommand(
+  "save",
+  async (ctx) => {
+    await ctx.send(
+      "📥 SAVE command recognized.\n" +
+      "🦁 TECH BY TOPFEROS MD 🐑"
+    );
+  }
+);
+
+registerCommand(
+  "send",
+  async (ctx) => {
+    await ctx.send(
+      "📤 SEND command recognized.\n" +
+      "🦁 TECH BY TOPFEROS MD 🐑"
+    );
+  }
+);
 
 /*
 |--------------------------------------------------------------------------
