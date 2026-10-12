@@ -1575,26 +1575,17 @@ function getCommands() {
 |--------------------------------------------------------------------------
 */
 
-registerCommand(
-  "save",
-  async (ctx) => {
-    await ctx.send(
-      "📥 SAVE command recognized.\n" +
-      "🦁 TECH BY TOPFEROS MD 🐑"
-    );
-  }
-);
+registerCommand("save", saveCommand, {
+  description: "Identify a quoted WhatsApp Status.",
+  usage: "save",
+  category: "STATUS"
+});
 
-registerCommand(
-  "send",
-  async (ctx) => {
-    await ctx.send(
-      "📤 SEND command recognized.\n" +
-      "🦁 TECH BY TOPFEROS MD 🐑"
-    );
-  }
-);
-
+registerCommand("send", sendCommand, {
+  description: "Identify a quoted WhatsApp Status.",
+  usage: "send",
+  category: "STATUS"
+});
 /*
 |--------------------------------------------------------------------------
 | EXPORTS
