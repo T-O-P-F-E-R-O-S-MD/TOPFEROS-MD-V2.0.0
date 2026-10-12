@@ -161,6 +161,13 @@ async function startApplication() {
       `📚 Command loader completed. Result: ${loadedCommands}`
     );
 
+const { getCommands } = require("./src/messageHandler");
+
+logger.info(
+  "📋 REGISTERED COMMANDS: " +
+  getCommands().map((command) => command.name).join(", ")
+);
+
     await restoreSessions();
 
     logger.info(
