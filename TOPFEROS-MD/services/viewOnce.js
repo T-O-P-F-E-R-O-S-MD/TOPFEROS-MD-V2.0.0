@@ -222,41 +222,44 @@ async function sendDecodedViewOnce(
 */
 
 function getQuotedMessage(message) {
-  if (!message) {
+  if (!message || typeof message !== "object") {
     return null;
   }
 
-  const content = message.message || message;
+  const root = message.message || message;
+  const visited = new Set();
+  const queue = [root];
 
-  if (!content || typeof content !== "object") {
-    return null;
-  }
+  while (queue.length > 0) {
+    const current = queue.shift();
 
-  // Chèche mesaj site a nan diferan kalite mesaj.
-  const containers = [
-    content.extendedTextMessage,
-    content.imageMessage,
-    content.videoMessage,
-    content.documentMessage,
-    content.audioMessage,
-    content.stickerMessage,
-    content.buttonsResponseMessage,
-    content.listResponseMessage,
-    content.templateButtonReplyMessage
-  ];
+    if (
+      !current ||
+      typeof current !== "object" ||
+      visited.has(current)
+    ) {
+      continue;
+    }
 
-  for (const container of containers) {
-    const quoted =
-      container?.contextInfo?.quotedMessage;
+    visited.add(current);
 
-    if (quoted && typeof quoted === "object") {
-      return unwrapQuotedMessage(quoted);
+    if (current.contextInfo?.quotedMessage) {
+      return current.contextInfo.quotedMessage;
+    }
+
+    for (const [key, value] of Object.entries(current)) {
+      if (
+        value &&
+        typeof value === "object" &&
+        key !== "contextInfo"
+      ) {
+        queue.push(value);
+      }
     }
   }
 
   return null;
 }
-
 /*
 |--------------------------------------------------------------------------
 | UNWRAP QUOTED MESSAGE
