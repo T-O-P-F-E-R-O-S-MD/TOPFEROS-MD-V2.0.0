@@ -1212,15 +1212,12 @@ async function handleMessage(
       if (
         autoViewOnce?.success
       ) {
-        return {
-          success: true,
-          command:
-            "auto-viewonce",
-          result:
-            autoViewOnce,
-          sessionId:
-            sessionId || null
-        };
+      return {
+  success: true,
+  command: "auto-viewonce",
+  result: autoViewOnce,
+  sessionId: sessionId || null
+};  
       }
     }
 
