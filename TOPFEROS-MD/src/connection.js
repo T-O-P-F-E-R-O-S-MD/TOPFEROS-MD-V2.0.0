@@ -11,8 +11,6 @@ const {
 const settingPanel =
   require("./settingPanel");
 
-translatePayload(content, selectedLanguage)
-
 const baileys = require("@whiskeysockets/baileys");
 
 const makeWASocket = baileys.default;
@@ -36,7 +34,6 @@ const {
 const {
   attachStatusHandler
 } = require("./statusHandler");
-
 /*
 |--------------------------------------------------------------------------
 | LOGGER
