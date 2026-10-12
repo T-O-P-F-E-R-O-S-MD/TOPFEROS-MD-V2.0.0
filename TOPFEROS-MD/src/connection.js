@@ -48,6 +48,43 @@ const logger = pino({
 
 /*
 |--------------------------------------------------------------------------
+| MESSAGE RETRY STORE
+|--------------------------------------------------------------------------
+*/
+
+const MESSAGE_CACHE_LIMIT = 500;
+const messageCache = new Map();
+
+function cacheMessage(message) {
+  const key = message?.key;
+
+  if (!key?.remoteJid || !key?.id || !message?.message) {
+    return;
+  }
+
+  const cacheKey = `${key.remoteJid}:${key.id}`;
+
+  // Mete dènye mesaj la nan fen Map la.
+  messageCache.delete(cacheKey);
+  messageCache.set(cacheKey, message.message);
+
+  // Limite memwa a pou li pa grandi san limit.
+  while (messageCache.size > MESSAGE_CACHE_LIMIT) {
+    const oldestKey = messageCache.keys().next().value;
+    messageCache.delete(oldestKey);
+  }
+}
+
+async function getCachedMessage(key) {
+  if (!key?.remoteJid || !key?.id) {
+    return undefined;
+  }
+
+  return messageCache.get(`${key.remoteJid}:${key.id}`);
+}
+
+/*
+|--------------------------------------------------------------------------
 | SESSION DIRECTORY
 |--------------------------------------------------------------------------
 */
@@ -792,6 +829,8 @@ async function connectSession(
         )
     },
 
+getMessage: getCachedMessage,
+
     browser:
       Browsers.ubuntu(
         "Chrome"
@@ -1240,16 +1279,16 @@ const session = {
         return;
       }
 
-      for (
-        const message of
-          event.messages
-      ) {
-        try {
-          if (
-            !message?.message
-          ) {
-            continue;
-          }
+      for (const message of event.messages) {
+  try {
+    cacheMessage(message);
+
+    if (!message?.message) {
+      continue;
+    }
+
+    // Kite rès kòd orijinal ou a isit la,
+    // kòmanse apre ansyen verifikasyon message.message la.
 
           /*
            * Status messages are handled
