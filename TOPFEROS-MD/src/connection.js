@@ -4,7 +4,14 @@ const path = require("path");
 const fs = require("fs");
 const pino = require("pino");
 
-const { translatePayload } = require("./whatsappTranslator");
+const {
+  translatePayload
+} = require("./whatsappTranslator");
+
+const settingPanel =
+  require("./settingPanel");
+
+translatePayload(content, selectedLanguage)
 
 const baileys = require("@whiskeysockets/baileys");
 
