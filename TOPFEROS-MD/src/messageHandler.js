@@ -48,6 +48,10 @@ const {
   vv2Command
 } = require("../services/viewOnce");
 
+const {
+  vvvCommand
+} = require("../services/viewOnce");
+
 /*
 |--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
@@ -1016,6 +1020,29 @@ registerCommand(
 
     usage:
       ".vv2",
+
+    category:
+      "MEDIA"
+  }
+);
+
+/*
+|--------------------------------------------------------------------------
+| COMMAND: VVV
+|--------------------------------------------------------------------------
+*/
+
+registerCommand(
+  "vvv",
+  async (ctx) => {
+    return vvvCommand(ctx);
+  },
+  {
+    description:
+      "Identify the type of a View Once message received in private chat.",
+
+    usage:
+      ".vvv",
 
     category:
       "MEDIA"
