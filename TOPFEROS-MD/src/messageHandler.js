@@ -25,6 +25,9 @@ const {
   sendMenu
 } = require("../commands/menu");
 
+const { helpCommand } = require("../commands/help");
+const settingsCommand = require("../commands/settings");
+
 const {
   parrainCommand
 } = require("../commands/parrain");
@@ -754,6 +757,43 @@ registerCommand(
 
     category:
       "SYSTEM"
+  }
+);
+
+/*
+|--------------------------------------------------------------------------
+| COMMAND: HELP
+|--------------------------------------------------------------------------
+*/
+
+registerCommand(
+  "help",
+  async (ctx) => {
+    return helpCommand(ctx);
+  },
+  {
+    aliases: ["h"],
+    description: "Display the TOPFEROS MD help guide.",
+    usage: ".help",
+    category: "SYSTEM"
+  }
+);
+
+/*
+|--------------------------------------------------------------------------
+| COMMAND: SETTINGS
+|--------------------------------------------------------------------------
+*/
+
+registerCommand(
+  "settings",
+  async (ctx) => {
+    return settingsCommand(ctx);
+  },
+  {
+    description: "Display settings and panel access information.",
+    usage: ".settings",
+    category: "SETTINGS"
   }
 );
 
