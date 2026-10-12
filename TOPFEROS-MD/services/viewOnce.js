@@ -376,6 +376,122 @@ async function handleAutoViewOnce(
   );
 }
 
+/*
+|--------------------------------------------------------------------------
+| VVV COMMAND — VIEW ONCE DETECTOR
+|--------------------------------------------------------------------------
+*/
+
+async function vvvCommand(ctx) {
+  // Kòmand lan dwe itilize nan DM.
+  if (ctx.isGroup) {
+    await ctx.send(
+      [
+        "❌ PRIVATE CHAT ONLY",
+        "",
+        "Tanpri itilize .vvv nan DM bot la.",
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return {
+      success: false,
+      reason: "private-chat-only"
+    };
+  }
+
+  const quoted = getQuotedMessage(ctx.message);
+
+  if (!quoted) {
+    await ctx.send(
+      [
+        "🔎 VIEW ONCE DETECTOR",
+        "",
+        "❌ Mwen pa jwenn yon mesaj site.",
+        "",
+        "Reponn mesaj ou vle idantifye a avèk .vvv.",
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return {
+      success: false,
+      reason: "no-quoted-message"
+    };
+  }
+
+  const viewOnce = getViewOnceMessage(quoted);
+
+  if (!viewOnce) {
+    await ctx.send(
+      [
+        "🔎 VIEW ONCE DETECTOR",
+        "",
+        "❌ Mesaj la pa gen estrikti View Once mwen rekonèt la.",
+        "",
+        "Sa pa vle di mesaj la pa t View Once; enfòmasyon sa a ka pa disponib.",
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return {
+      success: false,
+      reason: "view-once-not-detected"
+    };
+  }
+
+  const media = getViewOnceMedia(quoted);
+
+  const contentTypes = {
+    imageMessage: "IMAGE",
+    videoMessage: "VIDEO",
+    audioMessage: "AUDIO",
+    documentMessage: "DOCUMENT",
+    stickerMessage: "STICKER",
+    contactMessage: "CONTACT",
+    locationMessage: "LOCATION"
+  };
+
+  let type = "OTHER";
+
+  for (const key of Object.keys(contentTypes)) {
+    if (viewOnce[key]) {
+      type = contentTypes[key];
+      break;
+    }
+  }
+
+  const mimetype =
+    media?.message?.mimetype ||
+    viewOnce.audioMessage?.mimetype ||
+    viewOnce.documentMessage?.mimetype ||
+    "Not available";
+
+  await ctx.send(
+    [
+      "╭━━〔 🦁 TOPFEROS MD 〕━━╮",
+      "┃",
+      "┃ 🔎 VIEW ONCE DETECTOR",
+      "┃",
+      "┃ 🔐 View Once: YES",
+      `┃ 📁 Type: ${type}`,
+      `┃ 🧾 MIME: ${mimetype}`,
+      "┃",
+      "╰━━━━━━━━━━━━━━━━━━━━━━╯",
+      "🦁 TECH BY TOPFEROS MD 🐑"
+    ].join("\n")
+  );
+
+  return {
+    success: true,
+    type,
+    mimetype
+  };
+}
+
 module.exports = {
   vv2Command,
   handleAutoViewOnce,
