@@ -435,7 +435,7 @@ function createWelcomeMessage(
     config?.bot?.footer ||
     "🦁 TECH BY TOPFEROS MD 🐑";
 
-  return `
+ return `
 ╭━━━〔 🦁 TOPFEROS MD V2.0.0 🐑 〕━━━╮
 ┃
 ┃ 🎉 WELCOME TO TOPFEROS MD
@@ -459,7 +459,7 @@ function createWelcomeMessage(
 ┃ 👥 GROUP
 ┃ ├─ Group Management
 ┃ ├─ Group Rules
-┃ ├─ Warnings System
+┃ ├─ Warning System
 ┃ └─ Group Automation
 ┃
 ┃ 🛡️ SECURITY
@@ -504,7 +504,7 @@ ${footer}
 
 /*
 |--------------------------------------------------------------------------
-| SEND WELCOME MESSAGE
+| SEND WELCOME MESSAGE WITH BOT LOGO
 |--------------------------------------------------------------------------
 */
 
@@ -513,13 +513,10 @@ async function sendWelcomeMessage(
   sessionId
 ) {
   try {
-    if (
-      !sock?.user?.id
-    ) {
+    if (!sock?.user?.id) {
       logger.warn(
         `[${sessionId}] Cannot send welcome message: bot JID unavailable.`
       );
-
       return false;
     }
 
@@ -528,17 +525,35 @@ async function sendWelcomeMessage(
       "@s.whatsapp.net";
 
     const message =
-      createWelcomeMessage(
-        sessionId
+      createWelcomeMessage(sessionId);
+
+    const logoPath = path.join(
+      __dirname,
+      "..",
+      "assets",
+      "logo.png"
+    );
+
+    if (fs.existsSync(logoPath)) {
+      const logo = await fs.promises.readFile(
+        logoPath
       );
 
-    await sock.sendMessage(
-      jid,
-      {
+      await sock.sendMessage(jid, {
+        image: logo,
+        caption: message,
+        mentions: [jid]
+      });
+    } else {
+      logger.warn(
+        `[${sessionId}] Bot logo not found: ${logoPath}`
+      );
+
+      await sock.sendMessage(jid, {
         text: message,
         mentions: [jid]
-      }
-    );
+      });
+    }
 
     logger.info(
       `[${sessionId}] Welcome message sent.`
