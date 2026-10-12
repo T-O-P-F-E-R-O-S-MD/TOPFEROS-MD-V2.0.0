@@ -119,6 +119,40 @@ function getQuotedMessage(message) {
   return null;
 }
 
+/*
+|--------------------------------------------------------------------------
+| VV2 COMMAND — TOPFEROS MD
+|--------------------------------------------------------------------------
+*/
+
+async function vv2Command(ctx) {
+  const quoted = getQuotedMessage(ctx.message);
+
+  if (!quoted) {
+    await ctx.send(
+      "❌ Mwen pa jwenn mesaj ou site a. Reponn mesaj la avèk .vv2."
+    );
+
+    return { success: false };
+  }
+
+  const content = getViewOnceMessage(quoted);
+
+  if (!content) {
+    await ctx.send(
+      "❌ Mwen pa kapab konfime estrikti View Once mesaj sa a."
+    );
+
+    return { success: false };
+  }
+
+  await ctx.send(
+    "✅ Mwen idantifye estrikti View Once la. Dekodaj medya a pa fèt nan fonksyon sa a."
+  );
+
+  return { success: true };
+}
+
 async function vvvCommand(ctx) {
   if (ctx.isGroup) {
     await ctx.send("❌ Sèvi ak .vvv nan DM bot la.");
@@ -160,9 +194,10 @@ async function vvvCommand(ctx) {
 
 module.exports = {
   unwrapMessage,
+  vv2Command,
+  vvvCommand,
+  handleAutoViewOnce,
   getViewOnceMessage,
   getViewOnceMedia,
-  getQuotedMessage,
-  vvvCommand,
-  vv2Command
+  getQuotedMessage
 };
