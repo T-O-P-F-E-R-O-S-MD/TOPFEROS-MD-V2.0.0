@@ -8,7 +8,7 @@
 const fs = require("fs");
 const path = require("path");
 
-// Bon direksyon dosye kòmand yo
+// Dosye kote fichye kòmand yo ye
 const COMMANDS_DIR = __dirname;
 
 function loadCommands() {
@@ -18,12 +18,9 @@ function loadCommands() {
   );
 
   if (!fs.existsSync(COMMANDS_DIR)) {
-    console.error(
-      "❌ Dosye commands/ lan pa egziste:",
-      COMMANDS_DIR
+    throw new Error(
+      `Dosye kòmand yo pa egziste: ${COMMANDS_DIR}`
     );
-
-    return 0;
   }
 
   const files = fs
@@ -52,24 +49,23 @@ function loadCommands() {
 
     try {
       require(filePath);
-
       loaded++;
 
       console.log(
-        `✅ [TOPFEROS MD] Kòmand chaje: ${file}`
+        `✅ [TOPFEROS MD] Fichye chaje: ${file}`
       );
     } catch (error) {
       failed++;
 
       console.error(
-        `❌ [TOPFEROS MD] Erè nan ${file}:`,
+        `❌ [TOPFEROS MD] Echèk nan ${file}:`,
         error.stack || error.message || error
       );
     }
   }
 
   console.log(
-    `📚 [TOPFEROS MD] ${loaded} fichye chaje; ${failed} echwe.`
+    `📚 [TOPFEROS MD] Rezilta: ${loaded} fichye chaje; ${failed} echwe.`
   );
 
   return loaded;
