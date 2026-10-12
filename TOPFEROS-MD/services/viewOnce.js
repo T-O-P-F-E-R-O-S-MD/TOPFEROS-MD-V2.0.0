@@ -214,41 +214,88 @@ async function sendDecodedViewOnce(
 
 /*
 |--------------------------------------------------------------------------
-| GET QUOTED MESSAGE
+| GET QUOTED MESSAGE — TOPFEROS MD V2.0.0
 |--------------------------------------------------------------------------
 */
 
 function getQuotedMessage(message) {
-  const content =
-    message?.message;
-
-  if (!content) {
+  if (!message) {
     return null;
   }
 
+  const content = message.message || message;
+
+  if (!content || typeof content !== "object") {
+    return null;
+  }
+
+  // Chèche mesaj site a nan diferan kalite mesaj.
   const containers = [
     content.extendedTextMessage,
     content.imageMessage,
     content.videoMessage,
-    content.documentMessage
+    content.documentMessage,
+    content.audioMessage,
+    content.stickerMessage,
+    content.buttonsResponseMessage,
+    content.listResponseMessage,
+    content.templateButtonReplyMessage
   ];
 
-  for (
-    const container of containers
-  ) {
+  for (const container of containers) {
     const quoted =
-      container
-        ?.contextInfo
-        ?.quotedMessage;
+      container?.contextInfo?.quotedMessage;
 
-    if (quoted) {
-      return quoted;
+    if (quoted && typeof quoted === "object") {
+      return unwrapQuotedMessage(quoted);
     }
   }
 
   return null;
 }
 
+/*
+|--------------------------------------------------------------------------
+| UNWRAP QUOTED MESSAGE
+|--------------------------------------------------------------------------
+*/
+
+function unwrapQuotedMessage(quoted) {
+  if (!quoted || typeof quoted !== "object") {
+    return null;
+  }
+
+  let message = quoted;
+
+  // Retire anvlòp mesaj ki ka kache kontni an.
+  for (let i = 0; i < 5; i++) {
+    if (message.ephemeralMessage?.message) {
+      message = message.ephemeralMessage.message;
+      continue;
+    }
+
+    if (message.viewOnceMessage?.message) {
+      return message;
+    }
+
+    if (message.viewOnceMessageV2?.message) {
+      return message;
+    }
+
+    if (message.viewOnceMessageV2Extension?.message) {
+      return message;
+    }
+
+    if (message.documentWithCaptionMessage?.message) {
+      message = message.documentWithCaptionMessage.message;
+      continue;
+    }
+
+    break;
+  }
+
+  return message;
+}
 /*
 |--------------------------------------------------------------------------
 | VV2 COMMAND
