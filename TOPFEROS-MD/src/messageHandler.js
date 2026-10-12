@@ -44,6 +44,10 @@ const {
   playCommand
 } = require("../commands/play");
 
+const {
+  vv2Command
+} = require("../services/viewOnce");
+
 /*
 |--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
@@ -989,6 +993,29 @@ registerCommand(
 
     usage:
       ".play <song|video> <direct-url>",
+
+    category:
+      "MEDIA"
+  }
+);
+
+/*
+|--------------------------------------------------------------------------
+| COMMAND: VV2
+|--------------------------------------------------------------------------
+*/
+
+registerCommand(
+  "vv2",
+  async (ctx) => {
+    return vv2Command(ctx);
+  },
+  {
+    description:
+      "Identify a quoted WhatsApp View Once message.",
+
+    usage:
+      ".vv2",
 
     category:
       "MEDIA"
