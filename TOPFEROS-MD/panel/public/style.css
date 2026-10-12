@@ -49,18 +49,25 @@ body {
 
 .panel-page {
   position: relative;
+  isolation: isolate;
   min-height: 100vh;
   padding: 30px 15px 50px;
   overflow: hidden;
 }
 
+/* =========================================================
+   PANEL BACKGROUND
+   ========================================================= */
+
 .panel-background {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: url("/     panel/background.png");
+  pointer-events: none;
+
+  background-image: url("/background.png");
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
 }
 
@@ -68,15 +75,8 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(
-      circle at center,
-      transparent 0,
-      rgba(0, 0, 0, 0.45) 70%,
-      rgba(0, 0, 0, 0.85) 100%
-    );
+  background: rgba(0, 0, 0, 0.50);
 }
-
 
 /* =========================================================
    CARD
