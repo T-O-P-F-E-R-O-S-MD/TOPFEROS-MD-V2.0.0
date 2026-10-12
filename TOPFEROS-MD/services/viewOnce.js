@@ -11,48 +11,51 @@ const {
 
 /*
 |--------------------------------------------------------------------------
-| GET VIEW ONCE MESSAGE
+| GET VIEW ONCE MESSAGE — TOPFEROS MD V2.0.0
 |--------------------------------------------------------------------------
 */
 
 function getViewOnceMessage(message) {
-  if (!message) {
+  if (!message || typeof message !== "object") {
     return null;
   }
 
-  /*
-   * VIEW ONCE V1
-   */
+  let current = message;
 
-  if (
-    message.viewOnceMessage?.message
-  ) {
-    return message.viewOnceMessage.message;
-  }
+  // Verifye anvlòp mesaj yo san antre nan yon bouk san fen.
+  for (let i = 0; i < 5; i++) {
+    if (!current || typeof current !== "object") {
+      return null;
+    }
 
-  /*
-   * VIEW ONCE V2
-   */
+    if (current.viewOnceMessage?.message) {
+      return current.viewOnceMessage.message;
+    }
 
-  if (
-    message.viewOnceMessageV2?.message
-  ) {
-    return message.viewOnceMessageV2.message;
-  }
+    if (current.viewOnceMessageV2?.message) {
+      return current.viewOnceMessageV2.message;
+    }
 
-  /*
-   * VIEW ONCE V2 EXTENSION
-   */
+    if (current.viewOnceMessageV2Extension?.message) {
+      return current.viewOnceMessageV2Extension.message;
+    }
 
-  if (
-    message.viewOnceMessageV2Extension?.message
-  ) {
-    return message.viewOnceMessageV2Extension.message;
+    if (current.ephemeralMessage?.message) {
+      current = current.ephemeralMessage.message;
+      continue;
+    }
+
+    if (current.documentWithCaptionMessage?.message) {
+      current = current.documentWithCaptionMessage.message;
+      continue;
+    }
+
+    // Pa gen lòt anvlòp nou rekonèt.
+    return null;
   }
 
   return null;
 }
-
 /*
 |--------------------------------------------------------------------------
 | GET MEDIA
