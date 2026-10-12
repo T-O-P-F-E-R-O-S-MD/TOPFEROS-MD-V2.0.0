@@ -541,6 +541,7 @@ async function vvvCommand(ctx) {
 
 module.exports = {
   vv2Command,
+  vvvCommand,
   handleAutoViewOnce,
   getViewOnceMessage,
   getViewOnceMedia,
