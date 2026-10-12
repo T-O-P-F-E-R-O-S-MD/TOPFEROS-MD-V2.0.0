@@ -3,8 +3,8 @@
 
 const fs = require("fs");
 const path = require("path");
-const { GoogleGenAI } = require("@google/genai");
-const languageService = require("./language");
+const apiKey = process.env.GEMINI_API_KEY;
+const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 const FOOTER = "🦁 TECH BY TOPFEROS MD 🐑";
 const BRAND = "TOPFEROS MD";
