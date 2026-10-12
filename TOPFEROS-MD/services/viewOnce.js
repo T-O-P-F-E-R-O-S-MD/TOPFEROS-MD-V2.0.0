@@ -202,6 +202,12 @@ async function handleAutoViewOnce(_sock, message) {
     type: media.type
   };
 }
+async function handleAutoViewOnce(sock, message) {
+  return {
+    success: false,
+    handled: false
+  };
+}
 
 module.exports = {
   unwrapMessage,
