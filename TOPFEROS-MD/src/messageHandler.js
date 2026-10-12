@@ -52,6 +52,11 @@ const {
   vvvCommand
 } = require("../services/viewOnce");
 
+const {
+  saveCommand,
+  sendCommand
+} = require("../commands/status");
+
 /*
 |--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
@@ -1585,6 +1590,7 @@ registerCommand("send", sendCommand, {
   description: "Identify a quoted WhatsApp Status.",
   usage: "send",
   category: "STATUS"
+
 });
 /*
 |--------------------------------------------------------------------------
