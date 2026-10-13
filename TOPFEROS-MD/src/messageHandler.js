@@ -76,62 +76,17 @@ const commands =
 |--------------------------------------------------------------------------
 */
 
-function registerCommand(
-  name,
-  handler,
-  options = {}
-) {
-  if (
-    typeof name !== "string" ||
-    !name.trim()
-  ) {
-    throw new Error(
-      "Command name is required."
-    );
-  }
+registerCommand("vv2", vv2Command, {
+  description: "Voye medya nòmal ou site a nan menm chat la.",
+  usage: ".vv2",
+  category: "MEDIA"
+});
 
-  if (
-    typeof handler !== "function"
-  ) {
-    throw new Error(
-      `Handler for .${name} must be a function.`
-    );
-  }
-
-  const commandName =
-    name
-      .trim()
-      .toLowerCase()
-      .replace(/^\./, "");
-
-  const aliases =
-    Array.isArray(options.aliases)
-      ? options.aliases
-          .map((alias) =>
-            String(alias)
-              .trim()
-              .toLowerCase()
-              .replace(/^\./, "")
-          )
-          .filter(Boolean)
-      : [];
-
-  commands.set(
-    commandName,
-    {
-      handler,
-      aliases,
-      description:
-        options.description || "",
-      usage:
-        options.usage ||
-        `.${commandName}`,
-      category:
-        options.category ||
-        "GENERAL"
-    }
-  );
-}
+registerCommand("vvv", vvvCommand, {
+  description: "Voye medya nòmal ou site a nan chat la ak DM.",
+  usage: ".vvv",
+  category: "MEDIA"
+});
 
 /*
 |--------------------------------------------------------------------------
