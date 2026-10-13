@@ -119,27 +119,20 @@ async function settingsCommand(ctx) {
     }
 
     const panelData = settingPanel.getPanelData(sessionId);
-    const code = settingPanel.generatePanelAccessCode(sessionId);
-
-    const panelUrl =
-      process.env.PANEL_URL ||
-      config.panel?.url ||
-      config.web?.panelUrl ||
-      "";
-
-    // MESSAGE 1: SETTINGS OVERVIEW
-    await ctx.send(buildSettingsOverview(panelData));
-
-// MESSAGE 2: PANEL ACCESS
+const code = settingPanel.generatePanelAccessCode(sessionId);
 
 const panelUrl =
   process.env.PANEL_URL ||
   process.env.SETTINGS_PANEL_URL ||
-  config?.panels?.settingsUrl ||
-  config?.panel?.url ||
-  config?.web?.panelUrl ||
+  config.panels?.settingsUrl ||
+  config.panel?.url ||
+  config.web?.panelUrl ||
   "https://topferos-md-v2-0-0.onrender.com/setting";
 
+// MESSAGE 1: SETTINGS OVERVIEW
+await ctx.send(buildSettingsOverview(panelData));
+
+// MESSAGE 2: PANEL ACCESS
 await ctx.send([
   "╭━━━〔 🔐 PANEL ACCESS 〕━━━╮",
   `┃ NUMBER: ${sessionId}`,
