@@ -742,18 +742,39 @@ registerCommand(
 
 /*
 |--------------------------------------------------------------------------
-| COMMAND: SETTINGS
+| COMMAND: SETTING
 |--------------------------------------------------------------------------
 */
 
 registerCommand(
-  "settings",
+  "setting",
   async (ctx) => {
-    return settingsCommand(ctx);
+    const panelUrl = String(
+      config?.panels?.settingsUrl ||
+      process.env.SETTINGS_PANEL_URL ||
+      process.env.PANEL_URL ||
+      "https://topferos-md-v2-0-0.onrender.com/setting"
+    ).trim();
+
+    await ctx.send(
+      [
+        "⚙️ TOPFEROS MD SETTINGS",
+        "",
+        "🔗 Open the Settings Panel:",
+        panelUrl,
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return {
+      success: true,
+      url: panelUrl
+    };
   },
   {
-    description: "Display settings and panel access information.",
-    usage: ".settings",
+    description: "Open the TOPFEROS MD Settings Panel.",
+    usage: ".setting",
     category: "SETTINGS"
   }
 );
