@@ -347,9 +347,8 @@ function getDefaultSettings() {
     }
   };
 }
-
 // ============================================================
-// SESSION SETTINGS
+// SESSION SETTINGS — TOPFEROS MD V2.0.0
 // ============================================================
 
 function getSessionSettings(sessionId) {
@@ -359,51 +358,47 @@ function getSessionSettings(sessionId) {
     throw new Error("Session ID is required.");
   }
 
-  const session =
-    sessionManager.getSession(id);
+  const session = sessionManager.getSession(id);
 
   if (!session) {
     throw new Error("Session not found.");
   }
 
-  const defaults =
-    getDefaultSettings();
+  const defaults = getDefaultSettings();
 
   const automation =
     sessionManager.getSessionAutomation(id);
 
   return {
     bot: {
-      ...defaults.bot
+      ...defaults.bot,
+      ...(session.bot || {})
     },
 
     automation: {
       ...defaults.automation,
-      ...(automation || {})
+      ...(automation || {}),
+      ...(session.automation || {})
     },
 
     groupAutomation: {
-      ...defaults.groupAutomation
+      ...defaults.groupAutomation,
+      ...(session.groupAutomation || {})
     },
 
     connection: {
-      connected:
-        sessionManager.isConnected(id),
-
+      connected: sessionManager.isConnected(id),
       manuallyStopped:
         sessionManager.isManuallyStopped(id)
     },
 
-    language:
-      getPanelLanguage(id),
+    language: getPanelLanguage(id),
 
     logo: defaults.logo,
 
-    background:
-      defaults.background
+    background: defaults.background
   };
 }
-
 // ============================================================
 // SAVE SETTINGS
 // ============================================================
