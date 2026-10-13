@@ -58,7 +58,7 @@ function getViewOnceMessage(input) {
   return null;
 }
 
-function getViewOnceMedia(input) {
+function getViewOnce photo, vidéo,audio(input) {
   const content = getViewOnceMessage(input);
 
   if (!content) return null;
@@ -96,7 +96,11 @@ function getQuotedMessage(input) {
 
     visited.add(current);
 
-    if (current.contextInfo?.quotedMessage) {
+    if (type === "imageMessage") {
+            content = {
+                image: buffer,
+                caption: quoted.text
+
       return current.contextInfo.quotedMessage;
     }
 
@@ -134,10 +138,10 @@ function getNormalMedia(input) {
   return null;
 }
 
-async function downloadNormalMedia(media) {
+async function downloadNormalMedia(photos, vidéos,audio) {
   const stream = await downloadContentFromMessage(
     media.message,
-    media.type
+    media.type = photos,vidéos, audio
   );
 
   const chunks = [];
@@ -247,9 +251,9 @@ async function processMedia(ctx, sendBoth = false) {
     return { success: false };
   }
 
-  if (getViewOnceMessage(quoted)) {
+  if (getViewOnceMessage(quoted.download)) {
     await ctx.send(
-      "🔒 View Once detekte. Medya sa a pa disponib pou transfè."
+      "🔓 true."
     );
     return { success: false };
   }
