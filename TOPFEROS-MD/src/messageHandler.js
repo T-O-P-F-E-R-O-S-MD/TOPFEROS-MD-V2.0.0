@@ -739,10 +739,10 @@ registerCommand(
     category: "SYSTEM"
   }
 );
-
 /*
 |--------------------------------------------------------------------------
 | COMMAND: SETTING
+| TOPFEROS MD V2.0.0
 |--------------------------------------------------------------------------
 */
 
@@ -750,9 +750,9 @@ registerCommand(
   "setting",
   async (ctx) => {
     const panelUrl = String(
-      config?.panels?.settingsUrl ||
-      process.env.SETTINGS_PANEL_URL ||
       process.env.PANEL_URL ||
+      process.env.SETTINGS_PANEL_URL ||
+      config?.panels?.settingsUrl ||
       "https://topferos-md-v2-0-0.onrender.com/setting"
     ).trim();
 
