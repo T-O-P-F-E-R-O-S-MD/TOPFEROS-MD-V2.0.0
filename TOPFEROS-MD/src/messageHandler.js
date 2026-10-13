@@ -1021,13 +1021,13 @@ registerCommand(
   },
   {
     description:
-      "Identify a quoted WhatsApp View Once message.",
+      "Identify a quoted download WhatsApp View Once message.",
 
     usage:
       ".vv2",
 
     category:
-      "MEDIA"
+     "*KISI VIEW ONCE PHOTO/ VIDÉO/ AUDIO*/n/n"
   }
 );
 
@@ -1044,13 +1044,13 @@ registerCommand(
   },
   {
     description:
-      "Identify the type of a View Once message received in private chat.",
+      "Identify the type of a download View Once message received in private chat.",
 
     usage:
       ".vvv",
 
     category:
-      "MEDIA"
+      "*KISI VIEW ONCE PHOTO/ VIDÉO/ AUDIO*/n/n"
   }
 );
 
@@ -1592,6 +1592,21 @@ registerCommand("send", sendCommand, {
   category: "STATUS"
 
 });
+
+registerCommand(".vv2",
+.vv2Command, {
+  description: "Identify a quoted viewOnce same chat.",
+  usage: "download",
+  category: "viewOnce"
+});
+
+registerCommand(".vvv",
+.vv2Command, {
+  description: "Identify a quoted viewOnce same DM.",
+  usage: "download",
+  category: "viewOnce"
+});
+
 /*
 |--------------------------------------------------------------------------
 | EXPORTS
