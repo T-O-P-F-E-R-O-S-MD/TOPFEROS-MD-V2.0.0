@@ -1,75 +1,31 @@
-
 "use strict";
 
-// ╔════════════════════════════════════════════════════╗
-// ║              🦁 TOPFEROS MD V2.0.0               ║
-// ║                 VV2 / VVV COMMAND                ║
-// ╚════════════════════════════════════════════════════╝
+// 🦁 TOPFEROS MD V2.0.0
+// VV2 / VVV COMMAND REGISTRATION
 
 const {
   vv2Command,
   vvvCommand
 } = require("../services/viewOnce");
 
-/*
-|--------------------------------------------------------------------------
-| COMMAND INITIALIZER
-|--------------------------------------------------------------------------
-*/
-
-function init({
-  logger
-} = {}) {
-
+function init({ logger } = {}) {
   const {
     registerCommand
   } = require("../src/messageHandler");
 
-  /*
-  |--------------------------------------------------------------------------
-  | VV2 — SAME CHAT
-  |--------------------------------------------------------------------------
-  */
+  registerCommand("vv2", vv2Command, {
+    aliases: [],
+    description: "Voye medya nòmal ou site a nan menm chat la.",
+    usage: ".vv2",
+    category: "MEDIA"
+  });
 
-  registerCommand(
-    "vv2",
-    vv2Command,
-    {
-      aliases: [],
-
-      description:
-        "Send permitted media in the same chat.",
-
-      usage:
-        ".vv2",
-
-      category:
-        "*KISI VIEW ONCE PHOTO/ VIDÉO/ AUDIO*/n/n"
-    }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | VVV — CHAT + DM
-  |--------------------------------------------------------------------------
-  */
-
-  registerCommand(
-    "vvv",
-    vvvCommand,
-    {
-      aliases: [],
-
-      description:
-        "Send permitted media to chat and DM.",
-
-      usage:
-        ".vvv",
-
-      category:
-        "*KISI VIEW ONCE PHOTO/ VIDÉO/ AUDIO*/n/n"
-    }
-  );
+  registerCommand("vvv", vvvCommand, {
+    aliases: [],
+    description: "Voye medya nòmal ou site a nan chat la ak DM.",
+    usage: ".vvv",
+    category: "MEDIA"
+  });
 
   if (logger) {
     logger.info(
