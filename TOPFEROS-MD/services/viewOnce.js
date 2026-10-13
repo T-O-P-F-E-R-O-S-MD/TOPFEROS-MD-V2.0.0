@@ -2,37 +2,46 @@
 "use strict";
 
 // 🦁 TOPFEROS MD V2.0.0
-// MEDIA SERVICE — TECH BY TOPFEROS MD
+// MEDIA COMMAND SERVICE
+// Baileys 6.7.x
 
 const {
   downloadContentFromMessage
 } = require("@whiskeysockets/baileys");
 
-function unwrapMessage(message) {
-  let current = message?.message || message;
+const MEDIA_TYPES = [
+  ["imageMessage", "image"],
+  ["videoMessage", "video"],
+  ["audioMessage", "audio"],
+  ["documentMessage", "document"]
+];
+
+function unwrapMessage(input) {
+  let content = input?.message || input;
 
   for (let i = 0; i < 10; i++) {
-    if (!current || typeof current !== "object") {
+    if (!content || typeof content !== "object") {
       return null;
     }
 
-    if (current.ephemeralMessage?.message) {
-      current = current.ephemeralMessage.message;
-    } else if (
-      current.documentWithCaptionMessage?.message
-    ) {
-      current =
-        current.documentWithCaptionMessage.message;
-    } else {
-      return current;
+    if (content.ephemeralMessage?.message) {
+      content = content.ephemeralMessage.message;
+      continue;
     }
+
+    if (content.documentWithCaptionMessage?.message) {
+      content = content.documentWithCaptionMessage.message;
+      continue;
+    }
+
+    return content;
   }
 
-  return current;
+  return null;
 }
 
-function getViewOnceMessage(message) {
-  const content = unwrapMessage(message);
+function getViewOnceMessage(input) {
+  const content = unwrapMessage(input);
 
   if (!content) return null;
 
@@ -49,48 +58,49 @@ function getViewOnceMessage(message) {
   return null;
 }
 
-function getViewOnceMedia(message) {
-  const content = getViewOnceMessage(message);
+function getViewOnceMedia(input) {
+  const content = getViewOnceMessage(input);
 
   if (!content) return null;
 
-  for (const [key, type] of [
-    ["imageMessage", "image"],
-    ["videoMessage", "video"],
-    ["audioMessage", "audio"],
-    ["documentMessage", "document"]
-  ]) {
+  for (const [key, type] of MEDIA_TYPES) {
     if (content[key]) {
-      return { type, message: content[key] };
+      return {
+        type,
+        message: content[key]
+      };
     }
   }
 
   return null;
 }
 
-function getQuotedMessage(message) {
-  const root = unwrapMessage(message);
-  if (!root) return null;
+function getQuotedMessage(input) {
+  const content = unwrapMessage(input);
 
-  const queue = [root];
+  if (!content) return null;
+
+  const queue = [content];
   const visited = new Set();
 
   while (queue.length) {
-    const item = queue.shift();
+    const current = queue.shift();
 
     if (
-      !item ||
-      typeof item !== "object" ||
-      visited.has(item)
-    ) continue;
-
-    visited.add(item);
-
-    if (item.contextInfo?.quotedMessage) {
-      return item.contextInfo.quotedMessage;
+      !current ||
+      typeof current !== "object" ||
+      visited.has(current)
+    ) {
+      continue;
     }
 
-    for (const value of Object.values(item)) {
+    visited.add(current);
+
+    if (current.contextInfo?.quotedMessage) {
+      return current.contextInfo.quotedMessage;
+    }
+
+    for (const value of Object.values(current)) {
       if (value && typeof value === "object") {
         queue.push(value);
       }
@@ -100,23 +110,24 @@ function getQuotedMessage(message) {
   return null;
 }
 
-function getNormalMedia(message) {
-  const content = unwrapMessage(message);
+function getNormalMedia(input) {
+  const content = unwrapMessage(input);
 
-  if (!content || getViewOnceMessage(content)) {
+  if (!content) return null;
+
+  // Respect WhatsApp View Once restrictions.
+  if (getViewOnceMessage(content)) {
     return null;
   }
 
-  for (const [key, type] of [
-    ["imageMessage", "image"],
-    ["videoMessage", "video"],
-    ["audioMessage", "audio"],
-    ["documentMessage", "document"]
-  ]) {
+  for (const [key, type] of MEDIA_TYPES) {
     const item = content[key];
 
     if (item && !item.viewOnce) {
-      return { type, message: item };
+      return {
+        type,
+        message: item
+      };
     }
   }
 
@@ -139,103 +150,91 @@ async function downloadNormalMedia(media) {
 }
 
 function buildPayload(media, buffer) {
-  const item = media.message;
+  const original = media.message;
 
-  if (media.type === "image") {
-    return {
-      image: buffer,
-      caption: item.caption || ""
-    };
+  switch (media.type) {
+    case "image":
+      return {
+        image: buffer,
+        caption: original.caption || ""
+      };
+
+    case "video":
+      return {
+        video: buffer,
+        caption: original.caption || "",
+        mimetype: original.mimetype || "video/mp4"
+      };
+
+    case "audio":
+      return {
+        audio: buffer,
+        mimetype: original.mimetype || "audio/ogg",
+        ptt: Boolean(original.ptt)
+      };
+
+    case "document":
+      return {
+        document: buffer,
+        mimetype:
+          original.mimetype ||
+          "application/octet-stream",
+        fileName:
+          original.fileName ||
+          "TOPFEROS-MEDIA"
+      };
+
+    default:
+      throw new Error("Unsupported media type");
   }
-
-  if (media.type === "video") {
-    return {
-      video: buffer,
-      caption: item.caption || "",
-      mimetype: item.mimetype || "video/mp4"
-    };
-  }
-
-  if (media.type === "audio") {
-    return {
-      audio: buffer,
-      mimetype: item.mimetype || "audio/ogg",
-      ptt: false
-    };
-  }
-
-  return {
-    document: buffer,
-    mimetype:
-      item.mimetype || "application/octet-stream",
-    fileName: item.fileName || "TOPFEROS-MEDIA"
-  };
 }
 
-async function sendToBoth(
+function normalizeJid(jid) {
+  if (!jid || typeof jid !== "string") {
+    return null;
+  }
+
+  return jid.replace(/:\d+@/, "@");
+}
+
+async function deleteAfterTwoSeconds(
   sock,
-  chatId,
-  userId,
-  payload
+  jid,
+  sentMessage
 ) {
-  const sent = await sock.sendMessage(
-    chatId,
-    payload
-  );
+  if (!sentMessage?.key) return;
 
-  // Start the 2-second countdown immediately.
-  const deletion = sent?.key
-    ? new Promise((resolve) => {
-        setTimeout(async () => {
-          try {
-            await sock.sendMessage(chatId, {
-              delete: sent.key
-            });
-          } catch (error) {
-            console.error(
-              "[TOPFEROS] Delete error:",
-              error.message
-            );
-          }
-          resolve();
-        }, 2000);
-      })
-    : Promise.resolve();
-
-  let dmSent = false;
+  await new Promise(resolve => {
+    setTimeout(resolve, 2000);
+  });
 
   try {
-    if (userId && userId !== chatId) {
-      await sock.sendMessage(userId, payload);
-      dmSent = true;
-    }
-  } finally {
-    await deletion;
+    await sock.sendMessage(jid, {
+      delete: sentMessage.key
+    });
+  } catch (error) {
+    console.error(
+      "[TOPFEROS MD] Delete error:",
+      error.message
+    );
   }
-
-  return {
-    success: true,
-    chatSent: true,
-    dmSent
-  };
 }
 
-async function processMedia(ctx, both = false) {
-  const sock = ctx.sock;
-  const message = ctx.message;
+async function processMedia(ctx, sendBoth = false) {
+  const { sock, message } = ctx;
 
-  if (!sock || !message) {
-    return { success: false };
-  }
+  const chatId =
+    ctx.jid || message?.key?.remoteJid;
 
-  const chatId = message.key?.remoteJid;
-  const userId =
-    message.key?.participant ||
-    (message.key?.fromMe
-      ? sock.user?.id?.replace(/:\d+@/, "@")
-      : chatId);
+  const senderId = normalizeJid(
+    ctx.sender ||
+    message?.key?.participant ||
+    (message?.key?.fromMe
+      ? sock?.user?.id
+      : chatId)
+  );
 
-  if (!chatId) {
+  if (!sock || !chatId) {
     return { success: false };
   }
 
@@ -243,14 +242,14 @@ async function processMedia(ctx, both = false) {
 
   if (!quoted) {
     await ctx.send(
-      "❌ Reply yon foto oswa videyo avèk kòmand lan."
+      "❌ Reply yon foto, videyo oswa odyo ak kòmand lan."
     );
     return { success: false };
   }
 
   if (getViewOnceMessage(quoted)) {
     await ctx.send(
-      "🔐 View Once detekte. Medya pwoteje sa a pa disponib pou kopi."
+      "🔒 View Once detekte. Medya sa a pa disponib pou transfè."
     );
     return { success: false };
   }
@@ -268,26 +267,53 @@ async function processMedia(ctx, both = false) {
     const buffer = await downloadNormalMedia(media);
     const payload = buildPayload(media, buffer);
 
-    if (both) {
-      return await sendToBoth(
-        sock,
-        chatId,
-        userId,
-        payload
-      );
+    if (!sendBoth) {
+      await sock.sendMessage(chatId, payload);
+      return { success: true };
     }
 
-    await sock.sendMessage(chatId, payload);
+    if (!senderId) {
+      await ctx.send(
+        "❌ Mwen pa jwenn destinasyon DM nan."
+      );
+      return { success: false };
+    }
 
-    return { success: true };
+    // In a private chat, avoid duplicate messages.
+    if (senderId === chatId) {
+      await sock.sendMessage(chatId, payload);
+      return { success: true };
+    }
+
+    // Send the private copy first.
+    await sock.sendMessage(senderId, payload);
+
+    // Then send the temporary chat copy.
+    const sent = await sock.sendMessage(
+      chatId,
+      payload
+    );
+
+    await deleteAfterTwoSeconds(
+      sock,
+      chatId,
+      sent
+    );
+
+    return {
+      success: true,
+      dmSent: true,
+      chatSent: true
+    };
+
   } catch (error) {
     console.error(
-      "[TOPFEROS MEDIA]",
+      "[TOPFEROS MD MEDIA]",
       error.message
     );
 
     await ctx.send(
-      "❌ Telechajman oswa transfè medya a echwe."
+      "❌ Transfè medya a echwe."
     );
 
     return { success: false };
@@ -302,6 +328,7 @@ async function vvvCommand(ctx) {
   return processMedia(ctx, true);
 }
 
+// Required by src/messageHandler.js
 async function handleAutoViewOnce(sock, message) {
   return {
     success: false,
@@ -311,10 +338,10 @@ async function handleAutoViewOnce(sock, message) {
 
 module.exports = {
   unwrapMessage,
-  vv2Command,
-  vvvCommand,
-  handleAutoViewOnce,
   getViewOnceMessage,
   getViewOnceMedia,
-  getQuotedMessage
+  getQuotedMessage,
+  vv2Command,
+  vvvCommand,
+  handleAutoViewOnce
 };
