@@ -1,51 +1,48 @@
 
 "use strict";
 
-// TOPFEROS MD V2.0.0 — View Once Service
+// 🦁 TOPFEROS MD V2.0.0
+// MEDIA SERVICE — TECH BY TOPFEROS MD
+
+const {
+  downloadContentFromMessage
+} = require("@whiskeysockets/baileys");
 
 function unwrapMessage(message) {
-  if (!message || typeof message !== "object") {
-    return null;
-  }
+  let current = message?.message || message;
 
-  let current = message;
+  for (let i = 0; i < 10; i++) {
+    if (!current || typeof current !== "object") {
+      return null;
+    }
 
-  for (let i = 0; i < 10; i += 1) {
     if (current.ephemeralMessage?.message) {
       current = current.ephemeralMessage.message;
-      continue;
+    } else if (
+      current.documentWithCaptionMessage?.message
+    ) {
+      current =
+        current.documentWithCaptionMessage.message;
+    } else {
+      return current;
     }
-
-    if (current.documentWithCaptionMessage?.message) {
-      current = current.documentWithCaptionMessage.message;
-      continue;
-    }
-
-    return current;
   }
 
-  return null;
+  return current;
 }
 
 function getViewOnceMessage(message) {
-  const current = unwrapMessage(message);
+  const content = unwrapMessage(message);
 
-  if (!current) return null;
+  if (!content) return null;
 
-  const wrappers = [
+  for (const key of [
     "viewOnceMessage",
     "viewOnceMessageV2",
     "viewOnceMessageV2Extension"
-  ];
-
-  for (const key of wrappers) {
-    const wrapped = current[key];
-
-    if (
-      wrapped?.message &&
-      typeof wrapped.message === "object"
-    ) {
-      return wrapped.message;
+  ]) {
+    if (content[key]?.message) {
+      return content[key].message;
     }
   }
 
@@ -57,20 +54,14 @@ function getViewOnceMedia(message) {
 
   if (!content) return null;
 
-  const types = [
+  for (const [key, type] of [
     ["imageMessage", "image"],
     ["videoMessage", "video"],
     ["audioMessage", "audio"],
-    ["documentMessage", "document"],
-    ["stickerMessage", "sticker"]
-  ];
-
-  for (const [key, type] of types) {
+    ["documentMessage", "document"]
+  ]) {
     if (content[key]) {
-      return {
-        type,
-        message: content[key]
-      };
+      return { type, message: content[key] };
     }
   }
 
@@ -78,42 +69,29 @@ function getViewOnceMedia(message) {
 }
 
 function getQuotedMessage(message) {
-  if (!message || typeof message !== "object") {
-    return null;
-  }
-
-  const root = unwrapMessage(message.message || message);
-
+  const root = unwrapMessage(message);
   if (!root) return null;
 
   const queue = [root];
   const visited = new Set();
 
-  while (queue.length > 0) {
-    const current = queue.shift();
+  while (queue.length) {
+    const item = queue.shift();
 
     if (
-      !current ||
-      typeof current !== "object" ||
-      visited.has(current)
-    ) {
-      continue;
+      !item ||
+      typeof item !== "object" ||
+      visited.has(item)
+    ) continue;
+
+    visited.add(item);
+
+    if (item.contextInfo?.quotedMessage) {
+      return item.contextInfo.quotedMessage;
     }
 
-    visited.add(current);
-
-    const quoted = current.contextInfo?.quotedMessage;
-
-    if (quoted && typeof quoted === "object") {
-      return quoted;
-    }
-
-    for (const [key, value] of Object.entries(current)) {
-      if (
-        key !== "contextInfo" &&
-        value &&
-        typeof value === "object"
-      ) {
+    for (const value of Object.values(item)) {
+      if (value && typeof value === "object") {
         queue.push(value);
       }
     }
@@ -122,86 +100,208 @@ function getQuotedMessage(message) {
   return null;
 }
 
-async function vv2Command(ctx) {
-  const quoted = getQuotedMessage(ctx?.message);
+function getNormalMedia(message) {
+  const content = unwrapMessage(message);
 
-  if (!quoted) {
-    await ctx?.send?.(
-      "❌ Mwen pa jwenn mesaj ou site a. Reponn mesaj la avèk .vv2."
-    );
+  if (!content || getViewOnceMessage(content)) {
+    return null;
+  }
 
+  for (const [key, type] of [
+    ["imageMessage", "image"],
+    ["videoMessage", "video"],
+    ["audioMessage", "audio"],
+    ["documentMessage", "document"]
+  ]) {
+    const item = content[key];
+
+    if (item && !item.viewOnce) {
+      return { type, message: item };
+    }
+  }
+
+  return null;
+}
+
+async function downloadNormalMedia(media) {
+  const stream = await downloadContentFromMessage(
+    media.message,
+    media.type
+  );
+
+  const chunks = [];
+
+  for await (const chunk of stream) {
+    chunks.push(Buffer.from(chunk));
+  }
+
+  return Buffer.concat(chunks);
+}
+
+function buildPayload(media, buffer) {
+  const item = media.message;
+
+  if (media.type === "image") {
     return {
-      success: false,
-      reason: "quoted-message-not-found"
+      image: buffer,
+      caption: item.caption || ""
     };
   }
 
-  const media = getViewOnceMedia(quoted);
-
-  if (!media) {
-    await ctx?.send?.(
-      "❌ Mwen pa kapab konfime estrikti View Once mesaj sa a."
-    );
-
+  if (media.type === "video") {
     return {
-      success: false,
-      reason: "not-view-once"
+      video: buffer,
+      caption: item.caption || "",
+      mimetype: item.mimetype || "video/mp4"
     };
   }
 
-  await ctx?.send?.([
-    "╭━━〔 🦁 TOPFEROS MD 〕━━╮",
-    "┃ 🔎 VIEW ONCE DETECTED",
-    "┃ 🔐 Kontni an rete pwoteje",
-    `┃ 📁 Kalite: ${media.type}`,
-    "╰━━━━━━━━━━━━━━━━━━━━━━╯",
-    "🦁 TECH BY TOPFEROS MD 🐑"
-  ].join("\n"));
+  if (media.type === "audio") {
+    return {
+      audio: buffer,
+      mimetype: item.mimetype || "audio/ogg",
+      ptt: false
+    };
+  }
+
+  return {
+    document: buffer,
+    mimetype:
+      item.mimetype || "application/octet-stream",
+    fileName: item.fileName || "TOPFEROS-MEDIA"
+  };
+}
+
+async function sendToBoth(
+  sock,
+  chatId,
+  userId,
+  payload
+) {
+  const sent = await sock.sendMessage(
+    chatId,
+    payload
+  );
+
+  // Start the 2-second countdown immediately.
+  const deletion = sent?.key
+    ? new Promise((resolve) => {
+        setTimeout(async () => {
+          try {
+            await sock.sendMessage(chatId, {
+              delete: sent.key
+            });
+          } catch (error) {
+            console.error(
+              "[TOPFEROS] Delete error:",
+              error.message
+            );
+          }
+          resolve();
+        }, 2000);
+      })
+    : Promise.resolve();
+
+  let dmSent = false;
+
+  try {
+    if (userId && userId !== chatId) {
+      await sock.sendMessage(userId, payload);
+      dmSent = true;
+    }
+  } finally {
+    await deletion;
+  }
 
   return {
     success: true,
-    type: media.type,
-    inspected: true
+    chatSent: true,
+    dmSent
   };
+}
+
+async function processMedia(ctx, both = false) {
+  const sock = ctx.sock;
+  const message = ctx.message;
+
+  if (!sock || !message) {
+    return { success: false };
+  }
+
+  const chatId = message.key?.remoteJid;
+  const userId =
+    message.key?.participant ||
+    (message.key?.fromMe
+      ? sock.user?.id?.replace(/:\d+@/, "@")
+      : chatId);
+
+  if (!chatId) {
+    return { success: false };
+  }
+
+  const quoted = getQuotedMessage(message);
+
+  if (!quoted) {
+    await ctx.send(
+      "❌ Reply yon foto oswa videyo avèk kòmand lan."
+    );
+    return { success: false };
+  }
+
+  if (getViewOnceMessage(quoted)) {
+    await ctx.send(
+      "🔐 View Once detekte. Medya pwoteje sa a pa disponib pou kopi."
+    );
+    return { success: false };
+  }
+
+  const media = getNormalMedia(quoted);
+
+  if (!media) {
+    await ctx.send(
+      "❌ Pa gen medya nòmal ki disponib."
+    );
+    return { success: false };
+  }
+
+  try {
+    const buffer = await downloadNormalMedia(media);
+    const payload = buildPayload(media, buffer);
+
+    if (both) {
+      return await sendToBoth(
+        sock,
+        chatId,
+        userId,
+        payload
+      );
+    }
+
+    await sock.sendMessage(chatId, payload);
+
+    return { success: true };
+  } catch (error) {
+    console.error(
+      "[TOPFEROS MEDIA]",
+      error.message
+    );
+
+    await ctx.send(
+      "❌ Telechajman oswa transfè medya a echwe."
+    );
+
+    return { success: false };
+  }
+}
+
+async function vv2Command(ctx) {
+  return processMedia(ctx, false);
 }
 
 async function vvvCommand(ctx) {
-  if (ctx?.isGroup) {
-    await ctx?.send?.(
-      "❌ Sèvi ak .vvv nan DM bot la."
-    );
-
-    return {
-      success: false,
-      reason: "group-chat-not-supported"
-    };
-  }
-
-  return vv2Command(ctx);
+  return processMedia(ctx, true);
 }
 
-async function handleAutoViewOnce(_sock, message) {
-  const media = getViewOnceMedia(
-    message?.message || message
-  );
-
-  if (!media) {
-    return {
-      success: false,
-      ignored: true,
-      reason: "not-view-once"
-    };
-  }
-
-  // Kite medya View Once la entak.
-  // Pa telechaje oswa redistribye li otomatikman.
-  return {
-    success: false,
-    ignored: true,
-    reason: "view-once-media-left-untouched",
-    type: media.type
-  };
-}
 async function handleAutoViewOnce(sock, message) {
   return {
     success: false,
