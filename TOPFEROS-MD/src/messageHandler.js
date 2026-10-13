@@ -1069,64 +1069,6 @@ registerCommand(
 
 /*
 |--------------------------------------------------------------------------
-| COMMAND: SETTING
-|--------------------------------------------------------------------------
-*/
-
-registerCommand(
-  "setting",
-  async (ctx) => {
-    const panelUrl =
-      config?.panels?.settingsUrl ||
-      process.env.SETTINGS_PANEL_URL ||
-      "";
-
-    if (!panelUrl) {
-      await ctx.send(
-        [
-          "⚙️ TOPFEROS MD SETTINGS",
-          "",
-          "❌ The Settings Panel URL has not been configured yet.",
-          "",
-          "🦁 TECH BY TOPFEROS MD 🐑"
-        ].join("\n")
-      );
-
-      return {
-        success: false
-      };
-    }
-
-    await ctx.send(
-      [
-        "⚙️ TOPFEROS MD SETTINGS",
-        "",
-        "🔗 Open the Settings Panel:",
-        panelUrl,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
-    );
-
-    return {
-      success: true,
-      url: panelUrl
-    };
-  },
-  {
-    description:
-      "Open the TOPFEROS MD Settings Panel.",
-
-    usage:
-      ".setting",
-
-    category:
-      "SETTINGS"
-  }
-);
-
-/*
-|--------------------------------------------------------------------------
 | ATTACH STATUS AI
 |--------------------------------------------------------------------------
 */
