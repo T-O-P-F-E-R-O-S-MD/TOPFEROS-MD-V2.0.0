@@ -63,12 +63,8 @@ const {
 | MESSAGE HANDLER
 |--------------------------------------------------------------------------
 */
-
-const attachedSockets =
-  new WeakSet();
-
-const commands =
-  new Map();
+const attachedSockets = new WeakSet();
+const commands = new Map();
 
 /*
 |--------------------------------------------------------------------------
@@ -76,17 +72,36 @@ const commands =
 |--------------------------------------------------------------------------
 */
 
-registerCommand("vv2", vv2Command, {
-  description: "Voye medya nòmal ou site a nan menm chat la.",
-  usage: ".vv2",
-  category: "MEDIA"
-});
+function registerCommand(name, handler, options = {}) {
+  const normalized = String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^\./, "");
 
-registerCommand("vvv", vvvCommand, {
-  description: "Voye medya nòmal ou site a nan chat la ak DM.",
-  usage: ".vvv",
-  category: "MEDIA"
-});
+  if (!normalized || typeof handler !== "function") {
+    throw new TypeError(
+      `[TOPFEROS MD] Invalid command registration: ${name}`
+    );
+  }
+
+  const aliases = Array.isArray(options.aliases)
+    ? options.aliases
+        .map(alias =>
+          String(alias).trim().toLowerCase().replace(/^\./, "")
+        )
+        .filter(Boolean)
+    : [];
+
+  commands.set(normalized, {
+    handler,
+    aliases,
+    description: options.description || "",
+    usage: options.usage || "",
+    category: options.category || "GENERAL"
+  });
+
+  return commands.get(normalized);
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -975,14 +990,9 @@ registerCommand(
     return vv2Command(ctx);
   },
   {
-    description:
-      "Identify a quoted download WhatsApp View Once message.",
-
-    usage:
-      ".vv2",
-
-    category:
-     "*KISI VIEW ONCE PHOTO/ VIDÉO/ AUDIO*/n/n"
+    description: "Trete medya nòmal ki site nan mesaj la.",
+    usage: ".vv2",
+    category: "MEDIA"
   }
 );
 
@@ -998,14 +1008,9 @@ registerCommand(
     return vvvCommand(ctx);
   },
   {
-    description:
-      "Identify the type of a download View Once message received in private chat.",
-
-    usage:
-      ".vvv",
-
-    category:
-      "*KISI VIEW ONCE PHOTO/ VIDÉO/ AUDIO*/n/n"
+    description: "Trete medya nòmal ki site nan mesaj la.",
+    usage: ".vvv",
+    category: "MEDIA"
   }
 );
 
@@ -1545,21 +1550,6 @@ registerCommand("send", sendCommand, {
   description: "Identify a quoted WhatsApp Status.",
   usage: "send",
   category: "STATUS"
-
-});
-
-registerCommand(".vv2",
-.vv2Command, {
-  description: "Identify a quoted viewOnce same chat.",
-  usage: "download",
-  category: "viewOnce"
-});
-
-registerCommand(".vvv",
-.vv2Command, {
-  description: "Identify a quoted viewOnce same DM.",
-  usage: "download",
-  category: "viewOnce"
 });
 
 /*
