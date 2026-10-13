@@ -1,12 +1,14 @@
+
 "use strict";
 
 // ╔════════════════════════════════════════════════════╗
 // ║              🦁 TOPFEROS MD V2.0.0               ║
-// ║                    VV2 COMMAND                  ║
+// ║                 VV2 / VVV COMMAND                ║
 // ╚════════════════════════════════════════════════════╝
 
 const {
-  vv2Command
+  vv2Command,
+  vvvCommand
 } = require("../services/viewOnce");
 
 /*
@@ -17,11 +19,17 @@ const {
 
 function init({
   logger
-}) {
+} = {}) {
+
   const {
     registerCommand
-  } =
-    require("../src/messageHandler");
+  } = require("../src/messageHandler");
+
+  /*
+  |--------------------------------------------------------------------------
+  | VV2 — SAME CHAT
+  |--------------------------------------------------------------------------
+  */
 
   registerCommand(
     "vv2",
@@ -30,7 +38,7 @@ function init({
       aliases: [],
 
       description:
-        "Decode a replied ViewOnce in the same chat.",
+        "Send permitted media in the same chat.",
 
       usage:
         ".vv2",
@@ -40,9 +48,32 @@ function init({
     }
   );
 
+  /*
+  |--------------------------------------------------------------------------
+  | VVV — CHAT + DM
+  |--------------------------------------------------------------------------
+  */
+
+  registerCommand(
+    "vvv",
+    vvvCommand,
+    {
+      aliases: [],
+
+      description:
+        "Send permitted media to chat and DM.",
+
+      usage:
+        ".vvv",
+
+      category:
+        "MEDIA"
+    }
+  );
+
   if (logger) {
     logger.info(
-      "👁️ VV2 command registered: .vv2"
+      "🦁 TOPFEROS MD: .vv2 and .vvv registered"
     );
   }
 }
