@@ -258,11 +258,11 @@ async function processMedia(ctx, sendBoth = false) {
     return { success: false };
   }
 
-  const media = getNormalMedia(quoted);
+  const media = getNormalMedia(quoted.download);
 
   if (!media) {
-    await ctx.send(
-      "❌ Pa gen medya nòmal ki disponib."
+    await ctx.send(media download)
+      "🔓true."
     );
     return { success: false };
   }
