@@ -130,31 +130,45 @@ async function settingsCommand(ctx) {
     // MESSAGE 1: SETTINGS OVERVIEW
     await ctx.send(buildSettingsOverview(panelData));
 
-    // MESSAGE 2: PANEL ACCESS
-    await ctx.send([
-      "╭━━━〔 🔐 PANEL ACCESS 〕━━━╮",
-      `┃ NUMBER: ${sessionId}`,
-      `┃ CODE: ${code}`,
-      `┃ LINK: ${panelUrl || "PANEL_URL pa konfigire"}`,
-      "╰━━━━━━━━━━━━━━━━━━━━━━╯",
-      "",
-      "🦁 TECH BY TOPFEROS MD 🐑"
-    ].join("\n"));
+// MESSAGE 2: PANEL ACCESS
+
+const panelUrl =
+  process.env.PANEL_URL ||
+  process.env.SETTINGS_PANEL_URL ||
+  config?.panels?.settingsUrl ||
+  config?.panel?.url ||
+  config?.web?.panelUrl ||
+  "https://topferos-md-v2-0-0.onrender.com/setting";
+
+await ctx.send([
+  "╭━━━〔 🔐 PANEL ACCESS 〕━━━╮",
+  `┃ NUMBER: ${sessionId}`,
+  `┃ CODE: ${code}`,
+  `┃ LINK: ${panelUrl}`,
+  "╰━━━━━━━━━━━━━━━━━━━━━━╯",
+  "",
+  "📋 COPY CODE",
+  "Peze sou kòd ki nan mesaj anba a pou kopye li.",
+  "",
+  "🦁 TECH BY TOPFEROS MD 🐑"
+].join("\n"));
+
+// Send the code separately so it is easier to copy.
+await ctx.send(String(code));
 
     // MESSAGE 3: INSTRUCTIONS
-    await ctx.send([
-      "╭━━━〔 📘 INSTRUCTIONS 〕━━━╮",
-      "┃ 1. Louvri lyen panel la.",
-      "┃ 2. Chwazi lang ou.",
-      "┃ 3. Antre nimewo ak kòd session ou.",
-      "┃ 4. Modifye paramèt ou vle yo.",
-      "┃ 5. Sove chanjman yo.",
-      "╰━━━━━━━━━━━━━━━━━━━━━━╯",
-      "",
-      "Sèvi ak .menu pou wè kòmand yo.",
-      "Sèvi ak .help pou konnen kijan pou itilize yo.",
-      "🦁 TECH BY TOPFEROS MD 🐑"
-    ].join("\n"));
+await ctx.send([
+  "To change your bot settings, please click the web link in the message above and go to the web page. Use the ownerNumber and password provided in the message above to log in and change your bot settings. After submitting your settings on the website, your bot will update the new settings within 3 minutes. ✅",
+  "",
+  "Pour modifier les paramètres de votre bot, veuillez cliquer sur le lien web dans le message ci-dessus et accéder à la page web. Utilisez l’ownerNumber et le mot de passe indiqués dans le message ci-dessus pour vous connecter et modifier les paramètres de votre bot. Après avoir soumis les paramètres sur le site web, votre bot mettra à jour les nouveaux paramètres dans un délai de 3 minutes. ✅",
+  "",
+  "Para cambiar la configuración de tu bot, haz clic en el enlace web del mensaje anterior y accede a la página web. Utiliza el ownerNumber y la contraseña que aparecen en el mensaje anterior para iniciar sesión y cambiar la configuración de tu bot. Después de enviar la configuración en el sitio web, tu bot actualizará los nuevos ajustes en un plazo de 3 minutos. ✅",
+  "",
+  "要更改机器人的设置，请点击上方消息中的网页链接并打开网页。使用上方消息中提供的 ownerNumber 和密码登录，然后修改机器人的设置。在网站上提交设置后，机器人将在 3 分钟内更新新的设置。✅",
+  "",
+  "🦁 *By TOPFEROS MD TECH*"
+].join("\n"));
+
   } catch (error) {
     console.error("[SETTINGS COMMAND]", error);
 
