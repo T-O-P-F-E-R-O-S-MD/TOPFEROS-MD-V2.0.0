@@ -414,94 +414,72 @@ function isStatus(
 
 /*
 |--------------------------------------------------------------------------
-| GET PREFIX
+| TOPFEROS MD V2.0.0
+| GET PREFIX FROM SETTINGS
 |--------------------------------------------------------------------------
 */
 
-function getPrefix(
-  sessionId = ""
-) {
-  if (sessionId) {
-    try {
-      const session =
-        sessionManager.getSession(
-          sessionId
-        );
+function getPrefix(sessionId = "") {
+  try {
+    if (sessionId) {
+      const session = sessionManager.getSession(sessionId);
 
-      const sessionPrefix =
-        String(
-          session?.bot?.prefix ||
-          ""
-        ).trim();
+      const savedSettings =
+        settingPanel.getSavedBotSettings(sessionId) || {};
 
-      if (sessionPrefix) {
-        return sessionPrefix;
-      }
-    } catch {
-      // Fall back to global configuration.
+      const prefix = String(
+        savedSettings.prefix ||
+        session?.bot?.prefix ||
+        config?.bot?.prefix ||
+        "."
+      ).trim();
+
+      return prefix || ".";
     }
+  } catch (error) {
+    console.error(
+      "[TOPFEROS MD] Prefix loading error:",
+      error.message
+    );
   }
 
-  return (
-    config?.bot?.prefix ||
-    "."
-  );
+  return String(config?.bot?.prefix || ".").trim() || ".";
 }
 
 /*
 |--------------------------------------------------------------------------
-| PARSE COMMAND
+| PARSE COMMAND USING THE SAVED PREFIX
 |--------------------------------------------------------------------------
 */
 
-function parseCommand(
-  text,
-  sessionId = ""
-) {
-  const prefix =
-  getPrefix(
-    sessionId
-  );
+function parseCommand(text, sessionId = "") {
+  const prefix = getPrefix(sessionId);
 
-  const cleanText =
-    String(text || "")
-      .trim();
+  const cleanText = String(text || "").trim();
 
-  if (
-    !cleanText.startsWith(
-      prefix
-    )
-  ) {
+  if (!cleanText.startsWith(prefix)) {
     return null;
   }
 
-  const withoutPrefix =
-    cleanText
-      .slice(prefix.length)
-      .trim();
+  const withoutPrefix = cleanText
+    .slice(prefix.length)
+    .trim();
 
   if (!withoutPrefix) {
     return null;
   }
 
-  const parts =
-    withoutPrefix.split(
-      /\s+/
-    );
+  const parts = withoutPrefix.split(/\s+/);
 
-  const command =
-    String(
-      parts.shift() || ""
-    ).toLowerCase();
+  const command = String(parts.shift() || "")
+    .toLowerCase();
 
   return {
     prefix,
     command,
     args: parts,
-    text:
-      parts.join(" "),
-    raw:
-      withoutPrefix
+    text: parts.join(" "),
+    raw: withoutPrefix
   };
 }
 
