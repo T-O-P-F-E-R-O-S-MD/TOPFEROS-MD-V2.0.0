@@ -44,7 +44,7 @@ function init({
         ".vv2",
 
       category:
-        "MEDIA"
+        "*KISI VIEW ONCE PHOTO/ VIDÉO/ AUDIO*/n/n"
     }
   );
 
@@ -67,7 +67,7 @@ function init({
         ".vvv",
 
       category:
-        "MEDIA"
+        "*KISI VIEW ONCE PHOTO/ VIDÉO/ AUDIO*/n/n"
     }
   );
 
