@@ -749,36 +749,15 @@ registerCommand(
 registerCommand(
   "setting",
   async (ctx) => {
-    const panelUrl = String(
-      process.env.PANEL_URL ||
-      process.env.SETTINGS_PANEL_URL ||
-      config?.panels?.settingsUrl ||
-      "https://topferos-md-v2-0-0.onrender.com/setting"
-    ).trim();
-
-    await ctx.send(
-      [
-        "⚙️ TOPFEROS MD SETTINGS",
-        "",
-        "🔗 Open the Settings Panel:",
-        panelUrl,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
-    );
-
-    return {
-      success: true,
-      url: panelUrl
-    };
+    return await settingsCommand(ctx);
   },
   {
-    description: "Open the TOPFEROS MD Settings Panel.",
+    aliases: ["settings"],
+    description: "Display all bot settings and automation status.",
     usage: ".setting",
     category: "SETTINGS"
   }
 );
-
 /*
 |--------------------------------------------------------------------------
 | COMMAND: PARRAIN
