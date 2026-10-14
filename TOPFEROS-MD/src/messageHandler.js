@@ -1192,21 +1192,16 @@ if (
   const found = findCommand(plainCommand);
 
   if (found) {
-/*
- * Build command context.
- */
-
-      const context = buildContext(
-       sock,
-       message,
-       parsed,
-       sessionId
-       );
+    const context = buildContext(
+      sock,
+      message,
+      {
         command: plainCommand,
         args: [],
         text: "",
         prefix: ""
-      }
+      },
+      sessionId
     );
 
     await found.command.handler(context);
