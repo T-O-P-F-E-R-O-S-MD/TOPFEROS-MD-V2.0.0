@@ -1,100 +1,284 @@
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
+
 const config = require("../src/config");
-const sessionManager = require("../src/sessionManager");
-const settingPanel = require("../src/settingPanel");
+
+const sessionManager =
+  require("../src/sessionManager");
+
+const settingPanel =
+  require("../src/settingPanel");
 
 // ============================================================
 // 🦁 TOPFEROS MD V2.0.0
 // SETTINGS COMMAND
 // ============================================================
 
-function getSessionId(ctx) {
-  const rawId =
-    ctx.sessionId ||
-    ctx.sock?.user?.id ||
-    "";
+const LOGO_PATH = path.resolve(
+  __dirname,
+  "..",
+  "assets",
+  "logo.png"
+);
 
-  return String(rawId)
+const DEFAULT_PANEL_URL =
+  "https://topferos-md-v2-0-0.onrender.com/setting";
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function normalizeSessionId(value) {
+  return String(value || "")
     .split("@")[0]
     .split(":")[0]
     .replace(/\D/g, "");
 }
 
-function value(value, fallback = "Not configured") {
-  if (value === undefined || value === null || value === "") {
+function display(
+  value,
+  fallback = "Not Set"
+) {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
     return fallback;
   }
 
   return String(value);
 }
 
-function status(value) {
-  return value === true ? "ON" : "OFF";
+function onOff(value) {
+  if (value === true) {
+    return "✅ ON";
+  }
+
+  if (value === false) {
+    return "❌ OFF";
+  }
+
+  return "⚪ N/A";
 }
 
-function buildSettingsOverview(data) {
-  const settings = data.settings || {};
-  const bot = settings.bot || {};
-  const automation = settings.automation || {};
+// ============================================================
+// BUILD SETTINGS OVERVIEW
+// Li vrè paramèt sesyon an.
+// ============================================================
 
-  return [
-    "╭━━━〔 🦁 TOPFEROS MD 〕━━━╮",
-    "┃     ⚙️ SETTINGS PANEL",
-    "┃        VERSION 2.0.0",
-    "╰━━━━━━━━━━━━━━━━━━━━━━╯",
+function buildSettingsOverview(
+  panelData,
+  sessionId
+) {
+  const settings =
+    panelData?.settings || {};
+
+  const bot =
+    settings.bot || {};
+
+  const automation =
+    settings.automation || {};
+
+  const group =
+    settings.groupAutomation || {};
+
+  const logoExists =
+    fs.existsSync(LOGO_PATH);
+
+  const lines = [
+    "╭━━━━━━━━━━━❀━━━━━━━━━━━╮",
+    "       🦁 *BOT SETTINGS* 🐑",
+    "      🐑 *TOPFEROS MD* 🦁",
+    "╰━━━━━━━━━━━❀━━━━━━━━━━━╯",
+
     "",
-    "┏━━〔 USER INFO 〕",
-    `┃ OWNER NUMBER: ${value(bot.ownerNumber)}`,
-    `┃ BOT NAME: ${value(bot.name)}`,
-    `┃ LOCATION: ${value(bot.location)}`,
-    `┃ AGE: ${value(bot.age)}`,
-    `┃ PREFIX: ${value(bot.prefix)}`,
-    `┃ MODE: ${value(bot.mode)}`,
-    "┗━━━━━━━━━━━━━━━━━━━━",
+
+    "✨ *USER INFO* ✨",
+
     "",
-    "┏━━〔 AUTOMATION 〕",
-    `┃ Always Online: ${status(automation.alwaysOnline)}`,
-    `┃ Fake Typing: ${status(automation.fakeTyping)}`,
-    `┃ Fake Recording: ${status(automation.fakeRecording)}`,
-    `┃ Auto Status Seen: ${status(automation.autoStatusSeen)}`,
-    `┃ Auto Status Reply: ${status(automation.autoStatusReply)}`,
-    `┃ Auto Status React: ${status(automation.autoStatusReact)}`,
-    "┗━━━━━━━━━━━━━━━━━━━━",
-    "",
-    "┏━━〔 PROTECTION 〕",
-    `┃ Anti Delete: ${status(automation.antiDelete)}`,
-    `┃ Anti Call: ${status(automation.antiCall)}`,
-    `┃ Anti Bug: ${status(automation.antiBug)}`,
-    `┃ Anti Bot Filter: ${status(automation.antiBotFilter)}`,
-    `┃ Anti Block Numbers: ${
-      Array.isArray(automation.antiBlockNumbers) &&
-      automation.antiBlockNumbers.length > 0
-        ? "ON"
-        : "OFF"
+
+    `🎀 *Name*   » ${
+      display(
+        bot.name,
+        config.bot?.name || "TOPFEROS MD"
+      )
     }`,
-    `┃ Anti Delete Mode: ${value(automation.antiDeleteMode)}`,
-    `┃ Anti Bot Action: ${value(automation.antiBotAction)}`,
-    "┗━━━━━━━━━━━━━━━━━━━━",
+
+    `📱 *Number* » ${
+      display(
+        bot.ownerNumber,
+        sessionId
+      )
+    }`,
+
+    `🎂 *Age*    » ${
+      display(bot.age, "Not Set")
+    }`,
+
+    `📍 *From*   » ${
+      display(bot.location, "Not Set")
+    }`,
+
+    `🔤 *Prefix* » ${
+      display(bot.prefix, ".")
+    }`,
+
+    `🌐 *Mode*   » ${
+      display(bot.mode, "Public")
+    }`,
+
     "",
-    "┏━━〔 GROUP AUTOMATION 〕",
-    `┃ Group Automation: ${status(settings.groupAutomation?.enabled)}`,
-    `┃ Group ID: ${value(settings.groupAutomation?.groupGid)}`,
-    `┃ Timezone: ${value(settings.groupAutomation?.timezone)}`,
-    `┃ Close Time: ${value(settings.groupAutomation?.closeTime)}`,
-    `┃ Open Time: ${value(settings.groupAutomation?.openTime)}`,
-    `┃ Warning Limit: ${value(settings.groupAutomation?.warningLimit)}`,
-    "┗━━━━━━━━━━━━━━━━━━━━",
+
+    "🛡️ *PROTECTION* 🛡️",
+
     "",
-    "🦁 TECH BY TOPFEROS MD 🐑"
-  ].join("\n");
+
+    `📞 Anti Call       » ${
+      onOff(automation.antiCall)
+    }`,
+
+    `🧭 Anti Bugs       » ${
+      onOff(automation.antiBug)
+    }`,
+
+    `🛸 Anti Bot        » ${
+      onOff(automation.antiBotFilter)
+    }`,
+
+    `⚽ Anti Bot Action » ${
+      display(
+        automation.antiBotAction,
+        "Delete"
+      )
+    }`,
+
+    `🗑️ Anti Delete     » ${
+      onOff(automation.antiDelete)
+    }`,
+
+    `📤 Delete Mode     » ${
+      display(
+        automation.antiDeleteMode,
+        "Not Set"
+      )
+    }`,
+
+    `⛔ Block List      » ${
+      Array.isArray(
+        automation.antiBlockNumbers
+      ) &&
+      automation.antiBlockNumbers.length > 0
+        ? "✅ Set"
+        : "❌ Empty"
+    }`,
+
+    "",
+
+    "📊 *STATUS & AUTOMATION* 📊",
+
+    "",
+
+    `🟢 Always Online     » ${
+      onOff(automation.alwaysOnline)
+    }`,
+
+    `⌨️ Auto Typing       » ${
+      onOff(automation.fakeTyping)
+    }`,
+
+    `🎙️ Auto Recording    » ${
+      onOff(automation.fakeRecording)
+    }`,
+
+    `👁️ Status Seen       » ${
+      onOff(automation.autoStatusSeen)
+    }`,
+
+    `💬 Status Reply      » ${
+      onOff(automation.autoStatusReply)
+    }`,
+
+    `❤️ Status React      » ${
+      onOff(automation.autoStatusReact)
+    }`,
+
+    `👥 Group Automation  » ${
+      onOff(group.enabled)
+    }`,
+
+    `🖼️ Bot Logo » ${
+      logoExists
+        ? "✅ Set"
+        : "❌ Missing"
+    }`,
+
+    "✨ *Owner Only Access — Personal Chat* ✨",
+
+    "",
+
+    "🦁 *By TOPFEROS MD TECH* 🐑"
+  ];
+
+  return lines.join("\n");
 }
+
+// ============================================================
+// SEND FIRST MESSAGE WITH BOT LOGO
+// ============================================================
+
+async function sendOverviewWithLogo(
+  ctx,
+  caption
+) {
+  if (fs.existsSync(LOGO_PATH)) {
+    try {
+      await ctx.sock.sendMessage(
+        ctx.jid,
+        {
+          image: fs.readFileSync(
+            LOGO_PATH
+          ),
+
+          caption
+        }
+      );
+
+      return;
+    } catch (error) {
+      console.error(
+        "[SETTINGS] Logo send failed:",
+        error.message
+      );
+    }
+  }
+
+  // Si logo a pa disponib, voye tèks la kanmenm.
+  await ctx.send(caption);
+}
+
+// ============================================================
+// SETTINGS COMMAND
+// ============================================================
 
 async function settingsCommand(ctx) {
   try {
-    if (!ctx || !ctx.sock || !ctx.message) {
-      throw new Error("Command context is incomplete.");
+    if (
+      !ctx ||
+      !ctx.sock ||
+      !ctx.message ||
+      !ctx.jid
+    ) {
+      throw new Error(
+        "Command context is incomplete."
+      );
     }
+
+    // --------------------------------------------------------
+    // PRIVATE CHAT ONLY
+    // --------------------------------------------------------
 
     if (ctx.isGroup) {
       return ctx.send(
@@ -102,72 +286,171 @@ async function settingsCommand(ctx) {
       );
     }
 
+    // --------------------------------------------------------
+    // OWNER ACCESS
+    // --------------------------------------------------------
+
     if (!ctx.isOwner) {
       return ctx.send(
         "⛔ Kòmand sa a rezève pou owner bot la."
       );
     }
 
-    const sessionId = getSessionId(ctx);
+    // --------------------------------------------------------
+    // ACTIVE SESSION
+    // --------------------------------------------------------
 
-    if (!sessionId || !sessionManager.getSession(sessionId)) {
-      return ctx.send("❌ Session bot la pa disponib.");
+    const sessionId =
+      normalizeSessionId(
+        ctx.sessionId ||
+        ctx.sock?.user?.id
+      );
+
+    if (
+      !sessionId ||
+      !sessionManager.getSession(sessionId)
+    ) {
+      return ctx.send(
+        "❌ Session bot la pa disponib."
+      );
     }
 
-    if (!sessionManager.isConnected(sessionId)) {
-      return ctx.send("❌ Bot la pa konekte.");
+    if (
+      !sessionManager.isConnected(
+        sessionId
+      )
+    ) {
+      return ctx.send(
+        "❌ Bot la pa konekte. Konekte sesyon an anvan ou mande settings."
+      );
     }
 
-    const panelData = settingPanel.getPanelData(sessionId);
-const code = settingPanel.generatePanelAccessCode(sessionId);
+    // --------------------------------------------------------
+    // READ CURRENT PANEL SETTINGS
+    // --------------------------------------------------------
 
-const panelUrl =
-  process.env.PANEL_URL ||
-  process.env.SETTINGS_PANEL_URL ||
-  config.panels?.settingsUrl ||
-  config.panel?.url ||
-  config.web?.panelUrl ||
-  "https://topferos-md-v2-0-0.onrender.com/setting";
+    const panelData =
+      settingPanel.getPanelData(
+        sessionId
+      );
 
-// MESSAGE 1: SETTINGS OVERVIEW
-await ctx.send(buildSettingsOverview(panelData));
+    // --------------------------------------------------------
+    // GENERATE / RETRIEVE ACCESS CODE
+    // --------------------------------------------------------
 
-// MESSAGE 2: PANEL ACCESS
-await ctx.send([
-  "╭━━━〔 🔐 PANEL ACCESS 〕━━━╮",
-  `┃ NUMBER: ${sessionId}`,
-  `┃ CODE: ${code}`,
-  `┃ LINK: ${panelUrl}`,
-  "╰━━━━━━━━━━━━━━━━━━━━━━╯",
-  "",
-  "📋 COPY CODE",
-  "Peze sou kòd ki nan mesaj anba a pou kopye li.",
-  "",
-  "🦁 TECH BY TOPFEROS MD 🐑"
-].join("\n"));
+    const code =
+      settingPanel.generatePanelAccessCode(
+        sessionId
+      );
 
-// Send the code separately so it is easier to copy.
-await ctx.send(String(code));
+    // --------------------------------------------------------
+    // SETTINGS PORTAL
+    // --------------------------------------------------------
 
-    // MESSAGE 3: INSTRUCTIONS
-await ctx.send([
-  "To change your bot settings, please click the web link in the message above and go to the web page. Use the ownerNumber and password provided in the message above to log in and change your bot settings. After submitting your settings on the website, your bot will update the new settings within 3 minutes. ✅",
-  "",
-  "Pour modifier les paramètres de votre bot, veuillez cliquer sur le lien web dans le message ci-dessus et accéder à la page web. Utilisez l’ownerNumber et le mot de passe indiqués dans le message ci-dessus pour vous connecter et modifier les paramètres de votre bot. Après avoir soumis les paramètres sur le site web, votre bot mettra à jour les nouveaux paramètres dans un délai de 3 minutes. ✅",
-  "",
-  "Para cambiar la configuración de tu bot, haz clic en el enlace web del mensaje anterior y accede a la página web. Utiliza el ownerNumber y la contraseña que aparecen en el mensaje anterior para iniciar sesión y cambiar la configuración de tu bot. Después de enviar la configuración en el sitio web, tu bot actualizará los nuevos ajustes en un plazo de 3 minutos. ✅",
-  "",
-  "要更改机器人的设置，请点击上方消息中的网页链接并打开网页。使用上方消息中提供的 ownerNumber 和密码登录，然后修改机器人的设置。在网站上提交设置后，机器人将在 3 分钟内更新新的设置。✅",
-  "",
-  "🦁 *By TOPFEROS MD TECH*"
-].join("\n"));
+    const panelUrl =
+      process.env.PANEL_URL ||
+      process.env.SETTINGS_PANEL_URL ||
+      config.panels?.settingsUrl ||
+      DEFAULT_PANEL_URL;
+
+    // ========================================================
+    // MESSAGE 1: SETTINGS OVERVIEW + LOGO
+    // ========================================================
+
+    const overview =
+      buildSettingsOverview(
+        panelData,
+        sessionId
+      );
+
+    await sendOverviewWithLogo(
+      ctx,
+      overview
+    );
+
+    // ========================================================
+    // MESSAGE 2: LOGIN INFORMATION
+    // ========================================================
+
+    await ctx.send([
+      "🦁✧･ﾟ: *✧･ﾟ:* 🔐 *TOPFEROS MD LOGIN* 🔐 *:･ﾟ✧*:･ﾟ✧🐑",
+
+      "",
+
+      "🌸 *Owner Number*",
+
+      `╰┈➤ ${sessionId}`,
+
+      "",
+
+      "🌸 *6-Character Settings Code*",
+
+      "╰┈➤",
+
+      "",
+
+      `*${code}*`,
+
+      "",
+
+      "🌐 *Web Settings*",
+
+      `╰┈➤ ${panelUrl}`,
+
+      "",
+
+      "╰┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈╯",
+
+      "✨ *Keep Safe & Don't Share* ✨",
+
+      "",
+
+      "📋 Kòd la voye nan liy apa a pou fasilite kopi.",
+
+      "",
+
+      "🦁 *TECH BY TOPFEROS MD* 🐑"
+    ].join("\n"));
+
+    // ========================================================
+    // MESSAGE 3: COPYABLE CODE
+    // ========================================================
+
+    await ctx.send(
+      String(code)
+    );
+
+    // ========================================================
+    // MESSAGE 4: INSTRUCTIONS
+    // ========================================================
+
+    await ctx.send([
+      "To change your bot settings, please click the web link in the message above and open the web page.",
+
+      "",
+
+      "Enter the owner number and 6-character settings code shown above. The portal verifies the number, code, and active WhatsApp session before allowing access.",
+
+      "",
+
+      "After submitting settings, the bot will use the updated values when the panel applies them. ✅",
+
+      "",
+
+      "🦁 *TECH BY TOPFEROS MD* 🐑"
+    ].join("\n"));
 
   } catch (error) {
-    console.error("[SETTINGS COMMAND]", error);
-
-    return ctx.send(
-      "❌ Gen yon pwoblèm pandan ouvèti Settings Panel la."
+    console.error(
+      "[SETTINGS COMMAND]",
+      error?.stack || error
     );
+
+    if (ctx?.send) {
+      return ctx.send(
+        "❌ Gen yon pwoblèm pandan ouvèti Settings Panel la. Verifye si sesyon bot la konekte."
+      );
+    }
   }
 }
 
