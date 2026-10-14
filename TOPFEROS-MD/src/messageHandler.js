@@ -624,70 +624,36 @@ function canProcessMessage(
 function buildContext(
   sock,
   message,
-  parsed
+  parsed,
+  sessionId = ""
 ) {
-  const jid =
-    getChatJid(message);
-
-  const sender =
-    getSenderJid(message);
+  const jid = getChatJid(message);
+  const sender = getSenderJid(message);
 
   return {
     sock,
-
     message,
-
     jid,
-
     sender,
+    sessionId: String(sessionId || ""),
 
-    isGroup:
-      isGroup(jid),
+    isGroup: isGroup(jid),
+    isStatus: isStatus(jid),
+    isOwner: isOwner(message),
 
-    isStatus:
-      isStatus(jid),
+    command: parsed?.command || null,
+    args: parsed?.args || [],
+    text: parsed?.text || "",
+    prefix: parsed?.prefix || getPrefix(sessionId),
 
-    isOwner:
-      isOwner(message),
-
-    command:
-      parsed?.command ||
-      null,
-
-    args:
-      parsed?.args ||
-      [],
-
-    text:
-      parsed?.text ||
-      "",
-
-    prefix:
-      parsed?.prefix ||
-      getPrefix(),
-
-    bot:
-      config?.bot ||
-      {},
-
+    bot: config?.bot || {},
     config,
 
-    send:
-      (text, options = {}) =>
-        sendText(
-          sock,
-          jid,
-          text,
-          options
-        ),
+    send: (text, options = {}) =>
+      sendText(sock, jid, text, options),
 
-    react:
-      (emoji) =>
-        reactToMessage(
-          sock,
-          message,
-          emoji
-        )
+    react: (emoji) =>
+      reactToMessage(sock, message, emoji)
   };
 }
 
@@ -1226,10 +1192,16 @@ if (
   const found = findCommand(plainCommand);
 
   if (found) {
-    const context = buildContext(
-      sock,
-      message,
-      {
+/*
+ * Build command context.
+ */
+
+      const context = buildContext(
+       sock,
+       message,
+       parsed,
+       sessionId
+       );
         command: plainCommand,
         args: [],
         text: "",
