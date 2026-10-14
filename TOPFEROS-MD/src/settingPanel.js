@@ -388,9 +388,6 @@ function getLanguages() {
 // ============================================================
 
 function getDefaultSettings() {
-  const defaults =
-    sessionManager.getSessionAutomation("");
-
   return {
     bot: {
       name: config.bot.name,
