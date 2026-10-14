@@ -53,26 +53,25 @@ function createPanelAccessCode() {
   return code;
 }
 
-function generatePanelAccessCode(sessionId) {
+function verifyPanelAccessCode(sessionId, submittedCode) {
   const id = normalizeSessionId(sessionId);
 
   if (!id || !sessionManager.getSession(id)) {
-    throw new Error("WhatsApp session does not exist.");
+    return false;
   }
 
-  // Kenbe menm kòd la pandan sesyon WhatsApp la egziste.
-  // Pa chanje kòd la lè bot la dekonekte tanporèman.
-  const existingCode = panelAccessCodes.get(id);
+  // Pa tcheke isConnected() isit la.
+  // Kòd la pa dwe rejte sèlman paske bot la dekonekte tanporèman.
+  const savedCode = panelAccessCodes.get(id);
 
-  if (existingCode) {
-    return existingCode;
+  if (!savedCode) {
+    return false;
   }
 
-  const code = createPanelAccessCode();
-
-  panelAccessCodes.set(id, code);
-
-  return code;
+  return (
+    String(submittedCode || "").trim().toUpperCase() ===
+    savedCode
+  );
 }
 
 function verifyPanelAccessCode(sessionId, submittedCode) {
@@ -105,7 +104,13 @@ function clearPanelAccessCode(sessionId) {
     return false;
   }
 
-  return panelAccessCodes.delete(id);
+  const deleted = panelAccessCodes.delete(id);
+
+  if (deleted) {
+    savePanelAccessCodes();
+  }
+
+  return deleted;
 }
 // ============================================================
 // HELPERS
