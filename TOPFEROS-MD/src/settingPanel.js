@@ -74,12 +74,6 @@ function verifyPanelAccessCode(sessionId, submittedCode) {
   );
 }
 
-  return (
-    String(submittedCode || "").trim().toUpperCase() ===
-    savedCode
-  );
-}
-
 function verifyPanelAccessCode(sessionId, submittedCode) {
   const id = normalizeSessionId(sessionId);
 
