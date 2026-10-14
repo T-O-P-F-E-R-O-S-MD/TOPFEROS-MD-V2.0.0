@@ -1181,16 +1181,29 @@ const session = {
          */
 
         if (!shouldReconnect) {
-          logger.error(
-            `[${sessionId}] WhatsApp session logged out.`
-          );
+  logger.error(
+    `[${sessionId}] WhatsApp session logged out.`
+  );
 
-          activeSessions.delete(
-            sessionId
-          );
+  /*
+   * WhatsApp session closed permanently.
+   * Invalidate the old panel access code.
+   */
 
-          return;
-        }
+  settingPanel.clearPanelAccessCode(
+    sessionId
+  );
+
+  settingPanel.removePanelSession(
+    sessionId
+  );
+
+  activeSessions.delete(
+    sessionId
+  );
+
+  return;
+}
 
         /*
          * Prevent duplicate reconnect timers.
