@@ -87,22 +87,6 @@ function verifyPanelAccessCode(sessionId, submittedCode) {
     return false;
   }
 
-  if (!sessionManager.isConnected(id)) {
-    return false;
-  }
-
-  const savedCode = panelAccessCodes.get(id);
-
-  if (!savedCode) {
-    return false;
-  }
-
-  return (
-    String(submittedCode || "").trim().toUpperCase() ===
-    savedCode
-  );
-}
-
 function clearPanelAccessCode(sessionId) {
   const id = normalizeSessionId(sessionId);
 
