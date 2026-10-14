@@ -9,6 +9,9 @@ const config = require("./config");
 const sessionManager =
   require("./sessionManager");
 
+const settingPanel =
+  require("./settingPanel");
+
 const {
   recordOwnerCommand
 } = require("./ownerStats");
