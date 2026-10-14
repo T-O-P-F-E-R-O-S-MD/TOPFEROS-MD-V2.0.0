@@ -549,44 +549,54 @@ app.post(
         return sendError(res, 401, "The phone number does not match this session.");
       }
 
-      if (typeof settingPanel.verifyPanelAccessCode !== "function") {
-        return sendError(res, 500, "Settings access-code verification is unavailable.");
-      }
+if (
+  typeof settingPanel.verifyPanelAccessCode !== "function"
+) {
+  return sendError(
+    res,
+    500,
+    "Settings access-code verification is unavailable."
+  );
+}
 
-      if (!settingPanel.verifyPanelAccessCode(sessionId, code)) {
-        return sendError(res, 401, "Invalid or inactive settings code.");
-      }
+if (
+  !settingPanel.verifyPanelAccessCode(
+    sessionId,
+    code
+  )
+) {
+  return sendError(
+    res,
+    401,
+    "Invalid or inactive settings code."
+  );
+}
 
-      const sessionVerification = await Promise.resolve(
-        settingPanel.verifySession(sessionId)
-      );
-
-      if (!sessionVerification?.success) {
-        return sendError(
-          res,
-          401,
-          sessionVerification?.message || "Settings session verification failed."
-        );
-      }
-
-      const panelData = settingPanel.getPanelData(sessionId);
-
-      return res.json({
-        success: true,
-        sessionId,
-        settings: panelData?.settings || {},
-        bot: panelData?.bot || panelData?.settings?.bot || {},
-        botInformation: panelData?.bot || panelData?.settings?.bot || {},
-        connection: panelData?.connection || {
-          connected: sessionManager.isConnected(sessionId)
-        }
-      });
-    } catch (error) {
-      logger.error(error, "❌ VERIFY ERROR");
-      return sendError(res, 500, error.message || "Verification failed.");
-    }
-  }
+const sessionVerification = await Promise.resolve(
+  settingPanel.verifySession(sessionId)
 );
+
+if (!sessionVerification?.success) {
+  return sendError(
+    res,
+    401,
+    sessionVerification?.message ||
+      "Settings session verification failed."
+  );
+}
+
+const panelData = settingPanel.getPanelData(sessionId);
+
+return res.json({
+  success: true,
+  sessionId,
+  settings: panelData?.settings || {},
+  bot: panelData?.bot || panelData?.settings?.bot || {},
+  botInformation: panelData?.bot || panelData?.settings?.bot || {},
+  connection: panelData?.connection || {
+    connected: sessionManager.isConnected(sessionId)
+  }
+});
 
 // ============================================================
 // SESSION STATUS
