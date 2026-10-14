@@ -41,9 +41,10 @@ const panelAccessCodes = new Map();
 
 function createPanelAccessCode() {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const CODE_LENGTH = 6;
   let code = "";
 
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < CODE_LENGTH; i++) {
     code += characters[
       crypto.randomInt(0, characters.length)
     ];
@@ -56,14 +57,11 @@ function generatePanelAccessCode(sessionId) {
   const id = normalizeSessionId(sessionId);
 
   if (!id || !sessionManager.getSession(id)) {
-    throw new Error("Active bot session is required.");
+    throw new Error("WhatsApp session does not exist.");
   }
 
-  if (!sessionManager.isConnected(id)) {
-    throw new Error("The bot must be connected.");
-  }
-
-  // Keep the same code for this session.
+  // Kenbe menm kòd la pandan sesyon WhatsApp la egziste.
+  // Pa chanje kòd la lè bot la dekonekte tanporèman.
   const existingCode = panelAccessCodes.get(id);
 
   if (existingCode) {
