@@ -45,6 +45,10 @@ const PANEL_ACCESS_CODES_PATH = path.resolve(
   "panel-access-codes.json"
 );
 
+// ============================================================
+// LOAD SAVED ACCESS CODES
+// ============================================================
+
 function loadPanelAccessCodes() {
   try {
     if (!fs.existsSync(PANEL_ACCESS_CODES_PATH)) {
@@ -52,7 +56,10 @@ function loadPanelAccessCodes() {
     }
 
     const saved = JSON.parse(
-      fs.readFileSync(PANEL_ACCESS_CODES_PATH, "utf8")
+      fs.readFileSync(
+        PANEL_ACCESS_CODES_PATH,
+        "utf8"
+      )
     );
 
     if (
@@ -65,7 +72,9 @@ function loadPanelAccessCodes() {
 
     for (const [sessionId, savedCode] of Object.entries(saved)) {
       const id = normalizeSessionId(sessionId);
-      const code = String(savedCode || "").trim().toUpperCase();
+      const code = String(savedCode || "")
+        .trim()
+        .toUpperCase();
 
       if (id && /^[A-Z0-9]{6}$/.test(code)) {
         panelAccessCodes.set(id, code);
@@ -79,31 +88,52 @@ function loadPanelAccessCodes() {
   }
 }
 
+// ============================================================
+// SAVE ACCESS CODES
+// ============================================================
+
 function savePanelAccessCodes() {
-  const directory = path.dirname(PANEL_ACCESS_CODES_PATH);
+  try {
+    const directory = path.dirname(
+      PANEL_ACCESS_CODES_PATH
+    );
 
-  fs.mkdirSync(directory, {
-    recursive: true
-  });
+    fs.mkdirSync(directory, {
+      recursive: true
+    });
 
-  const temporaryPath =
-    PANEL_ACCESS_CODES_PATH + ".tmp";
+    const temporaryPath =
+      PANEL_ACCESS_CODES_PATH + ".tmp";
 
-  fs.writeFileSync(
-    temporaryPath,
-    JSON.stringify(
-      Object.fromEntries(panelAccessCodes),
-      null,
-      2
-    ),
-    "utf8"
-  );
+    fs.writeFileSync(
+      temporaryPath,
+      JSON.stringify(
+        Object.fromEntries(panelAccessCodes),
+        null,
+        2
+      ),
+      "utf8"
+    );
 
-  fs.renameSync(
-    temporaryPath,
-    PANEL_ACCESS_CODES_PATH
-  );
+    fs.renameSync(
+      temporaryPath,
+      PANEL_ACCESS_CODES_PATH
+    );
+
+    return true;
+  } catch (error) {
+    console.error(
+      "[TOPFEROS MD] Unable to save panel access codes:",
+      error.message
+    );
+
+    throw error;
+  }
 }
+
+// ============================================================
+// CREATE ACCESS CODE
+// ============================================================
 
 function createPanelAccessCode() {
   const characters =
@@ -120,6 +150,10 @@ function createPanelAccessCode() {
   return code;
 }
 
+// ============================================================
+// GENERATE ACCESS CODE
+// ============================================================
+
 function generatePanelAccessCode(sessionId) {
   const id = normalizeSessionId(sessionId);
 
@@ -129,6 +163,7 @@ function generatePanelAccessCode(sessionId) {
     );
   }
 
+  // Kenbe menm kòd la pou sesyon sa a.
   const existingCode =
     panelAccessCodes.get(id);
 
@@ -140,10 +175,19 @@ function generatePanelAccessCode(sessionId) {
 
   panelAccessCodes.set(id, code);
 
-  savePanelAccessCodes();
+  try {
+    savePanelAccessCodes();
+  } catch (error) {
+    panelAccessCodes.delete(id);
+    throw error;
+  }
 
   return code;
 }
+
+// ============================================================
+// VERIFY ACCESS CODE
+// ============================================================
 
 function verifyPanelAccessCode(
   sessionId,
@@ -155,7 +199,8 @@ function verifyPanelAccessCode(
     return false;
   }
 
-  // Yon dekoneksyon tanporè poukont li pa anile kòd la.
+  // Pa itilize isConnected() isit la:
+  // dekoneksyon tanporè poukont li pa anile kòd la.
   const savedCode =
     panelAccessCodes.get(id);
 
@@ -169,6 +214,10 @@ function verifyPanelAccessCode(
       .toUpperCase() === savedCode
   );
 }
+
+// ============================================================
+// CLEAR ACCESS CODE
+// ============================================================
 
 function clearPanelAccessCode(sessionId) {
   const id = normalizeSessionId(sessionId);
@@ -187,7 +236,12 @@ function clearPanelAccessCode(sessionId) {
   return deleted;
 }
 
+// ============================================================
+// LOAD ACCESS CODES AT STARTUP
+// ============================================================
+
 loadPanelAccessCodes();
+
 // ============================================================
 // HELPERS
 // ============================================================
