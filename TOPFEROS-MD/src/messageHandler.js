@@ -1277,12 +1277,13 @@ if (
      * Build command context.
      */
 
-    const context =
-      buildContext(
-        sock,
-        message,
-        parsed
-      );
+      const context =
+  buildContext(
+    sock,
+    message,
+    parsed,
+    sessionId
+  );
 
       await reactToMessage(
        sock,
