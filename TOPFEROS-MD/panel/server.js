@@ -519,84 +519,143 @@ app.post(
   async (req, res) => {
     try {
       const number = cleanNumber(req.body?.number);
-      const code = String(req.body?.code || "")
+
+      const code = String(
+        req.body?.code || ""
+      )
         .trim()
         .toUpperCase();
 
-      let sessionId = cleanSessionId(req.body?.sessionId);
+      let sessionId = cleanSessionId(
+        req.body?.sessionId
+      );
 
       if (!number) {
-        return sendError(res, 400, "Phone number is required.");
+        return sendError(
+          res,
+          400,
+          "Phone number is required."
+        );
       }
 
       if (!/^[A-Z0-9]{6}$/.test(code)) {
-        return sendError(res, 400, "Enter the 6-character settings code.");
+        return sendError(
+          res,
+          400,
+          "Enter the 6-character settings code."
+        );
       }
 
       if (!sessionId) {
-        sessionId = sessionManager.getSessionId(number);
+        sessionId =
+          sessionManager.getSessionId(number);
       }
 
       const session = getSession(sessionId);
 
       if (!session) {
-        return sendError(res, 404, "No session found for this number.");
+        return sendError(
+          res,
+          404,
+          "No session found for this number."
+        );
       }
 
-      const actualNumber = cleanNumber(session.number || sessionId);
+      const actualNumber = cleanNumber(
+        session.number || sessionId
+      );
 
       if (actualNumber !== number) {
-        return sendError(res, 401, "The phone number does not match this session.");
+        return sendError(
+          res,
+          401,
+          "The phone number does not match this session."
+        );
       }
 
-if (
-  typeof settingPanel.verifyPanelAccessCode !== "function"
-) {
-  return sendError(
-    res,
-    500,
-    "Settings access-code verification is unavailable."
-  );
-}
+      // Verifye si fonksyon verifikasyon kòd la disponib.
+      if (
+        typeof settingPanel.verifyPanelAccessCode !==
+        "function"
+      ) {
+        return sendError(
+          res,
+          500,
+          "Settings access-code verification is unavailable."
+        );
+      }
 
-if (
-  !settingPanel.verifyPanelAccessCode(
-    sessionId,
-    code
-  )
-) {
-  return sendError(
-    res,
-    401,
-    "Invalid or inactive settings code."
-  );
-}
+      // Verifye kòd aksè panèl la.
+      const validCode =
+        settingPanel.verifyPanelAccessCode(
+          sessionId,
+          code
+        );
 
-const sessionVerification = await Promise.resolve(
-  settingPanel.verifySession(sessionId)
-);
+      if (!validCode) {
+        return sendError(
+          res,
+          401,
+          "Invalid or inactive settings code."
+        );
+      }
 
-if (!sessionVerification?.success) {
-  return sendError(
-    res,
-    401,
-    sessionVerification?.message ||
-      "Settings session verification failed."
-  );
-}
+      // Verifye sesyon panèl la.
+      const sessionVerification =
+        await Promise.resolve(
+          settingPanel.verifySession(sessionId)
+        );
 
-const panelData = settingPanel.getPanelData(sessionId);
+      if (!sessionVerification?.success) {
+        return sendError(
+          res,
+          401,
+          sessionVerification?.message ||
+            "Settings session verification failed."
+        );
+      }
 
-return res.json({
-  success: true,
-  sessionId,
-  settings: panelData?.settings || {},
-  bot: panelData?.bot || panelData?.settings?.bot || {},
-  botInformation: panelData?.bot || panelData?.settings?.bot || {},
-  connection: panelData?.connection || {
-    connected: sessionManager.isConnected(sessionId)
+      // Chaje done panèl la.
+      const panelData =
+        settingPanel.getPanelData(sessionId);
+
+      return res.json({
+        success: true,
+        sessionId,
+
+        settings:
+          panelData?.settings || {},
+
+        bot:
+          panelData?.bot ||
+          panelData?.settings?.bot ||
+          {},
+
+        botInformation:
+          panelData?.bot ||
+          panelData?.settings?.bot ||
+          {},
+
+        connection:
+          panelData?.connection || {
+            connected:
+              sessionManager.isConnected(sessionId)
+          }
+      });
+    } catch (error) {
+      logger.error(
+        error,
+        "❌ SETTINGS SESSION VERIFICATION ERROR"
+      );
+
+      return sendError(
+        res,
+        500,
+        "Settings session verification failed."
+      );
+    }
   }
-});
+);
 
 // ============================================================
 // SESSION STATUS
