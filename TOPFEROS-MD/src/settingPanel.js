@@ -45,10 +45,6 @@ const PANEL_ACCESS_CODES_PATH = path.resolve(
   "panel-access-codes.json"
 );
 
-// ============================================================
-// LOAD SAVED ACCESS CODES
-// ============================================================
-
 function loadPanelAccessCodes() {
   try {
     if (!fs.existsSync(PANEL_ACCESS_CODES_PATH)) {
@@ -56,19 +52,20 @@ function loadPanelAccessCodes() {
     }
 
     const saved = JSON.parse(
-      fs.readFileSync(
-        PANEL_ACCESS_CODES_PATH,
-        "utf8"
-      )
+      fs.readFileSync(PANEL_ACCESS_CODES_PATH, "utf8")
     );
 
-    if (!saved || typeof saved !== "object") {
+    if (
+      !saved ||
+      typeof saved !== "object" ||
+      Array.isArray(saved)
+    ) {
       return;
     }
 
     for (const [sessionId, savedCode] of Object.entries(saved)) {
       const id = normalizeSessionId(sessionId);
-      const code = String(savedCode || "").toUpperCase();
+      const code = String(savedCode || "").trim().toUpperCase();
 
       if (id && /^[A-Z0-9]{6}$/.test(code)) {
         panelAccessCodes.set(id, code);
@@ -82,29 +79,23 @@ function loadPanelAccessCodes() {
   }
 }
 
-// ============================================================
-// SAVE ACCESS CODES
-// ============================================================
-
 function savePanelAccessCodes() {
-  const directory = path.dirname(
-    PANEL_ACCESS_CODES_PATH
-  );
+  const directory = path.dirname(PANEL_ACCESS_CODES_PATH);
 
   fs.mkdirSync(directory, {
     recursive: true
   });
-
-  const data = Object.fromEntries(
-    panelAccessCodes
-  );
 
   const temporaryPath =
     PANEL_ACCESS_CODES_PATH + ".tmp";
 
   fs.writeFileSync(
     temporaryPath,
-    JSON.stringify(data, null, 2),
+    JSON.stringify(
+      Object.fromEntries(panelAccessCodes),
+      null,
+      2
+    ),
     "utf8"
   );
 
@@ -113,13 +104,6 @@ function savePanelAccessCodes() {
     PANEL_ACCESS_CODES_PATH
   );
 }
-
-// Chaje kòd ki te deja sove yo.
-loadPanelAccessCodes();
-
-// ============================================================
-// CREATE ACCESS CODE
-// ============================================================
 
 function createPanelAccessCode() {
   const characters =
@@ -135,10 +119,6 @@ function createPanelAccessCode() {
 
   return code;
 }
-
-// ============================================================
-// GENERATE ACCESS CODE
-// ============================================================
 
 function generatePanelAccessCode(sessionId) {
   const id = normalizeSessionId(sessionId);
@@ -165,10 +145,6 @@ function generatePanelAccessCode(sessionId) {
   return code;
 }
 
-// ============================================================
-// VERIFY ACCESS CODE
-// ============================================================
-
 function verifyPanelAccessCode(
   sessionId,
   submittedCode
@@ -179,6 +155,7 @@ function verifyPanelAccessCode(
     return false;
   }
 
+  // Yon dekoneksyon tanporè poukont li pa anile kòd la.
   const savedCode =
     panelAccessCodes.get(id);
 
@@ -192,10 +169,6 @@ function verifyPanelAccessCode(
       .toUpperCase() === savedCode
   );
 }
-
-// ============================================================
-// CLEAR ACCESS CODE
-// ============================================================
 
 function clearPanelAccessCode(sessionId) {
   const id = normalizeSessionId(sessionId);
@@ -213,6 +186,8 @@ function clearPanelAccessCode(sessionId) {
 
   return deleted;
 }
+
+loadPanelAccessCodes();
 // ============================================================
 // HELPERS
 // ============================================================
