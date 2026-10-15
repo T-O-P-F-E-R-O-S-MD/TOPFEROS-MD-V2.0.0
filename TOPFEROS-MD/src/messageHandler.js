@@ -69,6 +69,69 @@ const {
 const attachedSockets = new WeakSet();
 const commands = new Map();
 
+
+/*
+|--------------------------------------------------------------------------
+| TOPFEROS MD — RECENT MESSAGE KEYS
+|--------------------------------------------------------------------------
+*/
+
+const recentMessageKeys = new Map();
+const MAX_CACHED_MESSAGES = 5000;
+
+function rememberMessageKey(message, sessionId) {
+  try {
+    const key = message?.key;
+    const jid = key?.remoteJid;
+    const id = key?.id;
+
+    if (!jid || !id) {
+      return;
+    }
+
+    const timestamp = Number(message.messageTimestamp);
+
+    if (!Number.isFinite(timestamp) || timestamp <= 0) {
+      return;
+    }
+
+    const cacheId =
+      `${String(sessionId || "")}:${jid}:${id}`;
+
+    recentMessageKeys.set(cacheId, {
+      remoteJid: jid,
+      id,
+      fromMe: Boolean(key.fromMe),
+      timestamp,
+      ...(key.participant
+        ? { participant: key.participant }
+        : {})
+    });
+
+    while (recentMessageKeys.size > MAX_CACHED_MESSAGES) {
+      const oldestKey =
+        recentMessageKeys.keys().next().value;
+
+      if (!oldestKey) break;
+
+      recentMessageKeys.delete(oldestKey);
+    }
+  } catch (error) {
+    console.error(
+      "[MESSAGE CACHE]",
+      error?.message || error
+    );
+  }
+}
+
+function getCachedMessageKey(sessionId, jid, messageId) {
+  const cacheId =
+    `${String(sessionId || "")}:${jid}:${messageId}`;
+
+  return recentMessageKeys.get(cacheId) || null;
+}
+
+
 /*
 |--------------------------------------------------------------------------
 | REGISTER COMMAND
@@ -1221,6 +1284,7 @@ if (
   return {
     success: false,
     reason: "Invalid message."
+    rememberMessageKey(message, sessionId);
   };
 }
 
@@ -1675,5 +1739,8 @@ module.exports = {
 
   attachStatusAI,
 
-  isOwner
+  isOwner,
+
+rememberMessageKey,
+getCachedMessageKey,
 };
