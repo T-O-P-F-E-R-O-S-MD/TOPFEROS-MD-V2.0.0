@@ -65,7 +65,7 @@ body {
   z-index: -1;
   pointer-events: none;
 
-  background-image: url("/background.png");
+  background-image: url("/panel-background.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
