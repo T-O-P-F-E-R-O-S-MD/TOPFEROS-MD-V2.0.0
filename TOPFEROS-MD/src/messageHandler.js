@@ -1306,6 +1306,30 @@ try {
     }
 
     /*
+
+/*
+|--------------------------------------------------------------------------
+
+ANTI BOT FILTER — SAFE PREPARATION
+*/
+
+const filterSettings =
+settingPanel.getSessionSettings(sessionId) || {};
+
+const filterAutomation =
+filterSettings.automation || {};
+
+if (filterAutomation.antiBotFilter === true) {
+/*
+
+* Do not classify a message as a bot
+* merely because it contains a command.
+* 
+* A reliable sender-identification rule
+* must be connected before Warn/Delete
+* can safely be applied.
+  */
+  }
     |--------------------------------------------------------------------------
     | AUTO VIEW ONCE IN PRIVATE DM
     |--------------------------------------------------------------------------
