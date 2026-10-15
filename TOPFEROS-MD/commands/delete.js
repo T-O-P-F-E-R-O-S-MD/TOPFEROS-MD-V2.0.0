@@ -1,24 +1,15 @@
+
 "use strict";
 
 /*
 |--------------------------------------------------------------------------
 | 🦁 TOPFEROS MD V2.0.0
-| COMMANDS: DELETE
-|--------------------------------------------------------------------------
-*/
-
-const {
-  registerCommand
-} = require("../src/messageHandler");
-
-/*
-|--------------------------------------------------------------------------
-| GET REPLIED MESSAGE
+| DELETE COMMANDS
 |--------------------------------------------------------------------------
 */
 
 function getQuotedKey(ctx) {
-  const message = ctx.message;
+  const message = ctx?.message;
   const content = message?.message || {};
 
   const contextInfo =
@@ -26,172 +17,125 @@ function getQuotedKey(ctx) {
     content.imageMessage?.contextInfo ||
     content.videoMessage?.contextInfo ||
     content.documentMessage?.contextInfo ||
-    content.stickerMessage?.contextInfo;
+    content.stickerMessage?.contextInfo ||
+    content.audioMessage?.contextInfo;
 
   if (!contextInfo?.stanzaId) {
     return null;
   }
 
-  const participant =
-    contextInfo.participant ||
-    (ctx.jid?.endsWith("@g.us")
-      ? undefined
-      : ctx.sock?.user?.id);
+  const quotedParticipant =
+    contextInfo.participant || undefined;
 
   return {
     remoteJid: ctx.jid,
     id: contextInfo.stanzaId,
-    ...(participant ? { participant } : {}),
     fromMe: Boolean(
-      participant &&
-      participant.split(":")[0] ===
-        ctx.sock?.user?.id?.split(":")[0]
-    )
+      quotedParticipant &&
+      ctx.sock?.user?.id &&
+      quotedParticipant.split("@")[0].split(":")[0] ===
+        ctx.sock.user.id.split("@")[0].split(":")[0]
+    ),
+    ...(quotedParticipant
+      ? { participant: quotedParticipant }
+      : {})
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| .DEL — DELETE FOR MYSELF
-|--------------------------------------------------------------------------
-*/
+async function delCommand(ctx) {
+  await ctx.send(
+    "⚠️ Kòmand .del la bezwen enfòmasyon mesaj orijinal la pou l efase mesaj la sèlman sou kont bot la.\n\n" +
+    "M ap konekte fonksyon sa a ak sistèm mesaj la nan pwochen etap la.\n\n" +
+    "🦁 TECH BY TOPFEROS MD 🐑"
+  );
 
-registerCommand(
-  "del",
-  async (ctx) => {
-    const key = getQuotedKey(ctx);
+  return {
+    success: false,
+    reason: "Local message deletion needs message-history integration."
+  };
+}
 
-    if (!key) {
-      await ctx.send(
-        "⚠️ Reply to the message you want to delete.\n\n" +
-        "Usage: .del\n\n" +
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      );
+async function deltCommand(ctx) {
+  const key = getQuotedKey(ctx);
 
-      return { success: false };
-    }
-
-    try {
-      await ctx.sock.chatModify(
-        {
-          clear: {
-            messages: [
-              {
-                id: key.id,
-                fromMe: key.fromMe,
-                timestamp: Number(
-                  ctx.message.messageTimestamp || 0
-                ),
-                ...(key.participant
-                  ? { participant: key.participant }
-                  : {})
-              }
-            ]
-          }
-        },
-        ctx.jid
-      );
-
-      await ctx.send(
-        "✅ Demann pou retire mesaj la nan chat lokal la voye.\n\n" +
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      );
-
-      return { success: true };
-    } catch (error) {
-      console.error("[DEL]", error);
-
-      await ctx.send(
-        "❌ WhatsApp pa t kapab retire mesaj sa a lokalman.\n\n" +
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      );
-
-      return { success: false };
-    }
-  },
-  {
-    description: "Remove a replied-to message locally when supported.",
-    usage: ".del (reply to a message)",
-    category: "MESSAGES"
-  }
-);
-
-/*
-|--------------------------------------------------------------------------
-| .DELT — DELETE FOR EVERYONE
-|--------------------------------------------------------------------------
-*/
-
-registerCommand(
-  "delt",
-  async (ctx) => {
-    const key = getQuotedKey(ctx);
-
-    if (!key) {
-      await ctx.send(
-        "⚠️ Reply to the message you want to delete for everyone.\n\n" +
-        "Usage: .delt\n\n" +
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      );
-
-      return { success: false };
-    }
-
-    try {
-      await ctx.sock.sendMessage(
-        ctx.jid,
-        { delete: key }
-      );
-
-      return { success: true };
-    } catch (error) {
-      console.error("[DELT]", error);
-
-      await ctx.send(
-        "❌ Mwen pa t kapab efase mesaj la pou tout moun. " +
-        "WhatsApp gen limit pou operasyon sa a.\n\n" +
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      );
-
-      return { success: false };
-    }
-  },
-  {
-    description: "Delete a replied-to message for everyone when permitted.",
-    usage: ".delt (reply to a message)",
-    category: "MESSAGES"
-  }
-);
-
-/*
-|--------------------------------------------------------------------------
-| .DELETE — DELETE CURRENT CHAT LOCALLY
-|--------------------------------------------------------------------------
-*/
-
-registerCommand(
-  "delete",
-  async (ctx) => {
+  if (!key) {
     await ctx.send(
-      "⚠️ WhatsApp/Baileys pa garanti efasman tout istwa chat lokal la " +
-      "ak yon sèl kòmand.\n\n" +
-      "Pou evite efase move mesaj, sèvi ak .del pou yon mesaj ou site " +
-      "oswa .delt pou mande efasman pou tout moun.\n\n" +
+      "⚠️ Reponn mesaj ou vle efase a, epi voye .delt\n\n" +
       "🦁 TECH BY TOPFEROS MD 🐑"
     );
 
     return {
       success: false,
-      reason: "Bulk local chat-history deletion is not implemented."
+      reason: "No quoted message."
     };
-  },
-  {
-    description: "Explain local chat deletion limitations.",
+  }
+
+  try {
+    await ctx.sock.sendMessage(ctx.jid, {
+      delete: key
+    });
+
+    return {
+      success: true,
+      command: "delt"
+    };
+  } catch (error) {
+    console.error("[DELT]", error?.stack || error);
+
+    await ctx.send(
+      "❌ WhatsApp pa t kapab efase mesaj sa a pou tout moun. " +
+      "Sa depann de otorizasyon ak limit WhatsApp yo.\n\n" +
+      "🦁 TECH BY TOPFEROS MD 🐑"
+    );
+
+    return {
+      success: false,
+      reason: error?.message || String(error)
+    };
+  }
+}
+
+async function deleteCommand(ctx) {
+  await ctx.send(
+    "⚠️ Fonksyon .delete pou netwaye tout mesaj nan chat la poko konekte.\n\n" +
+    "M ap konekte l san m pa fè bot la efase move mesaj.\n\n" +
+    "🦁 TECH BY TOPFEROS MD 🐑"
+  );
+
+  return {
+    success: false,
+    reason: "Local chat clearing needs message-history integration."
+  };
+}
+
+function init() {
+  const {
+    registerCommand
+  } = require("../src/messageHandler");
+
+  registerCommand("del", delCommand, {
+    description: "Delete a replied-to message locally.",
+    usage: ".del",
+    category: "MESSAGES"
+  });
+
+  registerCommand("delt", deltCommand, {
+    description: "Delete a replied-to message for everyone.",
+    usage: ".delt",
+    category: "MESSAGES"
+  });
+
+  registerCommand("delete", deleteCommand, {
+    description: "Clear chat messages locally.",
     usage: ".delete",
     category: "MESSAGES"
-  }
-);
+  });
+}
 
 module.exports = {
-  getQuotedKey
+  init,
+  getQuotedKey,
+  delCommand,
+  deltCommand,
+  deleteCommand
 };
