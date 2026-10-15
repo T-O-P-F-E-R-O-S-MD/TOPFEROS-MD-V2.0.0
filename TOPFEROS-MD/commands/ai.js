@@ -1,25 +1,15 @@
+
 "use strict";
 
+// ╔════════════════════════════════════════════════════╗
+// ║              🦁 TOPFEROS MD V2.0.0               ║
+// ║             GEMINI AI COMMAND                     ║
+// ╚════════════════════════════════════════════════════╝
+
 const {
-  GoogleGenAI
-} = require("@google/genai");
-
-/*
-|--------------------------------------------------------------------------
-| TOPFEROS MD V2.0.0
-| GEMINI AI COMMAND
-|--------------------------------------------------------------------------
-*/
-
-const apiKey =
-  process.env.GEMINI_API_KEY || "";
-
-const ai =
-  apiKey
-    ? new GoogleGenAI({
-        apiKey
-      })
-    : null;
+  askAI,
+  isAIConfigured
+} = require("../services/ai");
 
 /*
 |--------------------------------------------------------------------------
@@ -28,30 +18,22 @@ const ai =
 */
 
 async function aiCommand(ctx) {
-  if (!ctx.text) {
-    await ctx.send(
-      [
-        "🤖 Please provide a question.",
-        "",
-        `Example: ${ctx.prefix}ai What is artificial intelligence?`,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
-    );
+  const text = String(
+    ctx?.text || ""
+  ).trim();
 
-    return {
-      success: false
-    };
-  }
+  const prefix = String(
+    ctx?.prefix || "."
+  );
 
-  if (!ai) {
+  if (!text) {
     await ctx.send(
       [
         "🤖 TOPFEROS MD AI",
         "",
-        "❌ Gemini API key is not configured.",
+        "Please provide a question.",
         "",
-        "⚙️ Add GEMINI_API_KEY to your environment variables.",
+        `Example: ${prefix}ai What is artificial intelligence?`,
         "",
         "🦁 TECH BY TOPFEROS MD 🐑"
       ].join("\n")
@@ -59,63 +41,54 @@ async function aiCommand(ctx) {
 
     return {
       success: false,
-      reason:
-        "GEMINI_API_KEY is missing."
+      reason: "Empty question."
+    };
+  }
+
+  if (!isAIConfigured()) {
+    await ctx.send(
+      [
+        "🤖 TOPFEROS MD AI",
+        "",
+        "❌ Gemini AI is not configured.",
+        "",
+        "Please check GEMINI_API_KEY and GEMINI_MODEL.",
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return {
+      success: false,
+      reason: "AI is not configured."
     };
   }
 
   try {
-    const response =
-      await ai.models.generateContent({
-        model:
-          process.env.GEMINI_MODEL ||
-          "gemini-2.5-flash",
+    const answer = await askAI(
+      text,
+      {
+        systemPrompt: [
+          "You are the official AI assistant of TOPFEROS MD V2.0.0.",
+          "Give accurate, useful, clear and natural answers.",
+          "Answer in the same language as the user's question.",
+          "Support Haitian Creole, French, English, Spanish, Portuguese and Chinese.",
+          "Use Google Search when current information is needed and the search tool is available.",
+          "Never invent facts or claim you searched if you did not.",
+          "If information is uncertain, say so clearly.",
+          "Keep answers suitable for a general audience.",
+          "Do not add the bot footer because the calling code adds it."
+        ].join(" "),
 
-        contents:
-          ctx.text,
-
-        config: {
-          systemInstruction:
-            [
-              "You are the official AI assistant for TOPFEROS MD.",
-              "Give accurate, useful, and clear answers.",
-              "Use Google Search when the question requires current or changing information.",
-              "Do not invent facts.",
-              "If information is uncertain, clearly say so.",
-              "Answer in the same language used by the user whenever possible.",
-              "Keep answers suitable for a general audience."
-            ].join(" "),
-
-          tools: [
-            {
-              googleSearch: {}
-            }
-          ]
-        }
-      });
-
-    const answer =
-      String(
-        response?.text ||
-          ""
-      ).trim();
+        temperature: 0.7,
+        maxTokens: 1500
+      }
+    );
 
     if (!answer) {
-      await ctx.send(
-        [
-          "🤖 TOPFEROS MD AI",
-          "",
-          "❌ I could not generate an answer.",
-          "",
-          "🦁 TECH BY TOPFEROS MD 🐑"
-        ].join("\n")
+      throw new Error(
+        "Gemini returned an empty response."
       );
-
-      return {
-        success: false,
-        reason:
-          "Empty Gemini response."
-      };
     }
 
     await ctx.send(
@@ -134,9 +107,8 @@ async function aiCommand(ctx) {
     };
   } catch (error) {
     console.error(
-      "[GEMINI AI] Error:",
-      error?.stack ||
-        error
+      "[TOPFEROS MD AI COMMAND] Error:",
+      error?.stack || error
     );
 
     await ctx.send(
@@ -153,12 +125,16 @@ async function aiCommand(ctx) {
 
     return {
       success: false,
-      error:
-        error?.message ||
-        String(error)
+      reason: error?.message || String(error)
     };
   }
 }
+
+/*
+|--------------------------------------------------------------------------
+| EXPORTS
+|--------------------------------------------------------------------------
+*/
 
 module.exports = {
   aiCommand
