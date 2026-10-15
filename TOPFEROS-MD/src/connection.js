@@ -1346,6 +1346,10 @@ sock.ev.on(
   }
 );
 
+// Retounen socket la epi fèmen connectSession().
+  return sock;
+}
+
 /*
 |--------------------------------------------------------------------------
 | PAIR SESSION
