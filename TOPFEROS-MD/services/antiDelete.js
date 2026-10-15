@@ -531,101 +531,126 @@ function findCachedMessage(
 // CHECK ANTI-DELETE
 // ============================================================
 
-function isAntiDeleteEnabled(
-  sessionId
-) {
-  return settingPanel.isEnabled(
-    sessionId,
-    "antiDelete"
-  );
+function isAntiDeleteEnabled(sessionId) {
+  try {
+    const settings =
+      settingPanel.getSessionSettings(sessionId);
+
+    return settings?.automation?.antiDelete === true;
+  } catch (error) {
+    console.error(
+      "[TOPFEROS MD] Anti Delete settings error:",
+      error.message
+    );
+
+    return false;
+  }
 }
 
 // ============================================================
 // DESTINATION
 // ============================================================
 
-function getDestination(
-  sessionId,
-  chatId
-) {
-  const settings =
-    settingPanel.getSettings(
-      sessionId
-    ) || {};
+function getDestination(sessionId, chatId) {
+  try {
+    const settings =
+      settingPanel.getSessionSettings(sessionId);
 
-  /*
-   * Same Chat gen priyorite.
-   */
-  if (
-    settings.antiDeleteSameChat
-  ) {
-    return {
-      jid: chatId,
-      mode: "same-chat"
-    };
-  }
+    const mode = String(
+      settings?.automation?.antiDeleteMode || "private"
+    ).trim().toLowerCase();
 
-  /*
-   * DM Bot.
-   */
-  if (
-    settings.antiDeleteDM
-  ) {
-    const session =
-      settingPanel.getSession(
-        sessionId
-      );
-
-    const number =
-      session?.number ||
-      session?.botInformation
-        ?.number ||
-      "";
-
-    const clean =
-      String(number)
-        .replace(/\D/g, "");
-
-    if (clean) {
+    // Retounen mesaj la nan menm konvèsasyon an.
+    if (
+      mode === "same_chat" ||
+      mode === "nan menm chat la"
+    ) {
       return {
-        jid:
-          `${clean}@s.whatsapp.net`,
-        mode: "dm"
+        jid: chatId,
+        mode: "same-chat"
       };
     }
+
+    // Voye mesaj la an prive bay kont bot la.
+    if (
+      mode === "private" ||
+      mode === "an privé" ||
+      mode === "an prive"
+    ) {
+      const botJid =
+        sockUserJid(sessionId);
+
+      if (!botJid) {
+        return null;
+      }
+
+      return {
+        jid: botJid,
+        mode: "private"
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error(
+      "[TOPFEROS MD] Anti Delete destination error:",
+      error.message
+    );
+
+    return null;
   }
-
-  return null;
 }
-
 // ============================================================
 // LOCATION NAME
 // ============================================================
 
-async function getLocationName(
-  sock,
-  chatId
-) {
-  if (
-    String(chatId)
-      .endsWith("@g.us")
-  ) {
-    try {
-      const metadata =
-        await sock.groupMetadata(
-          chatId
-        );
+function getDestination(sock, sessionId, chatId) {
+  try {
+    const settings =
+      settingPanel.getSessionSettings(sessionId);
 
-      return (
-        metadata?.subject ||
-        chatId
-      );
-    } catch {
-      return chatId;
+    const mode = String(
+      settings?.automation?.antiDeleteMode || "private"
+    ).trim().toLowerCase();
+
+    if (
+      mode === "same_chat" ||
+      mode === "nan menm chat la"
+    ) {
+      return {
+        jid: chatId,
+        mode: "same-chat"
+      };
     }
-  }
 
-  return "Private Chat";
+    if (
+      mode === "private" ||
+      mode === "an privé" ||
+      mode === "an prive"
+    ) {
+      const botJid = String(
+        sock?.user?.id || ""
+      ).replace(/:\d+(?=@)/, "");
+
+      if (!botJid) {
+        return null;
+      }
+
+      return {
+        jid: botJid,
+        mode: "private"
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error(
+      "[TOPFEROS MD] Anti Delete destination error:",
+      error.message
+    );
+
+    return null;
+  }
 }
 
 // ============================================================
@@ -1091,10 +1116,11 @@ async function handleDeleteEvent(
     }
 
     const destination =
-      getDestination(
-        sessionId,
-        originalChat
-      );
+  getDestination(
+    sock,
+    sessionId,
+    originalChat
+  );
 
     if (!destination) {
       return false;
