@@ -1276,6 +1276,80 @@ const session = {
     }
   );
 
+
+/*
+|--------------------------------------------------------------------------
+| ANTI CALL — REJTE APÈL YO LÈ OPSYON AN AKTIVE
+|--------------------------------------------------------------------------
+*/
+
+sock.ev.on("call", async (calls) => {
+  try {
+    if (!Array.isArray(calls)) {
+      return;
+    }
+
+    const settings =
+      settingPanel.getSessionSettings(sessionId);
+
+    const automation =
+      settings?.automation || {};
+
+    if (automation.antiCall !== true) {
+      return;
+    }
+
+    for (const call of calls) {
+      try {
+        // Rejte sèlman apèl k ap antre yo.
+        if (
+          !call?.id ||
+          !call?.from ||
+          call.status !== "offer"
+        ) {
+          continue;
+        }
+
+        if (typeof sock.rejectCall !== "function") {
+          logger.warn(
+            `[${sessionId}] Anti Call: rejectCall pa disponib nan socket la.`
+          );
+          continue;
+        }
+
+        await sock.rejectCall(
+          call.id,
+          call.from
+        );
+
+        logger.info(
+          `[${sessionId}] Anti Call: apèl antre a rejte.`
+        );
+      } catch (error) {
+        logger.error(
+          {
+            error:
+              error?.stack ||
+              error?.message ||
+              String(error)
+          },
+          `[${sessionId}] Anti Call error.`
+        );
+      }
+    }
+  } catch (error) {
+    logger.error(
+      {
+        error:
+          error?.stack ||
+          error?.message ||
+          String(error)
+      },
+      `[${sessionId}] Anti Call settings error.`
+    );
+  }
+});
+
   /* |--------------------------------------------------------------------------
    | NORMAL MESSAGE EVENTS
    |--------------------------------------------------------------------------
