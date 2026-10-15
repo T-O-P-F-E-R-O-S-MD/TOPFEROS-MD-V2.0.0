@@ -67,15 +67,16 @@ body {
 
   background-image: url("/background.png");
   background-size: cover;
-  background-position: center center;
+  background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .panel-background::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.50);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 /* =========================================================
