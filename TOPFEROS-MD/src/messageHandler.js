@@ -1277,16 +1277,15 @@ try {
 * Validate the socket and message first.
 */
 
-if (
-  !sock ||
-  !message
-) {
+
+if (!sock || !message) {
   return {
     success: false,
     reason: "Invalid message."
-    rememberMessageKey(message, sessionId);
   };
 }
+
+rememberMessageKey(message, sessionId);
 
 /*
  * ANTI BUG GUARD
