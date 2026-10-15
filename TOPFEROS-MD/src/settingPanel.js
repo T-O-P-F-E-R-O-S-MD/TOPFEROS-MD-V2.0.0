@@ -542,10 +542,16 @@ function validateMode(mode) {
 }
 
 function validateAntiDeleteMode(mode) {
-  return [
+  const allowedModes = [
+    "private",
+    "same_chat",
     "An privé",
     "Nan menm chat la"
-  ].includes(String(mode || ""));
+  ];
+
+  return allowedModes.includes(
+    String(mode || "").trim()
+  );
 }
 
 function validateTime(value) {
