@@ -429,6 +429,41 @@ function isFromBot(
 
 /*
 |--------------------------------------------------------------------------
+| TOPFEROS MD V2.0.0
+
+ANTI BOT FILTER — KNOWN BOT NUMBERS
+*/
+
+function getKnownBotNumbers() {
+const raw =
+process.env.ANTI_BOT_NUMBERS || "";
+
+return new Set(
+raw
+.split(",")
+.map((number) => normalizePhone(number))
+.filter(Boolean)
+);
+}
+
+function isKnownBotSender(message, sock) {
+if (isFromBot(message, sock)) {
+return true;
+}
+
+const senderNumber = normalizePhone(
+getSenderJid(message)
+);
+
+if (!senderNumber) {
+return false;
+}
+
+return getKnownBotNumbers().has(senderNumber);
+}
+
+/*
+|--------------------------------------------------------------------------
 | IS GROUP
 |--------------------------------------------------------------------------
 */
