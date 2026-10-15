@@ -62,21 +62,18 @@ body {
 .panel-background {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
 
-  background-image: url("/panel-background.png");
+  /* Kenbe background-image ou deja genyen an */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
 }
 
-.panel-background::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+.panel-page {
+  position: relative;
+  z-index: 1;
 }
 
 /* =========================================================
