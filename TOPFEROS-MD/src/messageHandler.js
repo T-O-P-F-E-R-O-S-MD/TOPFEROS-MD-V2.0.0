@@ -1170,43 +1170,52 @@ async function stopAutoPresence(sock, jid, presence) {
 */
 
 async function handleMessage(
-  sock,
-  message,
-  sessionId
+sock,
+message,
+sessionId
 ) {
-  try {
-    if (
-      !sock ||
-      !message
-    ) {
+try {
 /*
-
-* ANTI BUG GUARD
-  */
-
-const currentSettings =
-settingPanel.getSessionSettings(sessionId) || {};
-
-const automation =
-currentSettings.automation || {};
+* Validate the socket and message first.
+*/
 
 if (
-automation.antiBug === true &&
-isUnsafeMessageStructure(message)
+  !sock ||
+  !message
 ) {
-return {
-success: false,
-ignored: true,
-reason: "Anti Bug: invalid message structure."
-};
+  return {
+    success: false,
+    reason: "Invalid message."
+  };
 }
-      return {
-        success: false,
-        reason:
-          "Invalid message."
-      };
-    }
 
+/*
+ * ANTI BUG GUARD
+ */
+
+try {
+  const currentSettings =
+    settingPanel.getSessionSettings(sessionId) || {};
+
+  const automation =
+    currentSettings.automation || {};
+
+  if (
+    automation.antiBug === true &&
+    isUnsafeMessageStructure(message)
+  ) {
+    return {
+      success: false,
+      ignored: true,
+      reason: "Anti Bug: invalid message structure."
+    };
+  }
+} catch (error) {
+  console.error(
+    "[TOPFEROS MD] Anti Bug error:",
+    error.message
+  );
+}
     /*
      * Ignore messages sent by the bot.
      */
