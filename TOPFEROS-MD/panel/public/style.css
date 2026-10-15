@@ -642,3 +642,151 @@ input[type="file"]::file-selector-button {
   }
 
 }
+/* =========================================
+   TOPFEROS MD CONNECTION PANEL
+========================================= */
+
+.connect-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 25px;
+  color: #fff;
+  background: rgba(7, 9, 13, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.connect-logo {
+  display: block;
+  width: 105px;
+  height: 105px;
+  margin: 0 auto 18px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.connect-card > .connect-title {
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.connect-subtitle {
+  margin-top: 8px;
+  margin-bottom: 28px;
+  color: #b7beca;
+  font-size: 14px;
+  text-align: center;
+}
+
+.connect-screen {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.connect-screen h2 {
+  margin-bottom: 12px;
+  font-size: clamp(19px, 5vw, 30px);
+  overflow-wrap: anywhere;
+}
+
+.connect-screen label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.connect-field {
+  display: block;
+  width: 100%;
+  min-height: 54px;
+  margin-bottom: 18px;
+  padding: 12px 15px;
+  color: #fff;
+  background: #191e2d;
+  border: 1px solid #394154;
+  border-radius: 14px;
+  font-size: 16px;
+}
+
+.connect-button {
+  display: block;
+  width: 100%;
+  min-height: 54px;
+  margin-top: 14px;
+  padding: 13px 18px;
+  color: #17130a;
+  background: #ffca4b;
+  border: 0;
+  border-radius: 15px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.connect-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.connect-button.secondary {
+  color: #fff;
+  background: #252b39;
+  border: 1px solid #41495b;
+}
+
+.connect-code-box {
+  margin-top: 18px;
+  padding: 16px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+#parrainCode {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  overflow-wrap: anywhere;
+}
+
+#statusMessage,
+#expiration {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+
+.connect-footer {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffca4b;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.connect-screen[hidden],
+.connect-code-box[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 600px) {
+  .connect-card {
+    padding: 16px;
+    border-radius: 19px;
+  }
+
+  .connect-logo {
+    width: 85px;
+    height: 85px;
+  }
+
+  .connect-title {
+    font-size: clamp(20px, 5.5vw, 26px);
+  }
+}
