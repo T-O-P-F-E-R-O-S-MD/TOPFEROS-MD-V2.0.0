@@ -56,7 +56,7 @@ body {
 }
 
 /* =========================================================
-   PANEL BACKGROUND
+   PANEL BACKGROUND — CONNECTION & SETTINGS
    ========================================================= */
 
 .panel-background {
@@ -65,7 +65,7 @@ body {
   z-index: 0;
   pointer-events: none;
 
-  /* Kenbe background-image ou deja genyen an */
+  background-image: url("/panel-background.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
