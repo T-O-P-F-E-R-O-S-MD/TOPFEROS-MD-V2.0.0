@@ -2,57 +2,65 @@
 
 // ╔════════════════════════════════════════════════════╗
 // ║              🦁 TOPFEROS MD V2.0.0               ║
-// ║                    AI SERVICE                    ║
+// ║          GEMINI AI + GOOGLE SEARCH               ║
 // ╚════════════════════════════════════════════════════╝
 
-const axios =
-  require("axios");
+const { GoogleGenAI } = require("@google/genai");
 
 /*
 |--------------------------------------------------------------------------
-| AI CONFIGURATION
+| GEMINI CONFIGURATION
 |--------------------------------------------------------------------------
 */
 
-const AI_API_URL =
-  String(
-    process.env.AI_API_URL || ""
-  ).trim();
+const GEMINI_API_KEY = String(
+  process.env.GEMINI_API_KEY ||
+  process.env.AI_API_KEY ||
+  ""
+).trim();
 
-const AI_API_KEY =
-  String(
-    process.env.AI_API_KEY || ""
-  ).trim();
+const GEMINI_MODEL = String(
+  process.env.GEMINI_MODEL ||
+  "gemini-3.8-flash"
+).trim();
 
-const AI_MODEL =
+const GOOGLE_SEARCH_ENABLED =
   String(
-    process.env.AI_MODEL ||
-      "llama-3.3-70b-versatile"
-  ).trim();
+    process.env.GEMINI_GOOGLE_SEARCH || "true"
+  ).toLowerCase() === "true";
+
+const SHOW_SOURCE_LINKS =
+  String(
+    process.env.GEMINI_SHOW_SOURCE_LINKS || "false"
+  ).toLowerCase() === "true";
+
+const ai = GEMINI_API_KEY
+  ? new GoogleGenAI({
+      apiKey: GEMINI_API_KEY
+    })
+  : null;
 
 /*
 |--------------------------------------------------------------------------
-| VALIDATE CONFIGURATION
+| CONFIGURATION VALIDATION
 |--------------------------------------------------------------------------
 */
 
 function isAIConfigured() {
   return Boolean(
-    AI_API_URL &&
-    AI_API_KEY &&
-    AI_MODEL
+    ai &&
+    GEMINI_API_KEY &&
+    GEMINI_MODEL
   );
 }
 
 /*
 |--------------------------------------------------------------------------
-| CLEAN AI RESPONSE
+| CLEAN TEXT
 |--------------------------------------------------------------------------
 */
 
-function cleanResponse(
-  value
-) {
+function cleanResponse(value) {
   if (
     value === null ||
     value === undefined
@@ -60,8 +68,156 @@ function cleanResponse(
     return "";
   }
 
-  return String(value)
+  return String(value).trim();
+}
+
+/*
+|--------------------------------------------------------------------------
+| REMOVE LINKS FROM WHATSAPP ANSWERS
+|--------------------------------------------------------------------------
+*/
+
+function removeSourceLinks(text) {
+  if (SHOW_SOURCE_LINKS) {
+    return cleanResponse(text);
+  }
+
+  let result = cleanResponse(text);
+
+  // Remove Markdown links, keeping their readable labels.
+  result = result.replace(
+    /\[([^\]]+)\]\(https?:\/\/[^)\s]+\)/gi,
+    "$1"
+  );
+
+  // Remove standalone URLs.
+  result = result.replace(
+    /https?:\/\/[^\s<>)\]]+/gi,
+    ""
+  );
+
+  result = result.replace(
+    /\bwww\.[^\s<>)\]]+/gi,
+    ""
+  );
+
+  // Remove empty source/citation labels.
+  result = result.replace(
+    /^\s*(sources?|references?|sous|références?)\s*:\s*$/gim,
+    ""
+  );
+
+  // Clean excess whitespace.
+  result = result
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
+
+  return result;
+}
+
+/*
+|--------------------------------------------------------------------------
+| DEFAULT SYSTEM PROMPT
+|--------------------------------------------------------------------------
+*/
+
+function buildSystemPrompt(customPrompt, mode) {
+  const basePrompt = [
+    "You are the official AI assistant of TOPFEROS MD.",
+    "Answer accurately, naturally, clearly and helpfully.",
+    "Use the language selected by the user or the language of the question.",
+    "Support Haitian Creole, French, English, Spanish, Portuguese and Chinese.",
+    "For Haitian Creole, use natural and correct Haitian Creole.",
+    "For current events, recent news, changing facts, prices, dates and updates,",
+    "use Google Search when available before answering.",
+    "Base current factual answers on information found through search.",
+    "Never invent news, sources, dates or facts.",
+    "If reliable current information cannot be found, say so clearly.",
+    "Summarize information in your own words.",
+    "Do not include URLs, hyperlinks or lists of source links in the answer.",
+    "Do not claim to have searched if no search was actually performed.",
+    "Never claim to perform actions you cannot perform.",
+    "Keep answers appropriate for a general audience.",
+    "Preserve the identity and name TOPFEROS MD.",
+    "Do not add a bot footer unless the calling code requests one."
+  ].join(" ");
+
+  const modePrompt =
+    mode === "chat"
+      ? "Maintain conversational continuity using the supplied recent history."
+      : "Answer the current question directly and stay focused on the request.";
+
+  return [
+    basePrompt,
+    modePrompt,
+    cleanResponse(customPrompt)
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/*
+|--------------------------------------------------------------------------
+| GEMINI GENERATION
+|--------------------------------------------------------------------------
+*/
+
+async function generateAnswer(
+  contents,
+  systemPrompt,
+  options = {}
+) {
+  if (!isAIConfigured()) {
+    throw new Error(
+      "Gemini AI is not configured. Check GEMINI_API_KEY and GEMINI_MODEL."
+    );
+  }
+
+  const config = {
+    systemInstruction: systemPrompt,
+
+    temperature:
+      typeof options.temperature === "number"
+        ? options.temperature
+        : 0.7,
+
+    maxOutputTokens:
+      typeof options.maxTokens === "number"
+        ? options.maxTokens
+        : 1200
+  };
+
+  /*
+   * Google Search is a built-in Gemini tool.
+   * Gemini decides when search is useful for the question.
+   */
+
+  if (GOOGLE_SEARCH_ENABLED) {
+    config.tools = [
+      {
+        googleSearch: {}
+      }
+    ];
+  }
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents,
+    config
+  });
+
+  const answer = cleanResponse(
+    response?.text
+  );
+
+  if (!answer) {
+    throw new Error(
+      "Gemini returned an empty response."
+    );
+  }
+
+  return removeSourceLinks(answer);
 }
 
 /*
@@ -70,137 +226,28 @@ function cleanResponse(
 |--------------------------------------------------------------------------
 */
 
-async function askAI(
-  prompt,
-  options = {}
-) {
-  const question =
-    cleanResponse(prompt);
+async function askAI(prompt, options = {}) {
+  const question = cleanResponse(prompt);
 
   if (!question) {
-    throw new Error(
-      "AI prompt is empty."
-    );
+    throw new Error("AI prompt is empty.");
   }
 
-  if (!isAIConfigured()) {
-    throw new Error(
-      "AI is not configured. Please check AI_API_URL, AI_API_KEY and AI_MODEL."
-    );
-  }
+  const systemPrompt = buildSystemPrompt(
+    options.systemPrompt,
+    "question"
+  );
 
-  const systemPrompt =
-    cleanResponse(
-      options.systemPrompt
-    ) ||
-    [
-      "You are the AI assistant of TOPFEROS MD.",
-      "Answer clearly, naturally and helpfully.",
-      "Do not claim to perform actions you cannot perform.",
-      "Keep responses appropriate for a general audience.",
-      "If the user asks a question in Haitian Creole, answer in Haitian Creole.",
-      "If the user asks in English, answer in English.",
-      "If the user asks in French, answer in French."
-    ].join(" ");
-
-  /*
-  |--------------------------------------------------------------------------
-  | OPENAI-COMPATIBLE CHAT REQUEST
-  |--------------------------------------------------------------------------
-  */
-
-  const response =
-    await axios.post(
-      AI_API_URL,
-      {
-        model:
-          AI_MODEL,
-
-        messages: [
-          {
-            role:
-              "system",
-            content:
-              systemPrompt
-          },
-          {
-            role:
-              "user",
-            content:
-              question
-          }
-        ],
-
-        temperature:
-          typeof options.temperature ===
-          "number"
-            ? options.temperature
-            : 0.7,
-
-        max_tokens:
-          typeof options.maxTokens ===
-          "number"
-            ? options.maxTokens
-            : 1200
-      },
-      {
-        headers: {
-          Authorization:
-            `Bearer ${AI_API_KEY}`,
-
-          "Content-Type":
-            "application/json"
-        },
-
-        timeout:
-          60000
-      }
-    );
-
-  const data =
-    response?.data;
-
-  /*
-  |--------------------------------------------------------------------------
-  | OPENAI-COMPATIBLE RESPONSE
-  |--------------------------------------------------------------------------
-  */
-
-  const content =
-    data?.choices?.[0]?.message?.content;
-
-  if (content) {
-    return cleanResponse(
-      content
-    );
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | FALLBACK RESPONSE FORMATS
-  |--------------------------------------------------------------------------
-  */
-
-  const fallback =
-    data?.response ||
-    data?.answer ||
-    data?.text ||
-    data?.message;
-
-  if (fallback) {
-    return cleanResponse(
-      fallback
-    );
-  }
-
-  throw new Error(
-    "The AI provider returned an empty response."
+  return generateAnswer(
+    question,
+    systemPrompt,
+    options
   );
 }
 
 /*
 |--------------------------------------------------------------------------
-| AI CHAT
+| AI CHAT WITH CONVERSATION HISTORY
 |--------------------------------------------------------------------------
 */
 
@@ -209,8 +256,7 @@ async function aiChat(
   history = [],
   options = {}
 ) {
-  const question =
-    cleanResponse(prompt);
+  const question = cleanResponse(prompt);
 
   if (!question) {
     throw new Error(
@@ -218,141 +264,72 @@ async function aiChat(
     );
   }
 
-  if (!isAIConfigured()) {
-    throw new Error(
-      "AI is not configured. Please check AI_API_URL, AI_API_KEY and AI_MODEL."
-    );
-  }
-
-  const systemPrompt =
-    cleanResponse(
-      options.systemPrompt
-    ) ||
-    [
-      "You are TOPFEROS MD AI Chat.",
-      "Have a natural and helpful conversation.",
-      "Remember the recent conversation messages provided to you.",
-      "Answer in the user's language whenever possible.",
-      "Keep responses appropriate for a general audience."
-    ].join(" ");
-
-  const messages = [
-    {
-      role:
-        "system",
-      content:
-        systemPrompt
-    }
-  ];
+  const contents = [];
 
   /*
-  |--------------------------------------------------------------------------
-  | ADD RECENT HISTORY
-  |--------------------------------------------------------------------------
-  */
+   * Convert the existing history format into Gemini format.
+   * Keep only recent, valid user and assistant messages.
+   */
 
-  if (
-    Array.isArray(history)
-  ) {
-    for (
-      const item of history.slice(-12)
-    ) {
+  if (Array.isArray(history)) {
+    for (const item of history.slice(-12)) {
       if (
         !item ||
         !item.role ||
-        !item.content
+        typeof item.content !== "string" ||
+        !item.content.trim()
       ) {
         continue;
       }
 
       const role =
-        item.role === "assistant"
-          ? "assistant"
-          : "user";
+        item.role === "assistant" ||
+        item.role === "model"
+          ? "model"
+          : item.role === "user"
+            ? "user"
+            : null;
 
-      messages.push({
+      if (!role) {
+        continue;
+      }
+
+      contents.push({
         role,
-        content:
-          cleanResponse(
-            item.content
-          )
+        parts: [
+          {
+            text: cleanResponse(item.content)
+          }
+        ]
       });
     }
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | ADD CURRENT MESSAGE
-  |--------------------------------------------------------------------------
-  */
-
-  messages.push({
-    role:
-      "user",
-    content:
-      question
+  // Add the current user message.
+  contents.push({
+    role: "user",
+    parts: [
+      {
+        text: question
+      }
+    ]
   });
 
-  const response =
-    await axios.post(
-      AI_API_URL,
-      {
-        model:
-          AI_MODEL,
+  const systemPrompt = buildSystemPrompt(
+    options.systemPrompt,
+    "chat"
+  );
 
-        messages,
-
-        temperature:
-          typeof options.temperature ===
-          "number"
-            ? options.temperature
-            : 0.7,
-
-        max_tokens:
-          typeof options.maxTokens ===
-          "number"
-            ? options.maxTokens
-            : 1200
-      },
-      {
-        headers: {
-          Authorization:
-            `Bearer ${AI_API_KEY}`,
-
-          "Content-Type":
-            "application/json"
-        },
-
-        timeout:
-          60000
-      }
-    );
-
-  const data =
-    response?.data;
-
-  const content =
-    data?.choices?.[0]?.message?.content ||
-    data?.response ||
-    data?.answer ||
-    data?.text ||
-    data?.message;
-
-  const answer =
-    cleanResponse(content);
-
-  if (!answer) {
-    throw new Error(
-      "The AI provider returned an empty chat response."
-    );
-  }
-
-  return answer;
+  return generateAnswer(
+    contents,
+    systemPrompt,
+    options
+  );
 }
 
 /*
 |--------------------------------------------------------------------------
-| EXPORTS
+| EXPORTS — KEEP EXISTING FUNCTION NAMES
 |--------------------------------------------------------------------------
 */
 
