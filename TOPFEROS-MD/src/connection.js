@@ -11,6 +11,9 @@ const {
 const settingPanel =
   require("./settingPanel");
 
+const antiDelete =
+  require("../services/antiDelete");
+
 const baileys = require("@whiskeysockets/baileys");
 
 const makeWASocket = baileys.default;
@@ -1278,66 +1281,70 @@ const session = {
    |--------------------------------------------------------------------------
    */
 
-  sock.ev.on(
-    "messages.upsert",
-    async (
-      event
-    ) => {
-      if (
-        !event ||
-        !Array.isArray(
-          event.messages
-        )
-      ) {
-        return;
-      }
-
-      for (const message of event.messages) {
-  try {
-    cacheMessage(message);
-
-    if (!message?.message) {
-      continue;
+sock.ev.on(
+  "messages.upsert",
+  async (event) => {
+    if (
+      !event ||
+      !Array.isArray(event.messages)
+    ) {
+      return;
     }
 
-    // Kite rès kòd orijinal ou a isit la,
-    // kòmanse apre ansyen verifikasyon message.message la.
-
-          /*
-           * Status messages are handled
-           * exclusively by statusHandler.
-           */
-
-          if (
-            message?.key
-              ?.remoteJid ===
-            "status@broadcast"
-          ) {
-            continue;
-          }
-
-          await handleMessage(
-            sock,
-            message,
-            sessionId
-          );
-        } catch (error) {
-          logger.error(
-            {
-              error:
-                error?.stack ||
-                error?.message ||
-                String(error)
-            },
-            `[${sessionId}] Message handler error.`
-          );
+    for (const message of event.messages) {
+      try {
+        if (!message?.message) {
+          continue;
         }
+
+        const remoteJid =
+          message.key?.remoteJid || "";
+
+        // Pa trete status kòm mesaj nòmal.
+        if (remoteJid === "status@broadcast") {
+          continue;
+        }
+
+        // Detekte mesaj efasman (REVOKE).
+        if (message.message.protocolMessage) {
+          await antiDelete.handleDeleteEvent(
+            sock,
+            sessionId,
+            message
+          );
+
+          continue;
+        }
+
+        // Konsève mesaj ki ka efase pita.
+        await antiDelete.handleIncomingMessage(
+          sessionId,
+          message
+        );
+
+        // Kenbe cache mesaj ki deja egziste a.
+        cacheMessage(message);
+
+        // Kontinye tretman nòmal kòmand yo.
+        await handleMessage(
+          sock,
+          message,
+          sessionId
+        );
+      } catch (error) {
+        logger.error(
+          {
+            error:
+              error?.stack ||
+              error?.message ||
+              String(error)
+          },
+          `[${sessionId}] Message handler error.`
+        );
       }
     }
-  );
-
-  return sock;
-}
+  }
+);
 
 /*
 |--------------------------------------------------------------------------
