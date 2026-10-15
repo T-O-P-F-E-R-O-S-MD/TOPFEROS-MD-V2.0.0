@@ -154,6 +154,47 @@ function findCommand(
 
 /*
 |--------------------------------------------------------------------------
+| TOPFEROS MD V2.0.0
+
+ANTI BUG MESSAGE GUARD
+*/
+
+function isUnsafeMessageStructure(message) {
+try {
+if (!message || typeof message !== "object") {
+return true;
+}
+
+if (
+  !message.key ||
+  typeof message.key !== "object" ||
+  !message.message ||
+  typeof message.message !== "object" ||
+  Array.isArray(message.message)
+) {
+  return true;
+}
+
+const messageText = extractMessageText(
+  message.message
+);
+
+if (
+  typeof messageText === "string" &&
+  messageText.length > 20000
+) {
+  return true;
+}
+
+return false;
+
+} catch (error) {
+return true;
+}
+}
+
+/*
+|--------------------------------------------------------------------------
 | EXTRACT MESSAGE TEXT
 |--------------------------------------------------------------------------
 */
@@ -1138,6 +1179,27 @@ async function handleMessage(
       !sock ||
       !message
     ) {
+/*
+
+* ANTI BUG GUARD
+  */
+
+const currentSettings =
+settingPanel.getSessionSettings(sessionId) || {};
+
+const automation =
+currentSettings.automation || {};
+
+if (
+automation.antiBug === true &&
+isUnsafeMessageStructure(message)
+) {
+return {
+success: false,
+ignored: true,
+reason: "Anti Bug: invalid message structure."
+};
+}
       return {
         success: false,
         reason:
