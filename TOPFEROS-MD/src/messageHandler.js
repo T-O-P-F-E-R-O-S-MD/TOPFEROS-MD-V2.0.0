@@ -1064,6 +1064,64 @@ function attachStatusAI(
   return true;
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| AUTO TYPING / AUTO RECORDING
+|--------------------------------------------------------------------------
+*/
+
+async function startAutoPresence(sock, sessionId, jid) {
+  try {
+    if (!sock || !sessionId || !jid) {
+      return null;
+    }
+
+    const settings =
+      settingPanel.getSessionSettings(sessionId);
+
+    const automation = settings?.automation || {};
+
+    let presence = null;
+
+    if (automation.fakeRecording === true) {
+      presence = "recording";
+    } else if (automation.fakeTyping === true) {
+      presence = "composing";
+    }
+
+    if (!presence) {
+      return null;
+    }
+
+    await sock.sendPresenceUpdate(presence, jid);
+
+    return presence;
+  } catch (error) {
+    console.error(
+      "[AUTO PRESENCE] Start failed:",
+      error?.message || error
+    );
+
+    return null;
+  }
+}
+
+async function stopAutoPresence(sock, jid, presence) {
+  if (!sock || !jid || !presence) {
+    return;
+  }
+
+  try {
+    await sock.sendPresenceUpdate("paused", jid);
+  } catch (error) {
+    console.error(
+      "[AUTO PRESENCE] Stop failed:",
+      error?.message || error
+    );
+  }
+}
+
 /*
 |--------------------------------------------------------------------------
 | HANDLE MESSAGE
@@ -1331,13 +1389,24 @@ if (
     }
 
     /*
-     * Execute command.
-     */
+     
+/*
+ * Execute command with Auto Typing / Recording.
+ */
 
-    const result =
-      await found.command.handler(
-        context
-      );
+const presence = await startAutoPresence(
+  sock,
+  sessionId,
+  jid
+);
+
+let result;
+
+try {
+  result = await found.command.handler(context);
+} finally {
+  await stopAutoPresence(sock, jid, presence);
+}
 
     return {
       success: true,
