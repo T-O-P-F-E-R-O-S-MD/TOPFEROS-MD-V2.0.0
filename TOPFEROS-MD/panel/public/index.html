@@ -1,17 +1,14 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10131d">
   <meta name="description" content="TOPFEROS MD V2.0.0 Connection Panel">
 
-       <h1 
-class="connect-title">
-  🦁 TOPFEROS MD
-  PANEL CONNECTION 🐑
-     </h1>
+  <title>TOPFEROS MD PANEL CONNECTION</title>
 
   <link rel="stylesheet" href="/style.css">
 
@@ -20,20 +17,21 @@ class="connect-title">
       background: #07090d;
     }
 
+    .panel-page {
+      position: relative;
+      isolation: isolate;
+      min-height: 100vh;
+    }
+
     .panel-background {
       position: fixed;
       inset: 0;
-      z-index: 0;
+      z-index: -1;
       pointer-events: none;
       background-image: url("/panel-background.png");
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-    }
-
-    .panel-page {
-      position: relative;
-      z-index: 1;
     }
 
     .connect-title {
@@ -47,7 +45,6 @@ class="connect-title">
     }
   </style>
 </head>
-
 <body>
   <main class="panel-page">
     <div class="panel-background"></div>
@@ -60,10 +57,10 @@ class="connect-title">
         onerror="this.style.display='none'"
       >
 
-      <h1 class=/stitle>
-       🦁 TOPFEROS MD
-      CONNECTION PANEL🐑
-      </h1>
+      
+<h1 class="connect-title">
+  🦁 TOPFEROS MD PANEL CONNECTION 🐑
+</h1>
 
       <p class="connect-subtitle">V2.0.0 · CONNECT PANEL</p>
 
