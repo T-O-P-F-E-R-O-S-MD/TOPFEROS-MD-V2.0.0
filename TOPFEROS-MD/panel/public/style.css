@@ -174,14 +174,15 @@ body {
   border-radius: 18px;
 }
 
-.section-title {
-  margin-bottom: 18px;
-  padding-bottom: 11px;
-  border-bottom: 1px solid var(--border);
-  color: var(--accent);
-  font-size: 15px;
+
+.connect-title {
+  width: 100%;
+  margin: 8px auto;
+  text-align: center;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  line-height: 1.5;
+  display: block;
 }
 
 
