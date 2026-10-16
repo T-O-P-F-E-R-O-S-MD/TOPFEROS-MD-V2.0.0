@@ -61,14 +61,31 @@ async function ttsCommand(ctx) {
         }
       );
 
-    const audio =
-      Buffer.from(
-        response.data
+        const audio = Buffer.from(response.data);
+
+    if (
+      !audio.length ||
+      audio.length < 100
+    ) {
+      throw new Error(
+        "TTS returned empty or invalid audio."
+      );
+    }
+
+    // Verifye si repons lan sanble ak yon MP3.
+    const isMp3 =
+      audio.length > 3 &&
+      (
+        audio.subarray(0, 3).toString() === "ID3" ||
+        (
+          audio[0] === 0xff &&
+          (audio[1] & 0xe0) === 0xe0
+        )
       );
 
-    if (!audio.length) {
+    if (!isMp3) {
       throw new Error(
-        "TTS returned empty audio."
+        "TTS provider did not return valid MP3 audio."
       );
     }
 
@@ -76,13 +93,11 @@ async function ttsCommand(ctx) {
       ctx.jid,
       {
         audio,
-        mimetype:
-          "audio/mpeg",
-        ptt: true
+        mimetype: "audio/mpeg",
+        ptt: false
       },
       {
-        quoted:
-          ctx.message
+        quoted: ctx.message
       }
     );
 
