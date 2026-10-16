@@ -7,12 +7,8 @@
 | PLAY COMMAND
 |--------------------------------------------------------------------------
 |
-| Usage:
-|   .play song <song name or URL>
-|   .play vid <video name or URL>
-|
-| Search uses YouTube Data API.
-| URL processing preserves the existing media pipeline.
+| .play song <non mizik oswa URL>
+| .play vid <non videyo oswa URL>
 |
 |--------------------------------------------------------------------------
 */
@@ -34,13 +30,11 @@ const {
 const YOUTUBE_API_KEY =
   process.env.YOUTUBE_API_KEY || "";
 
-/*
-|--------------------------------------------------------------------------
-| SEND AUDIO
-|--------------------------------------------------------------------------
-*/
-
 async function sendAudio(ctx, filePath) {
+  if (!isMediaFile(filePath)) {
+    throw new Error("Fichye odyo a pa egziste oswa li vid.");
+  }
+
   await ctx.sock.sendMessage(
     ctx.jid,
     {
@@ -52,13 +46,11 @@ async function sendAudio(ctx, filePath) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| SEND VIDEO
-|--------------------------------------------------------------------------
-*/
-
 async function sendVideo(ctx, filePath) {
+  if (!isMediaFile(filePath)) {
+    throw new Error("Fichye videyo a pa egziste oswa li vid.");
+  }
+
   await ctx.sock.sendMessage(
     ctx.jid,
     {
@@ -69,12 +61,6 @@ async function sendVideo(ctx, filePath) {
     { quoted: ctx.message }
   );
 }
-
-/*
-|--------------------------------------------------------------------------
-| YOUTUBE SEARCH
-|--------------------------------------------------------------------------
-*/
 
 async function searchYouTube(query, type) {
   if (!YOUTUBE_API_KEY) {
@@ -102,20 +88,15 @@ async function searchYouTube(query, type) {
     }
   );
 
-  return (response.data.items || []).map(item => ({
-    title: item.snippet.title,
-    channel: item.snippet.channelTitle,
-    videoId: item.id.videoId,
-    url:
-      `https://www.youtube.com/watch?v=${item.id.videoId}`
-  }));
+  return (response.data.items || [])
+    .filter(item => item.id && item.id.videoId)
+    .map(item => ({
+      title: item.snippet.title,
+      channel: item.snippet.channelTitle,
+      videoId: item.id.videoId,
+      url: `https://www.youtube.com/watch?v=${item.id.videoId}`
+    }));
 }
-
-/*
-|--------------------------------------------------------------------------
-| PLAY COMMAND
-|--------------------------------------------------------------------------
-*/
 
 async function playCommand(ctx) {
   const input = String(ctx.text || "").trim();
@@ -125,15 +106,15 @@ async function playCommand(ctx) {
       [
         "🎵 TOPFEROS MD PLAY",
         "",
-        "🎵 Search song:",
-        `${ctx.prefix}play song <song name>`,
+        "🎵 Chèche mizik:",
+        `${ctx.prefix}play song non mizik la`,
         "",
-        "🎬 Search video:",
-        `${ctx.prefix}play vid <video name>`,
+        "🎬 Chèche videyo:",
+        `${ctx.prefix}play vid non videyo a`,
         "",
-        "🔗 Direct media URL:",
-        `${ctx.prefix}play song <URL>`,
-        `${ctx.prefix}play vid <URL>`,
+        "🔗 URL medya ki sipòte:",
+        `${ctx.prefix}play song URL`,
+        `${ctx.prefix}play vid URL`,
         "",
         "🦁 TECH BY TOPFEROS MD 🐑"
       ].join("\n")
@@ -145,32 +126,34 @@ async function playCommand(ctx) {
     };
   }
 
-  const firstSpace = input.search(/\s/);
+  const match = input.match(/^(\S+)\s+([\s\S]+)$/);
 
-  const type = (
-    firstSpace === -1
-      ? input
-      : input.slice(0, firstSpace)
-  ).toLowerCase();
+  if (!match) {
+    await ctx.send(
+      [
+        "❌ Ou dwe presize kalite medya a ak non an oswa URL la.",
+        "",
+        `${ctx.prefix}play song non mizik la`,
+        `${ctx.prefix}play vid non videyo a`
+      ].join("\n")
+    );
 
-  const queryOrUrl = (
-    firstSpace === -1
-      ? ""
-      : input.slice(firstSpace + 1)
-  ).trim();
+    return {
+      success: false,
+      reason: "Missing query or URL."
+    };
+  }
+
+  const type = match[1].toLowerCase();
+  const queryOrUrl = match[2].trim();
 
   if (!["song", "vid"].includes(type)) {
     await ctx.send(
       [
-        "❌ TYPE MEDIA KI PA VALAB",
+        "❌ Kalite medya sa a pa valab.",
         "",
-        "🎵 Mizik:",
         `${ctx.prefix}play song non mizik la`,
-        "",
-        "🎬 Videyo:",
-        `${ctx.prefix}play vid non videyo a`,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
+        `${ctx.prefix}play vid non videyo a`
       ].join("\n")
     );
 
@@ -181,15 +164,7 @@ async function playCommand(ctx) {
   }
 
   if (!queryOrUrl) {
-    await ctx.send(
-      [
-        "❌ Ou dwe mete non an oswa URL la.",
-        "",
-        `Egzanp: ${ctx.prefix}play ${type} non medya a`,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
-    );
+    await ctx.send("❌ Mete non medya a oswa URL la.");
 
     return {
       success: false,
@@ -197,12 +172,12 @@ async function playCommand(ctx) {
     };
   }
 
-  let parsedUrl = null;
+  let parsedUrl;
 
   try {
     parsedUrl = new URL(queryOrUrl);
   } catch {
-    // Si li pa yon URL, n ap trete l kòm yon rechèch.
+    parsedUrl = null;
   }
 
   /*
@@ -252,7 +227,7 @@ async function playCommand(ctx) {
       });
 
       lines.push(
-        "ℹ️ Sa yo se rezilta rechèch. Pou voye yon fichye medya, sèvi ak yon sous ki otorize telechajman.",
+        "ℹ️ Rechèch sa a bay lyen yo; li pa telechaje fichye yo.",
         "",
         "🦁 TECH BY TOPFEROS MD 🐑"
       );
@@ -279,11 +254,9 @@ async function playCommand(ctx) {
         [
           "❌ RECHÈCH LA PA MACHE",
           "",
-          apiMessage ||
-            error?.message ||
-            "Erè pandan rechèch la.",
+          apiMessage || error.message || "Erè enkoni.",
           "",
-          "Verifye YOUTUBE_API_KEY la nan Render ak Google Cloud.",
+          "Verifye YOUTUBE_API_KEY la ak YouTube Data API v3.",
           "",
           "🦁 TECH BY TOPFEROS MD 🐑"
         ].join("\n")
@@ -291,7 +264,7 @@ async function playCommand(ctx) {
 
       return {
         success: false,
-        error: apiMessage || error?.message
+        error: apiMessage || error.message
       };
     }
   }
@@ -302,9 +275,7 @@ async function playCommand(ctx) {
   |--------------------------------------------------------------------------
   */
 
-  if (
-    !["http:", "https:"].includes(parsedUrl.protocol)
-  ) {
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
     await ctx.send(
       "❌ URL la dwe kòmanse ak http:// oswa https://."
     );
@@ -323,7 +294,7 @@ async function playCommand(ctx) {
       [
         "⏳ TOPFEROS MD MEDIA",
         "",
-        "📥 M ap trete medya a...",
+        "📥 M ap telechaje oswa prepare medya a...",
         "",
         "🦁 TECH BY TOPFEROS MD 🐑"
       ].join("\n")
@@ -340,20 +311,14 @@ async function playCommand(ctx) {
     }
 
     await ctx.send(
-      "⚙️ M ap prepare fichye a pou WhatsApp..."
+      "⚙️ M ap konvèti fichye a pou WhatsApp..."
     );
 
     if (type === "song") {
-      convertedFile = await convertToAudio(
-        downloadedFile
-      );
-
+      convertedFile = await convertToAudio(downloadedFile);
       await sendAudio(ctx, convertedFile);
     } else {
-      convertedFile = await convertToVideo(
-        downloadedFile
-      );
-
+      convertedFile = await convertToVideo(downloadedFile);
       await sendVideo(ctx, convertedFile);
     }
 
@@ -368,18 +333,25 @@ async function playCommand(ctx) {
       error?.stack || error
     );
 
-    await ctx.send(
-      [
-        "❌ TOPFEROS MD MEDIA",
-        "",
-        "Mwen pa t kapab trete oswa voye medya sa a.",
-        `Rezon: ${error?.message || "Erè enkoni."}`,
-        "",
-        "Eseye yon lòt URL ki sipòte telechajman.",
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
-    );
+    try {
+      await ctx.send(
+        [
+          "❌ TOPFEROS MD MEDIA",
+          "",
+          "Mwen pa t kapab trete oswa voye medya sa a.",
+          `Rezon: ${error?.message || "Erè enkoni."}`,
+          "",
+          "Verifye URL la epi eseye yon lòt sous medya ki otorize telechajman.",
+          "",
+          "🦁 TECH BY TOPFEROS MD 🐑"
+        ].join("\n")
+      );
+    } catch (sendError) {
+      console.error(
+        "[PLAY COMMAND] Could not send error message:",
+        sendError.message
+      );
+    }
 
     return {
       success: false,
