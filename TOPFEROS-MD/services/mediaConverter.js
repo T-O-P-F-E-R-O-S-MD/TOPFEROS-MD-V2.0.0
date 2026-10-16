@@ -24,6 +24,40 @@ const TEMP_DIR = path.join(
   os.tmpdir(),
   "topferos-md-media"
 );
+const { execFileSync } = require("child_process");
+
+const PYTHON_PACKAGES = path.resolve(
+  __dirname,
+  "..",
+  "python-packages"
+);
+
+function getFFmpegPath() {
+  const pythonPath = [
+    PYTHON_PACKAGES,
+    process.env.PYTHONPATH || ""
+  ].filter(Boolean).join(path.delimiter);
+
+  try {
+    return execFileSync(
+      "python3",
+      [
+        "-c",
+        "import sys; sys.path.insert(0, sys.argv[1]); import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())",
+        PYTHON_PACKAGES
+      ],
+      {
+        encoding: "utf8",
+        env: { ...process.env, PYTHONPATH: pythonPath },
+        timeout: 15000
+      }
+    ).trim();
+  } catch (error) {
+    throw new Error(
+      `Could not locate FFmpeg: ${error.message}`
+    );
+  }
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -108,14 +142,16 @@ function runFFmpeg(
         output
       ];
 
-      const process =
-        spawn(
-          "ffmpeg",
-          ffmpegArgs,
-          {
-            windowsHide: true
-          }
-        );
+      const ffmpegPath = getFFmpegPath();
+
+const process =
+  spawn(
+    ffmpegPath,
+    ffmpegArgs,
+    {
+      windowsHide: true
+    }
+  );
 
       let stderr = "";
 
