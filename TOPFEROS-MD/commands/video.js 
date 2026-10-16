@@ -53,7 +53,10 @@ async function videoCommand(ctx) {
       ].join("\n")
     );
 
-    return { success: false, reason: "Missing query." };
+    return {
+      success: false,
+      reason: "Missing query."
+    };
   }
 
   try {
@@ -66,7 +69,10 @@ async function videoCommand(ctx) {
         "❌ Mwen pa jwenn videyo ki koresponn ak rechèch sa a."
       );
 
-      return { success: false, reason: "No results." };
+      return {
+        success: false,
+        reason: "No results."
+      };
     }
 
     const lines = [
