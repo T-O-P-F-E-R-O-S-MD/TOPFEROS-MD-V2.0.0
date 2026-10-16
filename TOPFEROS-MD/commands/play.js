@@ -1,3 +1,4 @@
+
 "use strict";
 
 /*
@@ -7,16 +8,17 @@
 |--------------------------------------------------------------------------
 |
 | Usage:
-|   .play song <direct-url>
-|   .play video <direct-url>
+|   .play song <song name or URL>
+|   .play vid <video name or URL>
 |
-| The command downloads authorized media, converts it into a
-| WhatsApp-friendly format, sends it, then removes temporary files.
+| Search uses YouTube Data API.
+| URL processing preserves the existing media pipeline.
 |
 |--------------------------------------------------------------------------
 */
 
 const fs = require("fs");
+const axios = require("axios");
 
 const {
   downloadMedia,
@@ -29,28 +31,24 @@ const {
   convertToVideo
 } = require("../services/mediaConverter");
 
+const YOUTUBE_API_KEY =
+  process.env.YOUTUBE_API_KEY || "";
+
 /*
 |--------------------------------------------------------------------------
 | SEND AUDIO
 |--------------------------------------------------------------------------
 */
 
-async function sendAudio(
-  ctx,
-  filePath
-) {
+async function sendAudio(ctx, filePath) {
   await ctx.sock.sendMessage(
     ctx.jid,
     {
-      audio:
-        fs.readFileSync(
-          filePath
-        ),
-      mimetype:
-        "audio/mpeg",
-      ptt:
-        false
-    }
+      audio: fs.readFileSync(filePath),
+      mimetype: "audio/mpeg",
+      ptt: false
+    },
+    { quoted: ctx.message }
   );
 }
 
@@ -60,23 +58,57 @@ async function sendAudio(
 |--------------------------------------------------------------------------
 */
 
-async function sendVideo(
-  ctx,
-  filePath
-) {
+async function sendVideo(ctx, filePath) {
   await ctx.sock.sendMessage(
     ctx.jid,
     {
-      video:
-        fs.readFileSync(
-          filePath
-        ),
-      mimetype:
-        "video/mp4",
-      caption:
-        "🎬 TOPFEROS MD MEDIA"
+      video: fs.readFileSync(filePath),
+      mimetype: "video/mp4",
+      caption: "🎬 TOPFEROS MD MEDIA"
+    },
+    { quoted: ctx.message }
+  );
+}
+
+/*
+|--------------------------------------------------------------------------
+| YOUTUBE SEARCH
+|--------------------------------------------------------------------------
+*/
+
+async function searchYouTube(query, type) {
+  if (!YOUTUBE_API_KEY) {
+    throw new Error(
+      "YOUTUBE_API_KEY pa konfigire nan Render."
+    );
+  }
+
+  const searchQuery =
+    type === "song"
+      ? `${query} official audio`
+      : query;
+
+  const response = await axios.get(
+    "https://www.googleapis.com/youtube/v3/search",
+    {
+      params: {
+        part: "snippet",
+        type: "video",
+        maxResults: 5,
+        q: searchQuery,
+        key: YOUTUBE_API_KEY
+      },
+      timeout: 15000
     }
   );
+
+  return (response.data.items || []).map(item => ({
+    title: item.snippet.title,
+    channel: item.snippet.channelTitle,
+    videoId: item.id.videoId,
+    url:
+      `https://www.youtube.com/watch?v=${item.id.videoId}`
+  }));
 }
 
 /*
@@ -85,21 +117,23 @@ async function sendVideo(
 |--------------------------------------------------------------------------
 */
 
-async function playCommand(
-  ctx
-) {
-  if (!ctx.text) {
+async function playCommand(ctx) {
+  const input = String(ctx.text || "").trim();
+
+  if (!input) {
     await ctx.send(
       [
         "🎵 TOPFEROS MD PLAY",
         "",
-        "Usage:",
-        `${ctx.prefix}play song <direct-url>`,
-        `${ctx.prefix}play video <direct-url>`,
+        "🎵 Search song:",
+        `${ctx.prefix}play song <song name>`,
         "",
-        "Example:",
-        `${ctx.prefix}play song https://example.com/song.mp3`,
-        `${ctx.prefix}play video https://example.com/video.mp4`,
+        "🎬 Search video:",
+        `${ctx.prefix}play vid <video name>`,
+        "",
+        "🔗 Direct media URL:",
+        `${ctx.prefix}play song <URL>`,
+        `${ctx.prefix}play vid <URL>`,
         "",
         "🦁 TECH BY TOPFEROS MD 🐑"
       ].join("\n")
@@ -107,164 +141,241 @@ async function playCommand(
 
     return {
       success: false,
-      reason:
-        "Media URL is required."
+      reason: "Missing input."
     };
   }
 
-  const parts =
-    ctx.text
-      .trim()
-      .split(/\s+/);
+  const firstSpace = input.search(/\s/);
 
-  const type =
-    String(
-      parts.shift() || ""
-    )
-      .toLowerCase()
-      .trim();
+  const type = (
+    firstSpace === -1
+      ? input
+      : input.slice(0, firstSpace)
+  ).toLowerCase();
 
-  const url =
-    parts.join(" ").trim();
+  const queryOrUrl = (
+    firstSpace === -1
+      ? ""
+      : input.slice(firstSpace + 1)
+  ).trim();
+
+  if (!["song", "vid"].includes(type)) {
+    await ctx.send(
+      [
+        "❌ TYPE MEDIA KI PA VALAB",
+        "",
+        "🎵 Mizik:",
+        `${ctx.prefix}play song non mizik la`,
+        "",
+        "🎬 Videyo:",
+        `${ctx.prefix}play vid non videyo a`,
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return {
+      success: false,
+      reason: "Invalid media type."
+    };
+  }
+
+  if (!queryOrUrl) {
+    await ctx.send(
+      [
+        "❌ Ou dwe mete non an oswa URL la.",
+        "",
+        `Egzanp: ${ctx.prefix}play ${type} non medya a`,
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return {
+      success: false,
+      reason: "Missing query or URL."
+    };
+  }
+
+  let parsedUrl = null;
+
+  try {
+    parsedUrl = new URL(queryOrUrl);
+  } catch {
+    // Si li pa yon URL, n ap trete l kòm yon rechèch.
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | SEARCH BY NAME
+  |--------------------------------------------------------------------------
+  */
+
+  if (!parsedUrl) {
+    try {
+      await ctx.send(
+        type === "song"
+          ? "🔎 M ap chèche mizik la..."
+          : "🔎 M ap chèche videyo a..."
+      );
+
+      const results = await searchYouTube(
+        queryOrUrl,
+        type
+      );
+
+      if (!results.length) {
+        await ctx.send(
+          "❌ Mwen pa jwenn rezilta pou rechèch sa a."
+        );
+
+        return {
+          success: false,
+          reason: "No search results."
+        };
+      }
+
+      const lines = [
+        type === "song"
+          ? "🎵 TOPFEROS MD — REZILTA MIZIK"
+          : "🎬 TOPFEROS MD — REZILTA VIDEYO",
+        ""
+      ];
+
+      results.forEach((item, index) => {
+        lines.push(
+          `${index + 1}. ${item.title}`,
+          `🎤 Chèn: ${item.channel}`,
+          `🔗 ${item.url}`,
+          ""
+        );
+      });
+
+      lines.push(
+        "ℹ️ Sa yo se rezilta rechèch. Pou voye yon fichye medya, sèvi ak yon sous ki otorize telechajman.",
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      );
+
+      await ctx.send(lines.join("\n"));
+
+      return {
+        success: true,
+        action: "search",
+        type,
+        count: results.length,
+        results
+      };
+    } catch (error) {
+      console.error(
+        "[PLAY SEARCH] Error:",
+        error?.response?.data || error?.stack || error
+      );
+
+      const apiMessage =
+        error?.response?.data?.error?.message;
+
+      await ctx.send(
+        [
+          "❌ RECHÈCH LA PA MACHE",
+          "",
+          apiMessage ||
+            error?.message ||
+            "Erè pandan rechèch la.",
+          "",
+          "Verifye YOUTUBE_API_KEY la nan Render ak Google Cloud.",
+          "",
+          "🦁 TECH BY TOPFEROS MD 🐑"
+        ].join("\n")
+      );
+
+      return {
+        success: false,
+        error: apiMessage || error?.message
+      };
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | PROCESS DIRECT URL
+  |--------------------------------------------------------------------------
+  */
 
   if (
-    ![
-      "song",
-      "audio",
-      "music",
-      "video"
-    ].includes(type)
+    !["http:", "https:"].includes(parsedUrl.protocol)
   ) {
     await ctx.send(
-      [
-        "❌ Invalid media type.",
-        "",
-        "Use:",
-        `${ctx.prefix}play song <direct-url>`,
-        `${ctx.prefix}play video <direct-url>`,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
+      "❌ URL la dwe kòmanse ak http:// oswa https://."
     );
 
     return {
       success: false,
-      reason:
-        "Invalid media type."
+      reason: "Invalid URL protocol."
     };
   }
 
-  if (!url) {
-    await ctx.send(
-      [
-        "❌ Media URL is required.",
-        "",
-        `Example: ${ctx.prefix}play ${type} https://example.com/media`,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
-    );
-
-    return {
-      success: false,
-      reason:
-        "Media URL is missing."
-    };
-  }
-
-  let downloadedFile =
-    null;
-
-  let convertedFile =
-    null;
+  let downloadedFile = null;
+  let convertedFile = null;
 
   try {
     await ctx.send(
       [
         "⏳ TOPFEROS MD MEDIA",
         "",
-        "📥 Downloading media...",
+        "📥 M ap trete medya a...",
         "",
         "🦁 TECH BY TOPFEROS MD 🐑"
       ].join("\n")
     );
 
-    const download =
-      await downloadMedia(
-        url
-      );
+    const download = await downloadMedia(queryOrUrl);
 
-    downloadedFile =
-      download.path;
+    downloadedFile = download.path;
 
-    if (
-      !isMediaFile(
-        downloadedFile
-      )
-    ) {
+    if (!isMediaFile(downloadedFile)) {
       throw new Error(
-        "Downloaded media file is invalid."
+        "Fichye medya ki telechaje a pa valab."
       );
     }
 
     await ctx.send(
-      [
-        "⚙️ TOPFEROS MD MEDIA",
-        "",
-        "🔄 Preparing media for WhatsApp...",
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
+      "⚙️ M ap prepare fichye a pou WhatsApp..."
     );
 
-    if (
-      [
-        "song",
-        "audio",
-        "music"
-      ].includes(type)
-    ) {
-      convertedFile =
-        await convertToAudio(
-          downloadedFile
-        );
-
-      await sendAudio(
-        ctx,
-        convertedFile
+    if (type === "song") {
+      convertedFile = await convertToAudio(
+        downloadedFile
       );
+
+      await sendAudio(ctx, convertedFile);
     } else {
-      convertedFile =
-        await convertToVideo(
-          downloadedFile
-        );
-
-      await sendVideo(
-        ctx,
-        convertedFile
+      convertedFile = await convertToVideo(
+        downloadedFile
       );
+
+      await sendVideo(ctx, convertedFile);
     }
 
     return {
       success: true,
       type,
-      path:
-        convertedFile
+      action: "send"
     };
   } catch (error) {
     console.error(
       "[PLAY COMMAND] Error:",
-      error?.stack ||
-        error
+      error?.stack || error
     );
 
     await ctx.send(
       [
         "❌ TOPFEROS MD MEDIA",
         "",
-        "The media could not be downloaded or converted.",
+        "Mwen pa t kapab trete oswa voye medya sa a.",
+        `Rezon: ${error?.message || "Erè enkoni."}`,
         "",
-        `Reason: ${error?.message || "Unknown error."}`,
+        "Eseye yon lòt URL ki sipòte telechajman.",
         "",
         "🦁 TECH BY TOPFEROS MD 🐑"
       ].join("\n")
@@ -272,25 +383,15 @@ async function playCommand(
 
     return {
       success: false,
-      error:
-        error?.message ||
-        String(error)
+      error: error?.message || String(error)
     };
   } finally {
-    if (
-      convertedFile
-    ) {
-      removeFile(
-        convertedFile
-      );
+    if (convertedFile) {
+      removeFile(convertedFile);
     }
 
-    if (
-      downloadedFile
-    ) {
-      removeFile(
-        downloadedFile
-      );
+    if (downloadedFile) {
+      removeFile(downloadedFile);
     }
   }
 }
