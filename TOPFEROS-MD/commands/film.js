@@ -4,6 +4,10 @@
 const axios = require("axios");
 const { registerCommand } = require("../src/messageHandler");
 
+const {
+  downloadAndSendVideo
+} = require("../services/authorizedVideoSearch");
+
 const TMDB_API_KEY = process.env.TMDB_API_KEY || "";
 
 async function searchFilms(query) {
@@ -25,7 +29,7 @@ async function searchFilms(query) {
     }
   );
 
-  return (response.data.results || []).slice(0, 5);
+  return response.data.results || [];
 }
 
 async function filmCommand(ctx) {
@@ -33,96 +37,50 @@ async function filmCommand(ctx) {
 
   if (!query) {
     await ctx.send(
-      [
-        "🎬 TOPFEROS MD — FILM",
-        "",
-        "Itilizasyon:",
-        `${ctx.prefix}film non fim nan`,
-        "",
-        "Egzanp:",
-        `${ctx.prefix}film Spider-Man`,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
+      `🎬 Itilizasyon: ${ctx.prefix}film non fim nan`
     );
-
-    return { success: false, reason: "Missing query." };
+    return { success: false };
   }
 
   try {
-    await ctx.send("🔎 M ap chèche fim nan...");
+    await ctx.send("🔎 M ap verifye tit fim nan sou TMDB...");
 
     const results = await searchFilms(query);
+    const film = results[0];
 
-    if (!results.length) {
-      await ctx.send("❌ Mwen pa jwenn fim sa a.");
-      return { success: false, reason: "No results." };
+    if (!film) {
+      await ctx.send("❌ Mwen pa jwenn fim sa a sou TMDB.");
+      return { success: false };
     }
-
-    const lines = [
-      "🎬 TOPFEROS MD — REZILTA FIM",
-      ""
-    ];
-
-    for (const [index, film] of results.entries()) {
-      const title = film.title || "Tit pa disponib";
-      const date = film.release_date || "Dat pa disponib";
-      const rating =
-        typeof film.vote_average === "number"
-          ? film.vote_average.toFixed(1) + "/10"
-          : "Pa disponib";
-      const overview =
-        film.overview || "Pa gen rezime disponib.";
-
-      lines.push(
-        `${index + 1}. ${title}`,
-        `📅 Dat sòti: ${date}`,
-        `⭐ Nòt TMDB: ${rating}`,
-        `📝 Rezime: ${overview.slice(0, 400)}`,
-        `🔗 https://www.themoviedb.org/movie/${film.id}`,
-        ""
-      );
-    }
-
-    lines.push("🦁 TECH BY TOPFEROS MD 🐑");
-
-    await ctx.send(lines.join("\n"));
-
-    return {
-      success: true,
-      count: results.length
-    };
-  } catch (error) {
-    console.error(
-      "[FILM COMMAND] Error:",
-      error?.response?.data || error?.stack || error
-    );
-
-    const apiMessage =
-      error?.response?.data?.status_message;
 
     await ctx.send(
-      [
-        "❌ RECHÈCH FIM NAN PA MACHE",
-        "",
-        apiMessage || error?.message || "Erè enkoni.",
-        "",
-        "Verifye TMDB_API_KEY la nan Render.",
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
+      "🎬 Fim mwen jwenn:\n" +
+      `Tit: ${film.title}\n` +
+      `Dat sòti: ${film.release_date || "Pa disponib"}\n` +
+      `Nòt: ${Number(film.vote_average || 0).toFixed(1)}/10\n` +
+      `Rezime: ${(film.overview || "Pa gen rezime.").slice(0, 350)}`
     );
 
-    return {
-      success: false,
-      error: apiMessage || error?.message
-    };
+    return await downloadAndSendVideo(
+      ctx,
+      film.title,
+      "fim"
+    );
+  } catch (error) {
+    console.error("[FILM]", error?.stack || error);
+
+    await ctx.send(
+      "❌ Rechèch fim nan echwe: " +
+      (error.message || "Erè enkoni.")
+    );
+
+    return { success: false, error: error.message };
   }
 }
 
 registerCommand("film", filmCommand, {
   aliases: ["movie", "movies"],
-  description: "Chèche enfòmasyon sou fim.",
+  description: "Chèche yon fim epi voye videyo ki otorize si disponib.",
   usage: ".film <non fim nan>",
   category: "MEDIA"
 });
