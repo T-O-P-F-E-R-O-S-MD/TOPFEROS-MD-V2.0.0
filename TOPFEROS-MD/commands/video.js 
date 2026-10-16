@@ -1,0 +1,135 @@
+
+"use strict";
+
+const axios = require("axios");
+const { registerCommand } = require("../src/messageHandler");
+
+const YOUTUBE_API_KEY =
+  process.env.YOUTUBE_API_KEY || "";
+
+async function searchVideos(query) {
+  if (!YOUTUBE_API_KEY) {
+    throw new Error(
+      "YOUTUBE_API_KEY pa konfigire nan Render."
+    );
+  }
+
+  const response = await axios.get(
+    "https://www.googleapis.com/youtube/v3/search",
+    {
+      params: {
+        part: "snippet",
+        type: "video",
+        maxResults: 5,
+        q: query,
+        key: YOUTUBE_API_KEY
+      },
+      timeout: 15000
+    }
+  );
+
+  return (response.data.items || []).map(item => ({
+    title: item.snippet.title,
+    channel: item.snippet.channelTitle,
+    url: `https://www.youtube.com/watch?v=${item.id.videoId}`
+  }));
+}
+
+async function videoCommand(ctx) {
+  const query = String(ctx.text || "").trim();
+
+  if (!query) {
+    await ctx.send(
+      [
+        "🎬 TOPFEROS MD VIDEO",
+        "",
+        "Itilizasyon:",
+        `${ctx.prefix}video non videyo a`,
+        "",
+        "Egzanp:",
+        `${ctx.prefix}video komik ayisyen`,
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return { success: false, reason: "Missing query." };
+  }
+
+  try {
+    await ctx.send("🔎 M ap chèche videyo a...");
+
+    const results = await searchVideos(query);
+
+    if (!results.length) {
+      await ctx.send(
+        "❌ Mwen pa jwenn videyo ki koresponn ak rechèch sa a."
+      );
+
+      return { success: false, reason: "No results." };
+    }
+
+    const lines = [
+      "🎬 TOPFEROS MD — REZILTA VIDEYO",
+      ""
+    ];
+
+    results.forEach((item, index) => {
+      lines.push(
+        `${index + 1}. ${item.title}`,
+        `📺 Chèn: ${item.channel}`,
+        `🔗 ${item.url}`,
+        ""
+      );
+    });
+
+    lines.push(
+      "ℹ️ Chwazi yon lyen pou gade videyo a.",
+      "",
+      "🦁 TECH BY TOPFEROS MD 🐑"
+    );
+
+    await ctx.send(lines.join("\n"));
+
+    return {
+      success: true,
+      count: results.length
+    };
+  } catch (error) {
+    console.error(
+      "[VIDEO COMMAND] Error:",
+      error?.response?.data || error?.stack || error
+    );
+
+    const apiMessage =
+      error?.response?.data?.error?.message;
+
+    await ctx.send(
+      [
+        "❌ VIDEO SEARCH FAILED",
+        "",
+        apiMessage ||
+          error?.message ||
+          "Erè pandan rechèch videyo a.",
+        "",
+        "Verifye YOUTUBE_API_KEY la ak YouTube Data API v3 nan Google Cloud.",
+        "",
+        "🦁 TECH BY TOPFEROS MD 🐑"
+      ].join("\n")
+    );
+
+    return {
+      success: false,
+      error: apiMessage || error?.message
+    };
+  }
+}
+
+registerCommand("video", videoCommand, {
+  aliases: ["videos"],
+  description: "Chèche videyo sou YouTube.",
+  usage: ".video <non videyo a>",
+  category: "MEDIA"
+});
+
+module.exports = { videoCommand };
