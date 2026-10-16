@@ -4,6 +4,10 @@
 const axios = require("axios");
 const { registerCommand } = require("../src/messageHandler");
 
+const {
+  downloadAndSendVideo
+} = require("../services/authorizedVideoSearch");
+
 const TMDB_API_KEY = process.env.TMDB_API_KEY || "";
 
 async function searchSeries(query) {
@@ -24,7 +28,7 @@ async function searchSeries(query) {
     }
   );
 
-  return (response.data.results || []).slice(0, 5);
+  return response.data.results || [];
 }
 
 async function serieCommand(ctx) {
@@ -32,101 +36,50 @@ async function serieCommand(ctx) {
 
   if (!query) {
     await ctx.send(
-      [
-        "📺 TOPFEROS MD — SERIE",
-        "",
-        "Itilizasyon:",
-        `${ctx.prefix}serie non seri a`,
-        "",
-        "Egzanp:",
-        `${ctx.prefix}serie Stranger Things`,
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
+      `📺 Itilizasyon: ${ctx.prefix}serie non seri a`
     );
-
-    return { success: false, reason: "Missing query." };
+    return { success: false };
   }
 
   try {
-    await ctx.send("🔎 M ap chèche seri a...");
+    await ctx.send("🔎 M ap verifye tit seri a sou TMDB...");
 
     const results = await searchSeries(query);
+    const serie = results[0];
 
-    if (!results.length) {
-      await ctx.send("❌ Mwen pa jwenn seri sa a.");
-      return { success: false, reason: "No results." };
+    if (!serie) {
+      await ctx.send("❌ Mwen pa jwenn seri sa a sou TMDB.");
+      return { success: false };
     }
-
-    const lines = [
-      "📺 TOPFEROS MD — REZILTA SERI",
-      ""
-    ];
-
-    for (const [index, serie] of results.entries()) {
-      const title =
-        serie.name || "Tit pa disponib";
-
-      const date =
-        serie.first_air_date || "Dat pa disponib";
-
-      const rating =
-        typeof serie.vote_average === "number"
-          ? serie.vote_average.toFixed(1) + "/10"
-          : "Pa disponib";
-
-      const overview =
-        serie.overview || "Pa gen rezime disponib.";
-
-      lines.push(
-        `${index + 1}. ${title}`,
-        `📅 Premye difizyon: ${date}`,
-        `⭐ Nòt TMDB: ${rating}`,
-        `📝 Rezime: ${overview.slice(0, 400)}`,
-        `🔗 https://www.themoviedb.org/tv/${serie.id}`,
-        ""
-      );
-    }
-
-    lines.push("🦁 TECH BY TOPFEROS MD 🐑");
-
-    await ctx.send(lines.join("\n"));
-
-    return {
-      success: true,
-      count: results.length
-    };
-  } catch (error) {
-    console.error(
-      "[SERIE COMMAND] Error:",
-      error?.response?.data || error?.stack || error
-    );
-
-    const apiMessage =
-      error?.response?.data?.status_message;
 
     await ctx.send(
-      [
-        "❌ RECHÈCH SERI A PA MACHE",
-        "",
-        apiMessage || error?.message || "Erè enkoni.",
-        "",
-        "Verifye TMDB_API_KEY la nan Render.",
-        "",
-        "🦁 TECH BY TOPFEROS MD 🐑"
-      ].join("\n")
+      "📺 Seri mwen jwenn:\n" +
+      `Tit: ${serie.name}\n` +
+      `Premye difizyon: ${serie.first_air_date || "Pa disponib"}\n` +
+      `Nòt: ${Number(serie.vote_average || 0).toFixed(1)}/10\n` +
+      `Rezime: ${(serie.overview || "Pa gen rezime.").slice(0, 350)}`
     );
 
-    return {
-      success: false,
-      error: apiMessage || error?.message
-    };
+    return await downloadAndSendVideo(
+      ctx,
+      serie.name,
+      "seri"
+    );
+  } catch (error) {
+    console.error("[SERIE]", error?.stack || error);
+
+    await ctx.send(
+      "❌ Rechèch seri a echwe: " +
+      (error.message || "Erè enkoni.")
+    );
+
+    return { success: false, error: error.message };
   }
 }
 
 registerCommand("serie", serieCommand, {
   aliases: ["series", "tv"],
-  description: "Chèche enfòmasyon sou seri televizyon.",
+  description: "Chèche yon seri epi voye videyo ki otorize si disponib.",
   usage: ".serie <non seri a>",
   category: "MEDIA"
 });
