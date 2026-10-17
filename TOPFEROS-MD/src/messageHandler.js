@@ -40,8 +40,13 @@ const {
 } = require("../commands/pair");
 
 const {
-  aiCommand
-} = require("../commands/ai");
+  startAIChat,
+  continueAIChat,
+  setLastAIMessage,
+  isReplyToLastAIMessage,
+  isForwardOfLastAIMessage,
+  hasSession
+} = require("../services/aiChat");
 
 const {
   playCommand
@@ -964,26 +969,76 @@ registerCommand(
   }
 );
 
+
 /*
 |--------------------------------------------------------------------------
-| COMMAND: AI
+| COMMAND: AI — INTEGRATED CHAT AND FORWARD SYSTEM
 |--------------------------------------------------------------------------
 */
+
+function getAIForwardNotice(answer) {
+  const text = String(answer || "").toLowerCase();
+
+  if (/[àâçéèêëîïôùûüÿœ]/i.test(text) ||
+      /\b(bonjour|merci|vous|votre|réponse|question|continuer)\b/i.test(text)) {
+    return "💬 *Pour continuer cette conversation :* Transférez-moi cette réponse ou répondez directement à ce message. 🤖";
+  }
+
+  if (/\b(hello|thanks|your|answer|question|continue|please)\b/i.test(text)) {
+    return "💬 *To continue this conversation:* Forward this answer back to me or reply directly to this message. 🤖";
+  }
+
+  return "💬 *Pou kontinye konvèsasyon an:* Fè *Forward* mesaj sa a tounen ban mwen, oswa reponn dirèkteman sou mesaj sa a. 🤖";
+}
 
 registerCommand(
   "ai",
   async (ctx) => {
-    return aiCommand(ctx);
+    if (!ctx.text) {
+      await ctx.send(
+        `🤖 Voye kesyon ou konsa:\n${ctx.prefix}ai Ki sa entèlijans atifisyèl ye?`
+      );
+
+      return { success: false };
+    }
+
+    try {
+      const result = await startAIChat(ctx.jid, ctx.text);
+
+      if (!result || !result.answer) {
+        await ctx.send("❌ AI a pa retounen yon repons.");
+        return { success: false };
+      }
+
+      const outgoing =
+        `${result.answer}\n\n${getAIForwardNotice(result.answer)}`;
+
+      const sent = await ctx.send(outgoing);
+
+      setLastAIMessage(
+        ctx.jid,
+        sent?.key?.id || null,
+        outgoing
+      );
+
+      return {
+        success: true,
+        answer: result.answer
+      };
+    } catch (error) {
+      console.error("[AI CHAT]", error?.stack || error);
+
+      await ctx.send(
+        "❌ Mwen pa kapab reponn kounye a. Verifye konfigirasyon Gemini API a epi eseye ankò."
+      );
+
+      return { success: false };
+    }
   },
   {
-    description:
-      "Ask the TOPFEROS AI assistant.",
-
-    usage:
-      ".ai <question>",
-
-    category:
-      "AI"
+    description: "Start a new AI conversation.",
+    usage: ".ai <question>",
+    category: "AI"
   }
 );
 
@@ -1425,6 +1480,99 @@ try {
       extractMessageText(
         message.message
       );
+
+
+/*
+|--------------------------------------------------------------------------
+| CONTINUE AI CHAT THROUGH REPLY OR FORWARD
+|--------------------------------------------------------------------------
+*/
+
+if (!message?.key?.fromMe && messageText) {
+  const contextInfo =
+    message.message?.extendedTextMessage?.contextInfo ||
+    message.message?.imageMessage?.contextInfo ||
+    message.message?.videoMessage?.contextInfo ||
+    {};
+
+  const quotedMessageId = contextInfo.stanzaId;
+
+  const isReply = isReplyToLastAIMessage(
+    jid,
+    quotedMessageId
+  );
+
+  const isForward = isForwardOfLastAIMessage(
+    jid,
+    messageText
+  );
+
+  if ((isReply || isForward) && hasSession(jid)) {
+    // Forwarding the AI answer itself is a signal to resume.
+    // A direct reply uses the user's actual reply text.
+    const continuationText = isForward && !isReply
+      ? "Mwen vle kontinye konvèsasyon an apati repons ou sot ban mwen an. Tanpri kontinye nan menm kontèks la epi mande m sa mwen ta renmen fè apre."
+      : messageText;
+
+    try {
+      const result = await continueAIChat(
+        jid,
+        continuationText
+      );
+
+      if (result?.busy) {
+        await sendText(
+          sock,
+          jid,
+          "⏳ M ap trete mesaj ou deja. Tanpri tann repons lan."
+        );
+
+        return {
+          success: false,
+          reason: "AI session busy."
+        };
+      }
+
+      if (result?.answer) {
+        const outgoing =
+          `${result.answer}\n\n${getAIForwardNotice(result.answer)}`;
+
+        const sent = await sendText(
+          sock,
+          jid,
+          outgoing
+        );
+
+        setLastAIMessage(
+          jid,
+          sent?.key?.id || null,
+          outgoing
+        );
+
+        return {
+          success: true,
+          command: "ai-continue"
+        };
+      }
+    } catch (error) {
+      console.error(
+        "[AI CHAT CONTINUE]",
+        error?.stack || error
+      );
+
+      await sendText(
+        sock,
+        jid,
+        "❌ Mwen pa kapab kontinye konvèsasyon an kounye a. Eseye ankò."
+      );
+
+      return {
+        success: false,
+        reason: "AI continuation failed."
+      };
+    }
+  }
+}
 
 /*
 |--------------------------------------------------------------------------
