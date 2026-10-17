@@ -88,9 +88,21 @@ async function askAI(prompt, options = {}) {
     config
   });
 
-  const response = await chat.sendMessage({
+  let response;
+
+try {
+  response = await chat.sendMessage({
     message: text
   });
+} catch (error) {
+  console.error("[GEMINI ERROR]", {
+    message: error?.message,
+    status: error?.status,
+    code: error?.code
+  });
+
+  throw error;
+}
 
   const answer = String(response.text || "").trim();
 
