@@ -572,10 +572,10 @@ function getPrefix(sessionId = "") {
       const session = sessionManager.getSession(sessionId);
 
       const savedSettings =
-        settingPanel.getSavedBotSettings(sessionId) || {};
+        settingPanel.getSessionSettings(sessionId) || {};
 
       const prefix = String(
-        savedSettings.prefix ||
+        savedSettings.bot?.prefix ||
         session?.bot?.prefix ||
         config?.bot?.prefix ||
         "."
@@ -586,7 +586,7 @@ function getPrefix(sessionId = "") {
   } catch (error) {
     console.error(
       "[TOPFEROS MD] Prefix loading error:",
-      error.message
+      error.stack || error.message
     );
   }
 
