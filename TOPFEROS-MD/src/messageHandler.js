@@ -13,12 +13,12 @@ const settingPanel =
   require("./settingPanel");
 
 const {
-  recordOwnerCommand
-} = require("./ownerStats");
+  handleVVCommands
+} = require("../commands/vv");
 
 const {
-  handleAutoViewOnce
-} = require("../services/viewOnce");
+  recordOwnerCommand
+} = require("./ownerStats");
 
 const {
   attachStatusHandler
