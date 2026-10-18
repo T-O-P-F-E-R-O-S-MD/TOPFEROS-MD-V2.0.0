@@ -1,320 +1,133 @@
+
+
 "use strict";
 
 // 🦁 TOPFEROS MD V2.0.0
-// MEDIA SERVICE — VV2 / VVV
+// VV MEDIA DOWNLOAD SERVICE
+
+const fs = require("fs");
+const path = require("path");
 
 const {
   downloadContentFromMessage
 } = require("@whiskeysockets/baileys");
 
-const MEDIA_TYPES = [
-  ["imageMessage", "image"],
-  ["videoMessage", "video"],
-  ["audioMessage", "audio"],
-  ["documentMessage", "document"]
-];
+const SAVE_DIR = path.join(
+  __dirname,
+  "..",
+  "media-saves"
+);
 
-function unwrapMessage(input) {
-  let content = input?.message || input;
+const MAX_SIZE = 25 * 1024 * 1024;
 
-  for (let i = 0; i < 10; i++) {
-    if (!content || typeof content !== "object") {
-      return null;
-    }
+fs.mkdirSync(SAVE_DIR, { recursive: true });
 
-    if (content.ephemeralMessage?.message) {
-      content = content.ephemeralMessage.message;
-      continue;
-    }
-
-    if (content.documentWithCaptionMessage?.message) {
-      content = content.documentWithCaptionMessage.message;
-      continue;
-    }
-
-    return content;
+async function saveMedia(mediaMessage, type) {
+  if (!mediaMessage || !type) {
+    throw new Error("Medya oswa tip medya a manke.");
   }
 
-  return null;
-}
-
-function getViewOnceMessage(input) {
-  const content = unwrapMessage(input);
-
-  if (!content) return null;
-
-  const keys = [
-    "viewOnceMessage",
-    "viewOnceMessageV2",
-    "viewOnceMessageV2Extension"
+  const allowedTypes = [
+    "image",
+    "video",
+    "audio",
+    "document"
   ];
 
-  for (const key of keys) {
-    if (content[key]?.message) {
-      return content[key].message;
-    }
-  }
-
-  return null;
-}
-
-function getViewOnceMedia(input) {
-  const content = getViewOnceMessage(input);
-
-  if (!content) return null;
-
-  for (const [key, type] of MEDIA_TYPES) {
-    if (content[key]) {
-      return {
-        type,
-        message: content[key]
-      };
-    }
-  }
-
-  return null;
-}
-
-function getQuotedMessage(input) {
-  const content = unwrapMessage(input);
-
-  if (!content) return null;
-
-  const queue = [content];
-  const visited = new Set();
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-
-    if (
-      !current ||
-      typeof current !== "object" ||
-      visited.has(current)
-    ) {
-      continue;
-    }
-
-    visited.add(current);
-
-    if (current.contextInfo?.quotedMessage) {
-      return {
-        download: current.contextInfo.quotedMessage,
-        text:
-          current.contextInfo.quotedMessage.conversation ||
-          current.contextInfo.quotedMessage
-            .extendedTextMessage?.text ||
-          ""
-      };
-    }
-
-    for (const value of Object.values(current)) {
-      if (value && typeof value === "object") {
-        queue.push(value);
-      }
-    }
-  }
-
-  return null;
-}
-
-function getNormalMedia(input) {
-  const content = unwrapMessage(input);
-
-  if (!content || getViewOnceMessage(content)) {
-    return null;
-  }
-
-  for (const [key, type] of MEDIA_TYPES) {
-    const item = content[key];
-
-    if (item && !item.viewOnce) {
-      return {
-        type,
-        message: item
-      };
-    }
-  }
-
-  return null;
-}
-
-async function downloadNormalMedia(media) {
-  if (!media?.message || !media?.type) {
-    throw new Error("Invalid media object");
+  if (!allowedTypes.includes(type)) {
+    throw new Error("Tip medya sa a pa sipòte.");
   }
 
   const stream = await downloadContentFromMessage(
-    media.message,
-    media.type
+    mediaMessage,
+    type
   );
 
   const chunks = [];
+  let totalSize = 0;
 
   for await (const chunk of stream) {
-    chunks.push(Buffer.from(chunk));
+    totalSize += chunk.length;
+
+    if (totalSize > MAX_SIZE) {
+      throw new Error(
+        "Medya a depase limit 25 MB."
+      );
+    }
+
+    chunks.push(chunk);
   }
 
-  return Buffer.concat(chunks);
-}
+  const buffer = Buffer.concat(chunks);
 
-function buildPayload(media, buffer) {
-  const original = media.message;
-
-  switch (media.type) {
-    case "image":
-      return {
-        image: buffer,
-        caption: original.caption || ""
-      };
-
-    case "video":
-      return {
-        video: buffer,
-        caption: original.caption || "",
-        mimetype: original.mimetype || "video/mp4"
-      };
-
-    case "audio":
-      return {
-        audio: buffer,
-        mimetype: original.mimetype || "audio/ogg",
-        ptt: Boolean(original.ptt)
-      };
-
-    case "document":
-      return {
-        document: buffer,
-        mimetype:
-          original.mimetype || "application/octet-stream",
-        fileName: original.fileName || "TOPFEROS-MEDIA"
-      };
-
-    default:
-      throw new Error("Unsupported media type");
-  }
-}
-
-function normalizeJid(jid) {
-  if (!jid || typeof jid !== "string") {
-    return null;
+  if (!buffer.length) {
+    throw new Error("Medya a vid.");
   }
 
-  return jid.replace(/:\d+@/, "@");
-}
+  const mime = (
+    mediaMessage.mimetype || ""
+  ).toLowerCase();
 
-async function processMedia(ctx, sendBoth = false) {
-  const { sock, message } = ctx;
+  const extensions = {
+    image: {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/gif": "gif"
+    },
+    video: {
+      "video/mp4": "mp4",
+      "video/3gpp": "3gp",
+      "video/quicktime": "mov"
+    },
+    audio: {
+      "audio/ogg": "ogg",
+      "audio/mpeg": "mp3",
+      "audio/mp4": "m4a",
+      "audio/aac": "aac",
+      "audio/amr": "amr",
+      "audio/wav": "wav",
+      "audio/webm": "webm"
+    },
+    document: {
+      "application/pdf": "pdf",
+      "application/zip": "zip",
+      "application/json": "json",
+      "text/plain": "txt",
+      "application/msword": "doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx"
+    }
+  };
 
-  const chatId =
-    ctx.jid ||
-    message?.key?.remoteJid;
+  const extension =
+    extensions[type]?.[mime] || "bin";
 
-  const senderId = normalizeJid(
-    ctx.sender ||
-    message?.key?.participant ||
-    (message?.key?.fromMe ? sock?.user?.id : chatId)
+  const filename =
+    `media_${Date.now()}_${require("crypto")
+      .randomBytes(4)
+      .toString("hex")}.${extension}`;
+
+  const filepath = path.join(
+    SAVE_DIR,
+    filename
   );
 
-  if (!sock || !chatId) {
-    return { success: false };
-  }
+  fs.writeFileSync(filepath, buffer, {
+    flag: "wx"
+  });
 
-  const quoted = getQuotedMessage(message);
-
-  if (!quoted) {
-    await ctx.send(
-      "❌ Reponn sou yon foto, videyo oswa odyo nòmal ak .vv2 oswa .vvv."
-    );
-
-    return { success: false };
-  }
-
-  if (getViewOnceMessage(quoted.download)) {
-    await ctx.send(
-      "🔒 Kòmand sa a pa telechaje ni transfere medya View Once."
-    );
-
-    return { success: false };
-  }
-
-  const media = getNormalMedia(quoted.download);
-
-  if (!media) {
-    await ctx.send(
-      "❌ Mwen pa jwenn medya nòmal nan mesaj ou reponn lan."
-    );
-
-    return { success: false };
-  }
-
-  try {
-    const buffer = await downloadNormalMedia(media);
-    const payload = buildPayload(media, buffer);
-
-    if (!sendBoth || !senderId || senderId === chatId) {
-      await sock.sendMessage(chatId, payload);
-
-      return { success: true };
-    }
-
-    await sock.sendMessage(senderId, payload);
-
-    const sent = await sock.sendMessage(chatId, payload);
-
-    if (sent?.key) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      try {
-        await sock.sendMessage(chatId, {
-          delete: sent.key
-        });
-      } catch (error) {
-        console.error(
-          "[TOPFEROS MD] Delete error:",
-          error.message
-        );
-      }
-    }
-
-    return {
-      success: true,
-      dmSent: true,
-      chatSent: true
-    };
-  } catch (error) {
-    console.error(
-      "[TOPFEROS MD MEDIA]",
-      error.stack || error.message || error
-    );
-
-    await ctx.send("❌ Transfè medya a echwe.");
-
-    return { success: false };
-  }
-}
-
-async function vv2Command(ctx) {
-  return processMedia(ctx, false);
-}
-
-async function vvvCommand(ctx) {
-  return processMedia(ctx, true);
-}
-
-async function handleAutoViewOnce() {
   return {
-    success: false,
-    handled: false
+    filename,
+    filepath,
+    size: buffer.length,
+    type,
+    mimetype: mime || "application/octet-stream"
   };
 }
 
 module.exports = {
-  unwrapMessage,
-  getViewOnceMessage,
-  getViewOnceMedia,
-  getQuotedMessage,
-  getNormalMedia,
-  vv2Command,
-  vvvCommand,
-  handleAutoViewOnce
+  saveMedia,
+  SAVE_DIR,
+  MAX_SIZE
 };
