@@ -9,7 +9,7 @@ const {
   downloadContentFromMessage
 } = require('@whiskeysockets/baileys');
 
-const SAVE_DIR = path.join(__dirname, 'media-saves');
+const SAVE_DIR = path.join(__dirname, '..', 'media-saves');
 fs.mkdirSync(SAVE_DIR, { recursive: true });
 
 const MEDIA_TYPES = [
@@ -45,14 +45,31 @@ function isViewOnce(message) {
   return false;
 }
 
-function getQuotedMessage(message) {
-  const context =
-    message?.extendedTextMessage?.contextInfo ||
-    message?.imageMessage?.contextInfo ||
-    message?.videoMessage?.contextInfo ||
-    message?.documentMessage?.contextInfo;
 
-  return context?.quotedMessage || null;
+function getQuotedMessage(message) {
+  if (!message) return null;
+
+  const messageTypes = [
+    'extendedTextMessage',
+    'imageMessage',
+    'videoMessage',
+    'audioMessage',
+    'documentMessage',
+    'stickerMessage',
+    'buttonsResponseMessage',
+    'listResponseMessage',
+    'templateButtonReplyMessage'
+  ];
+
+  for (const type of messageTypes) {
+    const context = message[type]?.contextInfo;
+
+    if (context?.quotedMessage) {
+      return context.quotedMessage;
+    }
+  }
+
+  return null;
 }
 
 async function downloadAndSave(mediaMessage, type) {
@@ -62,28 +79,38 @@ async function downloadAndSave(mediaMessage, type) {
   );
 
   const chunks = [];
+let totalSize = 0;
 
-  for await (const chunk of stream) {
-    chunks.push(chunk);
+for await (const chunk of stream) {
+  totalSize += chunk.length;
+
+  if (totalSize > 25 * 1024 * 1024) {
+    throw new Error(
+      'Medya a twò gwo (maksimòm 25 MB).'
+    );
   }
 
-  const buffer = Buffer.concat(chunks);
+  chunks.push(chunk);
+}
 
-  if (!buffer.length) {
-    throw new Error('Medya a vid.');
-  }
+const buffer = Buffer.concat(chunks);
 
-  // Limite gwosè a 25 MB.
-  if (buffer.length > 25 * 1024 * 1024) {
-    throw new Error('Medya a twò gwo (maksimòm 25 MB).');
-  }
+if (!buffer.length) {
+  throw new Error('Medya a vid.');
+}
 
-  const extensions = {
-    image: 'jpg',
-    video: 'mp4',
-    audio: 'bin',
-    document: 'bin'
-  };
+const extensions = {
+  image: 'jpg',
+  video: 'mp4',
+  audio: mediaMessage.mimetype === 'audio/ogg'
+    ? 'ogg'
+    : mediaMessage.mimetype === 'audio/mpeg'
+      ? 'mp3'
+      : mediaMessage.mimetype === 'audio/mp4'
+        ? 'm4a'
+        : 'bin',
+  document: 'bin'
+};
 
   const filename =
     `media_${Date.now()}.${extensions[type] || 'bin'}`;
