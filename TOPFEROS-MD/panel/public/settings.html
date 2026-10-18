@@ -866,23 +866,15 @@
 
           if (!success) return;
 
-          const sessionVerified =
-            await window.TOPFEROS.verifySession();
-
-          if (!sessionVerified) {
-            window.TOPFEROS?.notify(
-              "Session verification failed. Please check your session.",
-              "error"
-            );
-
-            return;
-          }
-
           await window.TOPFEROS.loadSettings();
 
-          if (verificationSection) {
-            verificationSection.hidden = true;
-          }
+if (settingsContent) {
+  settingsContent.hidden = false;
+}
+
+if (verificationSection) {
+  verificationSection.hidden = true;
+}
 
           if (settingsContent) {
             settingsContent.hidden = false;
