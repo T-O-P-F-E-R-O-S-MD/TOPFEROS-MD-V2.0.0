@@ -1,10 +1,16 @@
 
 "use strict";
 
+// 🦁 TOPFEROS MD V2.0.0
+// WHATSAPP TRANSLATOR
+
 const fs = require("fs");
 const path = require("path");
-const apiKey = process.env.GEMINI_API_KEY;
-const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+const { GoogleGenAI } = require("@google/genai");
+const languageService = require("./language");
+
+const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 const FOOTER = "🦁 TECH BY TOPFEROS MD 🐑";
 const BRAND = "TOPFEROS MD";
@@ -170,9 +176,8 @@ async function translateText(text, targetLanguage) {
     return original;
   }
 
-  const model = String(
-    process.env.GEMINI_MODEL || "gemini-2.5-flash"
-  ).trim();
+  
+const selectedModel = String(model).trim();
 
   const targetName = getTargetLanguageName(lang);
 
@@ -190,9 +195,11 @@ async function translateText(text, targetLanguage) {
   ].join("\n");
 
   try {
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
+    
+const response = await ai.models.generateContent({
+  model: selectedModel,
+  contents: prompt,
+
       config: {
         temperature: 0.1
       }
