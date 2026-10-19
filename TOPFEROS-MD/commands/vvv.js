@@ -87,8 +87,11 @@ async function execute(context) {
     return;
   }
 
-  const quoted = getQuoted(message);
-  const found = getMedia(quoted);
+  // 🦁 TOPFEROS MD V2.0.0
+// VVV SERVICE CONNECTION
+
+const quoted = viewonce.getQuotedMessage(message);
+const found = viewonce.findMedia(quoted);
 
   if (!found) {
     await sock.sendMessage(chatId, {
@@ -98,16 +101,10 @@ async function execute(context) {
   }
 
   try {
-    const stream = await downloadContentFromMessage(
-      found.media,
-      found.type
-    );
-
-    const chunks = [];
-
-    for await (const chunk of stream) {
-      chunks.push(Buffer.from(chunk));
-    }
+    const buffer = await viewonce.downloadMedia(
+  found.media,
+  found.type
+);
 
     const buffer = Buffer.concat(chunks);
     if (!buffer.length) return;
