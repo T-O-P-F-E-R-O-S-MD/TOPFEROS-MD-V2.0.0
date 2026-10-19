@@ -67,8 +67,10 @@ async function execute(context) {
   if (!sock || !message) return;
 
   const chatId = message.key?.remoteJid;
-  const sender = message.key?.participant ||
-    chatId;
+  const sender =
+  message.key?.fromMe
+    ? sock.user?.id
+    : (message.key?.participant || chatId);
 
   if (!chatId || !sender) return;
 
