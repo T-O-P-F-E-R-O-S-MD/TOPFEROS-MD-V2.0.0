@@ -1,32 +1,45 @@
 
 "use strict";
 
+// 🦁 TOPFEROS MD V2.0.0
+// GEMINI AI SERVICE
+
 const { GoogleGenAI } = require("@google/genai");
 
-const API_KEY =
-  process.env.GEMINI_API_KEY ||
-  process.env.GOOGLE_API_KEY ||
-  process.env.GOOGLE_GEMINI_API_KEY;
+function getApiKey() {
+  return String(
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_GEMINI_API_KEY ||
+    ""
+  ).trim();
+}
 
-const MODEL =
-  process.env.GEMINI_MODEL || "gemini-3.8-flash";
+function getModel() {
+  return String(
+    process.env.GEMINI_MODEL ||
+    "gemini-3.8-flash"
+  ).trim();
+}
+
+function isAIConfigured() {
+  return Boolean(getApiKey());
+}
 
 function getAIClient() {
-  if (!API_KEY) {
+  const apiKey = getApiKey();
+
+  if (!apiKey) {
     throw new Error(
-      "Gemini API key is missing. Set GEMINI_API_KEY in .env or Railway Variables."
+      "GEMINI_API_KEY manke nan Render Environment."
     );
   }
 
-  return new GoogleGenAI({
-    apiKey: API_KEY
-  });
+  return new GoogleGenAI({ apiKey });
 }
 
 function normalizeHistory(history) {
-  if (!Array.isArray(history)) {
-    return [];
-  }
+  if (!Array.isArray(history)) return [];
 
   return history
     .filter(item =>
@@ -36,16 +49,21 @@ function normalizeHistory(history) {
       item.content.trim()
     )
     .map(item => ({
-      role:
-        item.role === "assistant" || item.role === "model"
-          ? "model"
-          : "user",
-      parts: [
-        {
-          text: item.content.trim()
-        }
-      ]
+      role: item.role === "user" ? "user" : "model",
+      parts: [{ text: item.content.trim() }]
     }));
+}
+
+function validNumber(value, fallback, min, max) {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number)
+    ? Math.min(max, Math.max(min, number))
+    : fallback;
 }
 
 async function askAI(prompt, options = {}) {
@@ -56,13 +74,12 @@ async function askAI(prompt, options = {}) {
   }
 
   const ai = getAIClient();
-
+  const model = getModel();
   const history = normalizeHistory(options.history);
 
-  // The latest user message may already be in the supplied history.
-  // Remove it from history because it is sent separately below.
+  // Evite voye dènye kesyon an de fwa.
   if (
-    history.length > 0 &&
+    history.length &&
     history[history.length - 1].role === "user" &&
     history[history.length - 1].parts[0].text === text
   ) {
@@ -70,49 +87,54 @@ async function askAI(prompt, options = {}) {
   }
 
   const config = {
-    systemInstruction:
-      String(options.systemPrompt || "You are a helpful AI assistant."),
-    temperature:
-      Number.isFinite(Number(options.temperature))
-        ? Number(options.temperature)
-        : 0.7,
-    maxOutputTokens:
-      Number.isFinite(Number(options.maxTokens))
-        ? Number(options.maxTokens)
-        : 1500
+    systemInstruction: String(
+      options.systemPrompt ||
+      "You are the helpful AI assistant of TOPFEROS MD."
+    ),
+    temperature: validNumber(
+      options.temperature, 0.7, 0, 2
+    ),
+    maxOutputTokens: Math.floor(
+      validNumber(options.maxTokens, 1500, 128, 8192)
+    )
   };
 
-  const chat = ai.chats.create({
-    model: MODEL,
-    history,
-    config
-  });
+  try {
+    const chat = ai.chats.create({
+      model,
+      history,
+      config
+    });
 
-  let response;
+    const response = await chat.sendMessage({
+      message: text
+    });
 
-try {
-  response = await chat.sendMessage({
-    message: text
-  });
-} catch (error) {
-  console.error("[GEMINI ERROR]", {
-    message: error?.message,
-    status: error?.status,
-    code: error?.code
-  });
+    const answer = String(
+      response?.text || ""
+    ).trim();
 
-  throw error;
-}
+    if (!answer) {
+      throw new Error(
+        "Gemini returned an empty response."
+      );
+    }
 
-  const answer = String(response.text || "").trim();
+    return answer;
+  } catch (error) {
+    const status =
+      error?.status ||
+      error?.code ||
+      "UNKNOWN";
 
-  if (!answer) {
-    throw new Error(
-      "Gemini returned an empty response. Please try again."
-    );
+    console.error("[GEMINI ERROR]", {
+      model,
+      status,
+      message: error?.message || String(error)
+    });
+
+    throw error;
   }
-
-  return answer;
 }
 
 async function aiChat(prompt, history = [], options = {}) {
@@ -120,10 +142,6 @@ async function aiChat(prompt, history = [], options = {}) {
     ...options,
     history
   });
-}
-
-function isAIConfigured() {
-  return Boolean(API_KEY);
 }
 
 module.exports = {
