@@ -26,8 +26,8 @@ function createSession(jid) {
     jid: key,
     active: true,
     history: [],
-    lastAIMessageId: null,
     lastAIText: null,
+    waitingForQuestion: false,
     busy: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -154,21 +154,62 @@ function isReplyToLastAIMessage(jid, quotedMessageId) {
   return String(quotedMessageId) === String(session.lastAIMessageId);
 }
 
+
 function normalizeMessageText(text) {
   return String(text || "")
     .replace(/\r\n/g, "\n")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
-function isForwardOfLastAIMessage(jid, incomingText) {
+function getForwardQuestion(jid, incomingText) {
   const session = getSession(jid);
 
-  if (!session || !session.active || !session.lastAIText) {
-    return false;
+  if (!session?.active || !session.lastAIText) {
+    return null;
   }
 
-  return normalizeMessageText(incomingText) ===
-    normalizeMessageText(session.lastAIText);
+  const incoming = normalizeMessageText(incomingText);
+  const previous = normalizeMessageText(session.lastAIText);
+
+  if (!incoming || !previous) {
+    return null;
+  }
+
+  // Forward egzak repons AI a.
+  if (incoming === previous) {
+    return "";
+  }
+
+  // Forward repons AI a ak yon kesyon ajoute.
+  if (incoming.startsWith(previous)) {
+    return incoming.slice(previous.length).trim();
+  }
+
+  return null;
+}
+
+function isForwardOfLastAIMessage(jid, incomingText) {
+  return getForwardQuestion(jid, incomingText) !== null;
+}
+
+function setWaitingForQuestion(jid, waiting = true) {
+  const session = getSession(jid);
+
+  if (!session?.active) return false;
+
+  session.waitingForQuestion = Boolean(waiting);
+  session.updatedAt = new Date().toISOString();
+
+  return true;
+}
+
+function isWaitingForQuestion(jid) {
+  const session = getSession(jid);
+
+  return Boolean(
+    session?.active && session.waitingForQuestion
+  );
 }
 
 function getChatHistory(jid) {
@@ -203,4 +244,7 @@ module.exports = {
   isForwardOfLastAIMessage,
   getChatHistory,
   getSessionInfo
+  getForwardQuestion,
+  setWaitingForQuestion,
+  isWaitingForQuestion,
 };
