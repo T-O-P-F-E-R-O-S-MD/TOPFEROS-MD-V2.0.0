@@ -24,7 +24,9 @@ const vv2Command =
 // 🦁 TOPFEROS MD V2.0.0
 // VVV COMMAND
 
-const vvvCommand = require("../commands/vvv");
+const {
+  execute: vvvCommand
+} = require("../commands/vvv");
 
 const {
   recordOwnerCommand
@@ -1170,16 +1172,15 @@ registerCommand(
 registerCommand(
   "vvv",
   async (ctx) => {
-    return await vvvCommand.execute(ctx);
+    await vvvCommand(ctx);
   },
   {
-    aliases: vvvCommand.aliases || [],
-    description: vvvCommand.description,
-    usage: vvvCommand.usage,
+    aliases: [],
+    description: "Send media to chat and DM",
+    usage: ".vvv",
     category: "MEDIA"
   }
 );
-
 
 /*
 |--------------------------------------------------------------------------
