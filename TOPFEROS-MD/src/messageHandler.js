@@ -12,10 +12,14 @@ const sessionManager =
 const settingPanel =
   require("./settingPanel");
 
-const {
-  handleVV2Commands
-} = require("../commands/vv2");
+// 🦁 TOPFEROS MD V2.0.0
+// VV2 COMMAND CONNECTION
 
+const vv2CommandModule =
+  require("../commands/vv2");
+
+const vv2Command =
+  vv2CommandModule.execute;
 
 const {
   recordOwnerCommand
@@ -1132,18 +1136,20 @@ registerCommand(
 
 /*
 |--------------------------------------------------------------------------
-| COMMAND: VVV
+| COMMAND: VV2
+| TOPFEROS MD V2.0.0
 |--------------------------------------------------------------------------
 */
 
 registerCommand(
-  "vvv",
+  vv2CommandModule.name,
   async (ctx) => {
-    return vvvCommand(ctx);
+    return await vv2Command(ctx);
   },
   {
-    description: "Trete medya nòmal ki site nan mesaj la.",
-    usage: ".vvv",
+    aliases: vv2CommandModule.aliases,
+    description: vv2CommandModule.description,
+    usage: vv2CommandModule.usage,
     category: "MEDIA"
   }
 );
