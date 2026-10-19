@@ -10,13 +10,6 @@ const {
   downloadContentFromMessage
 } = require("@whiskeysockets/baileys");
 
-const viewonce = require("../services/viewOnce");
-
-// 🦁 TOPFEROS MD V2.0.0
-// VVV SERVICE CONNECTION
-
-const viewonce = require("./viewonce");
-
 const MEDIA_TYPES = [
   ["imageMessage", "image"],
   ["videoMessage", "video"],
