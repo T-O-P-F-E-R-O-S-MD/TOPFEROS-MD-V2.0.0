@@ -54,14 +54,6 @@ const {
 } = require("../commands/play");
 
 const {
-  vv2Command
-} = require("../services/viewOnce");
-
-const {
-  vvvCommand
-} = require("../services/viewOnce");
-
-const {
   saveCommand,
   sendCommand
 } = require("../commands/status");
