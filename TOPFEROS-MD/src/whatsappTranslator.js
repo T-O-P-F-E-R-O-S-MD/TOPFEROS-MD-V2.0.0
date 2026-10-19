@@ -178,7 +178,11 @@ async function translateText(text, targetLanguage, options = {}) {
     return original;
   }
 
-  const key = `${lang}:${output}`;
+  const key = JSON.stringify([
+  lang,
+  output,
+  protectedItems
+]);
 
   if (cache.has(key)) {
     return cache.get(key);
