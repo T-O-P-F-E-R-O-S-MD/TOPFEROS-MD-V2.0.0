@@ -9,6 +9,8 @@ const config = require("./config");
 const sessionManager = require("./sessionManager");
 const language = require("./language");
 
+const whatsappTranslator = require("./whatsappTranslator");
+
 // ============================================================
 // TOPFEROS MD V2.0.0
 // SETTINGS PANEL CONTROLLER
@@ -341,9 +343,9 @@ function verifySession(sessionId) {
   };
 }
 
-// ============================================================
-// LANGUAGE
-// ============================================================
+ // ============================================================
+ // LANGUAGE — TOPFEROS MD V2.0.0
+ // ============================================================
 
 function setPanelLanguage(sessionId, value) {
   const id = normalizeSessionId(sessionId);
@@ -352,12 +354,24 @@ function setPanelLanguage(sessionId, value) {
     throw new Error("Session ID is required.");
   }
 
+  const selected = language.resolveLanguage(value);
+
+  if (!selected) {
+    throw new Error("Unsupported language.");
+  }
+
+  const sessionPath =
+    sessionManager.getSessionPath(id);
+
+  // Anrejistre lang sesyon WhatsApp la.
+  whatsappTranslator.saveSessionLanguage(
+    sessionPath,
+    selected
+  );
+
   const panelSession =
     getPanelSession(id) ||
     createPanelSession(id);
-
-  const selected =
-    language.resolveLanguage(value);
 
   panelSession.language = selected;
   touchPanelSession(id);
@@ -370,13 +384,29 @@ function setPanelLanguage(sessionId, value) {
 }
 
 function getPanelLanguage(sessionId) {
-  const panelSession = getPanelSession(sessionId);
+  const id = normalizeSessionId(sessionId);
 
-  if (!panelSession) {
+  if (!id) {
     return language.getDefaultLanguage();
   }
 
-  return panelSession.language;
+  const panelSession = getPanelSession(id);
+
+  const sessionPath =
+    sessionManager.getSessionPath(id);
+
+  const selected =
+    whatsappTranslator.readSessionLanguage(
+      sessionPath,
+      panelSession?.language ||
+        language.getDefaultLanguage()
+    );
+
+  if (panelSession) {
+    panelSession.language = selected;
+  }
+
+  return selected;
 }
 
 function getLanguages() {
@@ -823,6 +853,15 @@ function saveSettings(sessionId, payload) {
       groupAutomation
     }
   );
+
+
+  // Anrejistre nouvo lang WhatsApp la si li chanje.
+  const requestedLanguage =
+    bot.language || data.language;
+
+  if (requestedLanguage) {
+    setPanelLanguage(id, requestedLanguage);
+  }
 
   touchPanelSession(id);
 
