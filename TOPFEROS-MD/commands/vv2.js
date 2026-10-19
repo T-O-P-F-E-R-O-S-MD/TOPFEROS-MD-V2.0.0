@@ -1,7 +1,7 @@
 
 "use strict";
 
-const viewonce = require("./viewonce");
+const viewonce = require("../services/viewOnce");
 
 async function execute(context) {
   const {
