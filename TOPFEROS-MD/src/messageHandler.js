@@ -13,8 +13,9 @@ const settingPanel =
   require("./settingPanel");
 
 const {
-  handleVVCommands
-} = require("../commands/vv");
+  handleVV2Commands
+} = require("../commands/vv2");
+
 
 const {
   recordOwnerCommand
