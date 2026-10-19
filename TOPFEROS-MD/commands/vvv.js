@@ -5,13 +5,6 @@
 // VVV COMMAND
 // Same Chat + Private DM + Delete after 1 second
 
-const {
-  downloadContentFromMessage
-} = require("@whiskeysockets/baileys");
-
-// 🦁 TOPFEROS MD V2.0.0
-// VVV SERVICE CONNECTION
-
 const viewonce = require("../services/viewOnce");
 
 const sleep = (ms) =>
