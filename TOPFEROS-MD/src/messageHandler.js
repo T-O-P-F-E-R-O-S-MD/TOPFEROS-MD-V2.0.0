@@ -1011,7 +1011,13 @@ registerCommand(
     }
 
     try {
-      const result = await startAIChat(ctx.jid, ctx.text);
+      if (result?.busy) {
+  await ctx.send(
+    "⏳ AI a ap trete yon kesyon. Tanpri tann."
+  );
+
+  return { success: false };
+}
 
       if (!result || !result.answer) {
         await ctx.send("❌ AI a pa retounen yon repons.");
