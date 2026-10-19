@@ -863,7 +863,6 @@ getMessage: getCachedMessage,
       socketConfig
     );
 
-
   // Tradui mesaj WhatsApp k ap soti yo dapre lang panel la.
   const originalSendMessage = sock.sendMessage.bind(sock);
 
@@ -871,6 +870,20 @@ getMessage: getCachedMessage,
     try {
       const selectedLanguage =
         settingPanel.getPanelLanguage(sessionId);
+
+      // Jwenn non bot ak footer sesyon aktyèl la.
+      const currentSession =
+        sessionManager.getSession(sessionId);
+
+      const botName =
+        currentSession?.bot?.name ||
+        config.bot?.name ||
+        "TOPFEROS MD";
+
+      const footer =
+        currentSession?.bot?.footer ||
+        config.bot?.footer ||
+        "🦁 TECH BY TOPFEROS MD 🐑";
 
       if (
         content &&
@@ -880,10 +893,15 @@ getMessage: getCachedMessage,
           typeof content.caption === "string"
         )
       ) {
-        const translatedContent = await translatePayload(
-          content,
-          selectedLanguage
-        );
+        
+const translatedContent = await translatePayload(
+  content,
+  selectedLanguage,
+  {
+    botName,
+    footer
+  }
+);
 
         return originalSendMessage(
           jid,
