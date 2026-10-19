@@ -69,6 +69,10 @@ const {
   sendCommand
 } = require("../commands/status");
 
+getForwardQuestion,
+setWaitingForQuestion,
+isWaitingForQuestion,
+
 /*
 |--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
@@ -1508,14 +1512,13 @@ try {
         message.message
       );
 
-
 /*
 |--------------------------------------------------------------------------
 | CONTINUE AI CHAT THROUGH REPLY OR FORWARD
 |--------------------------------------------------------------------------
 */
 
-if (!message?.key?.fromMe && messageText) {
+if (!message?.key?.fromMe && messageText && hasSession(jid)) {
   const contextInfo =
     message.message?.extendedTextMessage?.contextInfo ||
     message.message?.imageMessage?.contextInfo ||
@@ -1529,17 +1532,54 @@ if (!message?.key?.fromMe && messageText) {
     quotedMessageId
   );
 
-  const isForward = isForwardOfLastAIMessage(
-    jid,
-    messageText
+  const isForwarded = Boolean(
+    contextInfo.isForwarded ||
+    Number(contextInfo.forwardingScore || 0) > 0
   );
 
-  if ((isReply || isForward) && hasSession(jid)) {
-    // Forwarding the AI answer itself is a signal to resume.
-    // A direct reply uses the user's actual reply text.
-    const continuationText = isForward && !isReply
-      ? "Mwen vle kontinye konvèsasyon an apati repons ou sot ban mwen an. Tanpri kontinye nan menm kontèks la epi mande m sa mwen ta renmen fè apre."
-      : messageText;
+  const forwardQuestion = isForwarded
+    ? getForwardQuestion(jid, messageText)
+    : null;
+
+  const isAIForward = forwardQuestion !== null;
+
+  // Yon nouvo kòmand pa dwe sèvi kòm kesyon
+  // pou ansyen konvèsasyon an.
+  const parsedAICommand = parseCommand(
+    messageText,
+    sessionId
+  );
+
+  const isCommand = Boolean(parsedAICommand);
+
+  const waiting = isWaitingForQuestion(jid);
+
+  if (isAIForward && !forwardQuestion) {
+    setWaitingForQuestion(jid, true);
+
+    await sendText(
+      sock,
+      jid,
+      "🤖 Mwen rekonèt repons AI ou transfere a. " +
+      "Voye pwochen kesyon ou san prefix .ai."
+    );
+
+    return {
+      success: true,
+      command: "ai-forward-waiting"
+    };
+  }
+
+  const shouldContinue =
+    isReply ||
+    (isAIForward && Boolean(forwardQuestion)) ||
+    (waiting && !isCommand);
+
+  if (shouldContinue) {
+    const continuationText =
+      isAIForward && forwardQuestion
+        ? forwardQuestion
+        : messageText;
 
     try {
       const result = await continueAIChat(
@@ -1551,7 +1591,7 @@ if (!message?.key?.fromMe && messageText) {
         await sendText(
           sock,
           jid,
-          "⏳ M ap trete mesaj ou deja. Tanpri tann repons lan."
+          "⏳ AI a ap trete yon kesyon. Tanpri tann."
         );
 
         return {
@@ -1576,6 +1616,8 @@ if (!message?.key?.fromMe && messageText) {
           outgoing
         );
 
+        setWaitingForQuestion(jid, false);
+
         return {
           success: true,
           command: "ai-continue"
@@ -1590,7 +1632,7 @@ if (!message?.key?.fromMe && messageText) {
       await sendText(
         sock,
         jid,
-        "❌ Mwen pa kapab kontinye konvèsasyon an kounye a. Eseye ankò."
+        "❌ AI a pa kapab kontinye kounye a. Eseye ankò."
       );
 
       return {
