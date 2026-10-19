@@ -808,10 +808,20 @@ app.post(
         return sendError(res, 500, "Settings save service is unavailable.");
       }
 
-      const result = settingPanel.saveSettings(sessionId, {
-        bot: req.body?.bot || {},
-        settings: req.body?.settings || {}
-      });
+const result = settingPanel.saveSettings(sessionId, {
+  bot: req.body?.bot || {},
+  settings: {
+    ...(req.body?.settings || {}),
+    automation:
+      req.body?.automation ||
+      req.body?.settings?.automation ||
+      {},
+    groupAutomation:
+      req.body?.groupAutomation ||
+      req.body?.settings?.groupAutomation ||
+      {}
+  }
+});
 
       return res.json(result);
     } catch (error) {
