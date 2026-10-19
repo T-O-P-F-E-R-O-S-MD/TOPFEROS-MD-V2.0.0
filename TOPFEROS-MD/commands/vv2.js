@@ -8,7 +8,7 @@ const path = require('path');
 
 const {
   saveMedia
-} = require("../services/vvService");
+} = require("../services/viewOnce");
 
 const SAVE_DIR = path.join(__dirname, '..', 'media-saves');
 fs.mkdirSync(SAVE_DIR, { recursive: true });
