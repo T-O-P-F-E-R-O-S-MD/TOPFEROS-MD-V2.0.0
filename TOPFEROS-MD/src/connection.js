@@ -872,18 +872,17 @@ getMessage: getCachedMessage,
         settingPanel.getPanelLanguage(sessionId);
 
       // Jwenn non bot ak footer sesyon aktyèl la.
-      const currentSession =
-        sessionManager.getSession(sessionId);
 
-      const botName =
-        currentSession?.bot?.name ||
-        config.bot?.name ||
-        "TOPFEROS MD";
+      const currentSettings =
+  settingPanel.getSessionSettings(sessionId);
 
-      const footer =
-        currentSession?.bot?.footer ||
-        config.bot?.footer ||
-        "🦁 TECH BY TOPFEROS MD 🐑";
+const botName =
+  currentSettings?.bot?.name ||
+  "TOPFEROS MD";
+
+const footer =
+  currentSettings?.bot?.footer ||
+  "🦁 TECH BY TOPFEROS MD 🐑";
 
       if (
         content &&
