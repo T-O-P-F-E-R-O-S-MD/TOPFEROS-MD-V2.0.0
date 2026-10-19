@@ -246,7 +246,7 @@ app.get(
 // ============================================================
 
 app.get(
-  "/setting",
+  ["/setting", "/settings"],
   (req, res) => {
     const settingPath =
       path.join(
