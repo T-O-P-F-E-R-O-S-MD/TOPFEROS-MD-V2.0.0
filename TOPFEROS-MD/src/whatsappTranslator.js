@@ -59,23 +59,33 @@ function saveSessionLanguage(sessionPath, value) {
   return language;
 }
 
-function protectTerms(text) {
+function protectTerms(text, options = {}) {
   const protectedItems = [];
   let output = String(text || "");
 
   const protect = (value) => {
-    if (!value || !output.includes(value)) return;
+    const term = String(value || "").trim();
+
+    if (!term || !output.includes(term)) {
+      return;
+    }
 
     const token = `ZXQKEEP${protectedItems.length}QXZ`;
-    protectedItems.push([token, value]);
-    output = output.split(value).join(token);
+
+    protectedItems.push([token, term]);
+
+    output = output.split(term).join(token);
   };
 
-  // Konsève non bot la ak siyati a.
+  // Pwoteje footer ak non bot chak sesyon.
+  protect(options.footer);
+  protect(options.botName);
+
+  // Pwoteje valè orijinal TOPFEROS MD yo.
   protect(FOOTER);
   protect(BRAND);
 
-  // Konsève lyen, adrès imel, kòmand ak kòd.
+  // Pwoteje lyen, imel, kòmand ak kòd.
   const patterns = [
     /https?:\/\/[^\s]+/gi,
     /www\.[^\s]+/gi,
@@ -92,6 +102,7 @@ function protectTerms(text) {
           : match;
 
       const token = `ZXQKEEP${protectedItems.length}QXZ`;
+
       protectedItems.push([token, value]);
 
       return prefix && value !== match
@@ -100,7 +111,10 @@ function protectTerms(text) {
     });
   }
 
-  return { output, protectedItems };
+  return {
+    output,
+    protectedItems
+  };
 }
 
 function restoreTerms(text, protectedItems) {
@@ -147,7 +161,7 @@ function getGeminiClient() {
   return new GoogleGenAI({ apiKey });
 }
 
-async function translateText(text, targetLanguage) {
+async function translateText(text, targetLanguage, options = {}) {
   const original = String(text || "");
   const lang =
     languageService.normalizeLanguage(targetLanguage);
@@ -157,7 +171,7 @@ async function translateText(text, targetLanguage) {
   }
 
   const { output, protectedItems } =
-    protectTerms(original);
+  protectTerms(original, options);
 
   // Pa voye mesaj ki pa gen tèks nòmal nan API a.
   if (!/[A-Za-zÀ-ž\u4e00-\u9fff]{3}/.test(output)) {
@@ -249,24 +263,28 @@ const response = await ai.models.generateContent({
   }
 }
 
-async function translatePayload(payload, language) {
-  if (!payload || typeof payload !== "object") {
-    return payload;
-  }
-
-  const result = { ...payload };
-
-  for (const field of ["text", "caption"]) {
-    if (typeof result[field] === "string") {
-      result[field] = await translateText(
-        result[field],
-        language
-      );
-    }
-  }
-
-  return result;
+<CodeBlock language="javascript" editable>
+async function translatePayload(
+payload,
+language,
+options = {}
+) {
+if (!payload || typeof payload !== "object") {
+return payload;
 }
+const result = { ...payload };
+for (const field of ["text", "caption"]) {
+if (typeof result[field] === "string") {
+result[field] = await translateText(
+result[field],
+language,
+options
+);
+}
+}
+return result;
+}
+</CodeBlock>
 
 module.exports = {
   translateText,
