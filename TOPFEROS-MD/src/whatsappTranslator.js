@@ -267,28 +267,25 @@ const response = await ai.models.generateContent({
   }
 }
 
-<CodeBlock language="javascript" editable>
-async function translatePayload(
-payload,
-language,
-options = {}
-) {
-if (!payload || typeof payload !== "object") {
-return payload;
+async function translatePayload(payload, language, options = {}) {
+  if (!payload || typeof payload !== "object") {
+    return payload;
+  }
+
+  const result = { ...payload };
+
+  for (const field of ["text", "caption"]) {
+    if (typeof result[field] === "string") {
+      result[field] = await translateText(
+        result[field],
+        language,
+        options
+      );
+    }
+  }
+
+  return result;
 }
-const result = { ...payload };
-for (const field of ["text", "caption"]) {
-if (typeof result[field] === "string") {
-result[field] = await translateText(
-result[field],
-language,
-options
-);
-}
-}
-return result;
-}
-</CodeBlock>
 
 module.exports = {
   translateText,
