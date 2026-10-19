@@ -5,9 +5,10 @@
 
 const fs = require('fs');
 const path = require('path');
+
 const {
-  downloadContentFromMessage
-} = require('@whiskeysockets/baileys');
+  saveMedia
+} = require("../services/vvService");
 
 const SAVE_DIR = path.join(__dirname, '..', 'media-saves');
 fs.mkdirSync(SAVE_DIR, { recursive: true });
@@ -204,7 +205,8 @@ async function handleVVCommands(sock, msg) {
   }
 
   try {
-    const filename = await downloadAndSave(mediaMessage, type);
+    const saved = await saveMedia(mediaMessage, type);
+const filename = saved.filename;
 
     await sock.sendMessage(chatId, {
       text:
