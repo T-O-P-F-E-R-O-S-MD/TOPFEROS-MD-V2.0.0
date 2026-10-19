@@ -1063,6 +1063,19 @@ app.post("/api/pair", async (req, res) => {
   try {
     const number = cleanNumber(req.body?.number);
 
+    // Lang itilizatè a chwazi anvan pairing.
+    const selectedLanguage = language.resolveLanguage(
+      req.body?.language
+    );
+
+    if (!selectedLanguage) {
+      return sendError(
+        res,
+        400,
+        "Please select a valid language."
+      );
+    }
+
     if (!number || number.length < 8 || number.length > 15) {
       return sendError(
         res,
@@ -1078,6 +1091,20 @@ app.post("/api/pair", async (req, res) => {
         "Fonksyon WhatsApp pairing la pa disponib."
       );
     }
+
+    
+    // Konsève lang lan anvan koneksyon WhatsApp la.
+    // Sa pèmèt premye mesaj welcome la sèvi ak lang sa a.
+    const sessionPath =
+      sessionManager.getSessionPath(number);
+
+    const whatsappTranslator =
+      require("../src/whatsappTranslator");
+
+    whatsappTranslator.saveSessionLanguage(
+      sessionPath,
+      selectedLanguage
+    );
 
     const result = await connection.pairSession(number);
 
