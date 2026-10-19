@@ -115,7 +115,16 @@ async function startAIChat(jid, message) {
     throw new Error("AI Chat message is empty.");
   }
 
-  // A new .ai command starts a fresh conversation.
+  const existing = getSession(jid);
+
+  if (existing?.busy) {
+    return {
+      busy: true,
+      session: existing,
+      answer: null
+    };
+  }
+
   const session = createSession(jid);
   return requestAI(session, text);
 }
