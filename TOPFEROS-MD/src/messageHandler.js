@@ -21,6 +21,11 @@ const vv2CommandModule =
 const vv2Command =
   vv2CommandModule.execute;
 
+// 🦁 TOPFEROS MD V2.0.0
+// VVV COMMAND
+
+const vvvCommand = require("../commands/vvv");
+
 const {
   recordOwnerCommand
 } = require("./ownerStats");
@@ -1153,6 +1158,28 @@ registerCommand(
     category: "MEDIA"
   }
 );
+
+
+/*
+|--------------------------------------------------------------------------
+| COMMAND: VVV
+| TOPFEROS MD V2.0.0
+|--------------------------------------------------------------------------
+*/
+
+registerCommand(
+  "vvv",
+  async (ctx) => {
+    return await vvvCommand.execute(ctx);
+  },
+  {
+    aliases: vvvCommand.aliases || [],
+    description: vvvCommand.description,
+    usage: vvvCommand.usage,
+    category: "MEDIA"
+  }
+);
+
 
 /*
 |--------------------------------------------------------------------------
