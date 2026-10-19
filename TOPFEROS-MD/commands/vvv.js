@@ -106,7 +106,6 @@ const found = viewonce.findMedia(quoted);
   found.type
 );
 
-    const buffer = Buffer.concat(chunks);
     if (!buffer.length) return;
 
     const payload = {};
