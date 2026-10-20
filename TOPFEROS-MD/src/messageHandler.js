@@ -64,17 +64,13 @@ const {
 } = require("../services/aiChat");
 
 const {
-  playCommand
-} = require("../commands/play");
-
-const {
   saveCommand,
   sendCommand
 } = require("../commands/status");
 
-getForwardQuestion,
-setWaitingForQuestion,
-isWaitingForQuestion,
+const {
+  playCommand
+} = require("../commands/play");
 
 /*
 |--------------------------------------------------------------------------
@@ -1013,13 +1009,18 @@ registerCommand(
       return { success: false };
     }
 
-    try {
-      if (result?.busy) {
-  await ctx.send(
-    "⏳ AI a ap trete yon kesyon. Tanpri tann."
+   try {
+  const result = await startAIChat(
+    ctx.jid,
+    ctx.text
   );
 
-  return { success: false };
+  if (result?.busy) {
+    await ctx.send(
+      "⏳ AI a ap trete yon kesyon. Tanpri tann."
+    );
+
+    return { success: false };
 }
 
       if (!result || !result.answer) {
