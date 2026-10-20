@@ -172,6 +172,54 @@ function normalizeMessageText(text) {
 }
 
 function getForwardQuestion(jid, incomingText) {
+  const session = getSession(jid);
+
+  if (!session?.active || !session.lastAIText) {
+    return null;
+  }
+
+  const incoming = normalizeMessageText(incomingText);
+  const previous = normalizeMessageText(session.lastAIText);
+
+  if (!incoming || !previous) {
+    return null;
+  }
+
+  // Rekonèt mesaj konplè AI a ki transfere.
+  if (incoming === previous) {
+    return "";
+  }
+
+  // Jwenn dènye repons AI a nan istwa konvèsasyon an.
+  const lastAnswer =
+    [...session.history]
+      .reverse()
+      .find(item => item.role === "assistant")
+      ?.content || "";
+
+  const normalizedAnswer =
+    normalizeMessageText(lastAnswer);
+
+  // Rekonèt repons AI a san enstriksyon Forward la.
+  if (
+    normalizedAnswer &&
+    incoming === normalizedAnswer
+  ) {
+    return "";
+  }
+
+  // Rekonèt Forward ki gen yon nouvo kesyon ajoute.
+  for (const reference of [previous, normalizedAnswer]) {
+    if (
+      reference &&
+      incoming.startsWith(reference)
+    ) {
+      return incoming.slice(reference.length).trim();
+    }
+  }
+
+  return null;
+}
 
 function isForwardOfLastAIMessage(jid, incomingText) {
   return getForwardQuestion(jid, incomingText) !== null;
