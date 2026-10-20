@@ -57,6 +57,9 @@ const {
   setLastAIMessage,
   isReplyToLastAIMessage,
   isForwardOfLastAIMessage,
+  getForwardQuestion,
+  setWaitingForQuestion,
+  isWaitingForQuestion,
   hasSession
 } = require("../services/aiChat");
 
