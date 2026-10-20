@@ -1364,86 +1364,78 @@ async function stopAutoPresence(sock, jid, presence) {
 */
 
 async function handleMessage(
-sock,
-message,
-sessionId
+  sock,
+  message,
+  sessionId
 ) {
-try {
-/*
-* Validate the socket and message first.
-*/
+  try {
+    /*
+     * Validate the socket and message first.
+     */
 
+    if (!sock || !message) {
+      return {
+        success: false,
+        reason: "Invalid message."
+      };
+    }
 
-if (!sock || !message) {
-  return {
-    success: false,
-    reason: "Invalid message."
-  };
-}
+    rememberMessageKey(message, sessionId);
 
-rememberMessageKey(message, sessionId);
+    /*
+     * ANTI BUG GUARD
+     */
 
-/*
- * ANTI BUG GUARD
- */
+    try {
+      const currentSettings =
+        settingPanel.getSessionSettings(sessionId) || {};
 
-try {
-  const currentSettings =
-    settingPanel.getSessionSettings(sessionId) || {};
+      const automation =
+        currentSettings.automation || {};
 
-  const automation =
-    currentSettings.automation || {};
+      if (
+        automation.antiBug === true &&
+        isUnsafeMessageStructure(message)
+      ) {
+        return {
+          success: false,
+          ignored: true,
+          reason: "Anti Bug: invalid message structure."
+        };
+      }
+    } catch (error) {
+      console.error(
+        "[TOPFEROS MD] Anti Bug error:",
+        error?.message || error
+      );
+    }
 
-  if (
-    automation.antiBug === true &&
-    isUnsafeMessageStructure(message)
-  ) {
-    return {
-      success: false,
-      ignored: true,
-      reason: "Anti Bug: invalid message structure."
-    };
-  }
-} catch (error) {
-  console.error(
-    "[TOPFEROS MD] Anti Bug error:",
-    error.message
-  );
-}
     /*
      * Ignore messages sent by the bot.
      */
 
     if (
-  !message?.key?.fromMe &&
-  isFromBot(
-    message,
-    sock
-  )
-) {
-  return {
-    success: false,
-    ignored: true,
-    reason:
-      "Message originated from bot."
-  };
-}
+      !message?.key?.fromMe &&
+      isFromBot(message, sock)
+    ) {
+      return {
+        success: false,
+        ignored: true,
+        reason: "Message originated from bot."
+      };
+    }
 
-    const jid =
-      getChatJid(message);
+    const jid = getChatJid(message);
 
     /*
      * Status is handled separately.
      */
 
-    if (
-      isStatus(jid)
-    ) {
+    if (isStatus(jid)) {
       return {
         success: false,
         ignored: true,
-        reason:
-          "Status handled by statusHandler."
+        reason: "Status handled by statusHandler."
       };
     }
 
@@ -1451,24 +1443,14 @@ try {
      * Check bot mode.
      */
 
-    if (
-      !canProcessMessage(
-        message
-      )
-    ) {
+    if (!canProcessMessage(message)) {
       return {
         success: false,
         ignored: true,
-        reason:
-          "Message not allowed in current bot mode."
+        reason: "Message not allowed in current bot mode."
       };
     }
-
-    /*
-
-
-    /*
-    |--------------------------------------------------------------------------
+ |--------------------------------------------------------------------------
     | ANTI BOT FILTER — SAFE PREPARATION
     |--------------------------------------------------------------------------
     */
@@ -1483,44 +1465,41 @@ try {
       // Bot detection is not connected yet.
       // Do not delete or warn users based on guesses.
     }
+    
+/*
+|--------------------------------------------------------------------------
+| AUTO VIEW ONCE IN PRIVATE DM
+| Safe guard — TOPFEROS MD V2.0.0
+|--------------------------------------------------------------------------
+*/
 
-    /*
-    |--------------------------------------------------------------------------
-    | AUTO VIEW ONCE IN PRIVATE DM
-    |--------------------------------------------------------------------------
-    */
+if (
+  !isGroup(jid) &&
+  !isStatus(jid) &&
+  !message?.key?.fromMe &&
+  typeof handleAutoViewOnce === "function"
+) {
+  try {
+    const autoViewOnce = await handleAutoViewOnce(
+      sock,
+      message
+    );
 
-    if (
-      !isGroup(jid) &&
-      !isStatus(jid) &&
-      !message?.key?.fromMe
-    ) {
-      const autoViewOnce =
-        await handleAutoViewOnce(
-          sock,
-          message
-        );
-
-      if (
-        autoViewOnce?.success
-      ) {
+    if (autoViewOnce?.success) {
       return {
-  success: true,
-  command: "auto-viewonce",
-  result: autoViewOnce,
-  sessionId: sessionId || null
-};  
-      }
+        success: true,
+        command: "auto-viewonce",
+        result: autoViewOnce,
+        sessionId: sessionId || null
+      };
     }
-
-    /*
-     * Extract message text.
-     */
-
-    const messageText =
-      extractMessageText(
-        message.message
-      );
+  } catch (error) {
+    console.error(
+      "[AUTO VIEW ONCE]",
+      error?.stack || error
+    );
+  }
+}
 
 /*
 |--------------------------------------------------------------------------
