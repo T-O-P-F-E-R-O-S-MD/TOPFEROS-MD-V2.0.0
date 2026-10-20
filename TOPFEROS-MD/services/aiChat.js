@@ -172,31 +172,6 @@ function normalizeMessageText(text) {
 }
 
 function getForwardQuestion(jid, incomingText) {
-  const session = getSession(jid);
-
-  if (!session?.active || !session.lastAIText) {
-    return null;
-  }
-
-  const incoming = normalizeMessageText(incomingText);
-  const previous = normalizeMessageText(session.lastAIText);
-
-  if (!incoming || !previous) {
-    return null;
-  }
-
-  // Forward egzak repons AI a.
-  if (incoming === previous) {
-    return "";
-  }
-
-  // Forward repons AI a ak yon kesyon ajoute.
-  if (incoming.startsWith(previous)) {
-    return incoming.slice(previous.length).trim();
-  }
-
-  return null;
-}
 
 function isForwardOfLastAIMessage(jid, incomingText) {
   return getForwardQuestion(jid, incomingText) !== null;
