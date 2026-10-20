@@ -1357,22 +1357,19 @@ async function stopAutoPresence(sock, jid, presence) {
   }
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | HANDLE MESSAGE
+| TOPFEROS MD V2.0.0
 |--------------------------------------------------------------------------
 */
 
-async function handleMessage(
-  sock,
-  message,
-  sessionId
-) {
+async function handleMessage(sock, message, sessionId) {
   try {
     /*
-     * Validate the socket and message first.
+     * Validate socket and message.
      */
-
     if (!sock || !message) {
       return {
         success: false,
@@ -1383,8 +1380,10 @@ async function handleMessage(
     rememberMessageKey(message, sessionId);
 
     /*
-     * ANTI BUG GUARD
-     */
+    |--------------------------------------------------------------------------
+    | ANTI BUG GUARD
+    |--------------------------------------------------------------------------
+    */
 
     try {
       const currentSettings =
@@ -1411,8 +1410,10 @@ async function handleMessage(
     }
 
     /*
-     * Ignore messages sent by the bot.
-     */
+    |--------------------------------------------------------------------------
+    | IGNORE BOT MESSAGES
+    |--------------------------------------------------------------------------
+    */
 
     if (
       !message?.key?.fromMe &&
@@ -1428,8 +1429,10 @@ async function handleMessage(
     const jid = getChatJid(message);
 
     /*
-     * Status is handled separately.
-     */
+    |--------------------------------------------------------------------------
+    | STATUS HANDLER
+    |--------------------------------------------------------------------------
+    */
 
     if (isStatus(jid)) {
       return {
@@ -1440,8 +1443,10 @@ async function handleMessage(
     }
 
     /*
-     * Check bot mode.
-     */
+    |--------------------------------------------------------------------------
+    | BOT MODE
+    |--------------------------------------------------------------------------
+    */
 
     if (!canProcessMessage(message)) {
       return {
@@ -1450,7 +1455,9 @@ async function handleMessage(
         reason: "Message not allowed in current bot mode."
       };
     }
- |--------------------------------------------------------------------------
+
+    /*
+    |--------------------------------------------------------------------------
     | ANTI BOT FILTER — SAFE PREPARATION
     |--------------------------------------------------------------------------
     */
@@ -1465,258 +1472,264 @@ async function handleMessage(
       // Bot detection is not connected yet.
       // Do not delete or warn users based on guesses.
     }
-    
-/*
-|--------------------------------------------------------------------------
-| AUTO VIEW ONCE IN PRIVATE DM
-| Safe guard — TOPFEROS MD V2.0.0
-|--------------------------------------------------------------------------
-*/
 
-if (
-  !isGroup(jid) &&
-  !isStatus(jid) &&
-  !message?.key?.fromMe &&
-  typeof handleAutoViewOnce === "function"
-) {
-  try {
-    const autoViewOnce = await handleAutoViewOnce(
-      sock,
-      message
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | AUTO VIEW ONCE IN PRIVATE DM
+    |--------------------------------------------------------------------------
+    */
 
-    if (autoViewOnce?.success) {
-      return {
-        success: true,
-        command: "auto-viewonce",
-        result: autoViewOnce,
-        sessionId: sessionId || null
-      };
+    if (
+      !isGroup(jid) &&
+      !isStatus(jid) &&
+      !message?.key?.fromMe &&
+      typeof handleAutoViewOnce === "function"
+    ) {
+      try {
+        const autoViewOnce =
+          await handleAutoViewOnce(sock, message);
+
+        if (autoViewOnce?.success) {
+          return {
+            success: true,
+            command: "auto-viewonce",
+            result: autoViewOnce,
+            sessionId: sessionId || null
+          };
+        }
+      } catch (error) {
+        console.error(
+          "[AUTO VIEW ONCE]",
+          error?.stack || error
+        );
+      }
     }
-  } catch (error) {
-    console.error(
-      "[AUTO VIEW ONCE]",
-      error?.stack || error
-    );
-  }
-}
 
-/*
-|--------------------------------------------------------------------------
-| CONTINUE AI CHAT THROUGH REPLY OR FORWARD
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | EXTRACT MESSAGE TEXT
+    |--------------------------------------------------------------------------
+    */
 
-if (!message?.key?.fromMe && messageText && hasSession(jid)) {
-  const contextInfo =
-    message.message?.extendedTextMessage?.contextInfo ||
-    message.message?.imageMessage?.contextInfo ||
-    message.message?.videoMessage?.contextInfo ||
-    {};
+    const messageText =
+      extractMessageText(message.message);
 
-  const quotedMessageId = contextInfo.stanzaId;
+    /*
+    |--------------------------------------------------------------------------
+    | CONTINUE AI CHAT THROUGH REPLY OR FORWARD
+    |--------------------------------------------------------------------------
+    */
 
-  const isReply = isReplyToLastAIMessage(
-    jid,
-    quotedMessageId
-  );
+    if (
+      !message?.key?.fromMe &&
+      messageText &&
+      hasSession(jid)
+    ) {
+      const contextInfo =
+        message.message?.extendedTextMessage?.contextInfo ||
+        message.message?.imageMessage?.contextInfo ||
+        message.message?.videoMessage?.contextInfo ||
+        {};
 
-  const isForwarded = Boolean(
-    contextInfo.isForwarded ||
-    Number(contextInfo.forwardingScore || 0) > 0
-  );
+      const quotedMessageId = contextInfo.stanzaId;
 
-  const forwardQuestion = isForwarded
-    ? getForwardQuestion(jid, messageText)
-    : null;
-
-  const isAIForward = forwardQuestion !== null;
-
-  // Yon nouvo kòmand pa dwe sèvi kòm kesyon
-  // pou ansyen konvèsasyon an.
-  const parsedAICommand = parseCommand(
-    messageText,
-    sessionId
-  );
-
-  const isCommand = Boolean(parsedAICommand);
-
-  const waiting = isWaitingForQuestion(jid);
-
-  if (isAIForward && !forwardQuestion) {
-    setWaitingForQuestion(jid, true);
-
-    await sendText(
-      sock,
-      jid,
-      "🤖 Mwen rekonèt repons AI ou transfere a. " +
-      "Voye pwochen kesyon ou san prefix .ai."
-    );
-
-    return {
-      success: true,
-      command: "ai-forward-waiting"
-    };
-  }
-
-  const shouldContinue =
-    isReply ||
-    (isAIForward && Boolean(forwardQuestion)) ||
-    (waiting && !isCommand);
-
-  if (shouldContinue) {
-    const continuationText =
-      isAIForward && forwardQuestion
-        ? forwardQuestion
-        : messageText;
-
-    try {
-      const result = await continueAIChat(
+      const isReply = isReplyToLastAIMessage(
         jid,
-        continuationText
+        quotedMessageId
       );
 
-      if (result?.busy) {
+      const isForwarded = Boolean(
+        contextInfo.isForwarded ||
+        Number(contextInfo.forwardingScore || 0) > 0
+      );
+
+      const forwardQuestion = isForwarded
+        ? getForwardQuestion(jid, messageText)
+        : null;
+
+      const isAIForward = forwardQuestion !== null;
+
+      const parsedAICommand =
+        parseCommand(messageText, sessionId);
+
+      const isCommand = Boolean(parsedAICommand);
+
+      const waiting = isWaitingForQuestion(jid);
+
+      if (isAIForward && !forwardQuestion) {
+        setWaitingForQuestion(jid, true);
+
         await sendText(
           sock,
           jid,
-          "⏳ AI a ap trete yon kesyon. Tanpri tann."
+          "🤖 Mwen rekonèt repons AI ou transfere a. " +
+          "Voye pwochen kesyon ou san prefix .ai."
         );
-
-        return {
-          success: false,
-          reason: "AI session busy."
-        };
-      }
-
-      if (result?.answer) {
-        const outgoing =
-          `${result.answer}\n\n${getAIForwardNotice(result.answer)}`;
-
-        const sent = await sendText(
-          sock,
-          jid,
-          outgoing
-        );
-
-        setLastAIMessage(
-          jid,
-          sent?.key?.id || null,
-          outgoing
-        );
-
-        setWaitingForQuestion(jid, false);
 
         return {
           success: true,
-          command: "ai-continue"
+          command: "ai-forward-waiting"
         };
       }
-    } catch (error) {
-      console.error(
-        "[AI CHAT CONTINUE]",
-        error?.stack || error
-      );
 
-      await sendText(
-        sock,
-        jid,
-        "❌ AI a pa kapab kontinye kounye a. Eseye ankò."
-      );
+      const shouldContinue =
+        isReply ||
+        (isAIForward && Boolean(forwardQuestion)) ||
+        (waiting && !isCommand);
 
-      return {
-        success: false,
-        reason: "AI continuation failed."
-      };
+      if (shouldContinue) {
+        const continuationText =
+          isAIForward && forwardQuestion
+            ? forwardQuestion
+            : messageText;
+
+        try {
+          const result = await continueAIChat(
+            jid,
+            continuationText
+          );
+
+          if (result?.busy) {
+            await sendText(
+              sock,
+              jid,
+              "⏳ AI a ap trete yon kesyon. Tanpri tann."
+            );
+
+            return {
+              success: false,
+              reason: "AI session busy."
+            };
+          }
+
+          if (result?.answer) {
+            const outgoing =
+              `${result.answer}\n\n${getAIForwardNotice(result.answer)}`;
+
+            const sent = await sendText(
+              sock,
+              jid,
+              outgoing
+            );
+
+            setLastAIMessage(
+              jid,
+              sent?.key?.id || null,
+              outgoing
+            );
+
+            setWaitingForQuestion(jid, false);
+
+            return {
+              success: true,
+              command: "ai-continue"
+            };
+          }
+        } catch (error) {
+          console.error(
+            "[AI CHAT CONTINUE]",
+            error?.stack || error
+          );
+
+          await sendText(
+            sock,
+            jid,
+            "❌ AI a pa kapab kontinye kounye a. Eseye ankò."
+          );
+
+          return {
+            success: false,
+            reason: "AI continuation failed."
+          };
+        }
+      }
     }
-  }
-}
 
-/*
-|--------------------------------------------------------------------------
-| COMMANDS: SAVE / SEND WITHOUT PREFIX
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | COMMANDS: SAVE / SEND WITHOUT PREFIX
+    |--------------------------------------------------------------------------
+    */
 
-const plainCommand =
-  (messageText || "").trim().toLowerCase();
-
-if (
-  !message?.key?.fromMe &&
-  ["save", "send"].includes(plainCommand)
-) {
-  const found = findCommand(plainCommand);
-
-  if (found) {
-    const context = buildContext(
-      sock,
-      message,
-      {
-        command: plainCommand,
-        args: [],
-        text: "",
-        prefix: ""
-      },
-      sessionId
-    );
-
-    await found.command.handler(context);
-
-    return {
-      success: true,
-      command: plainCommand,
-      sessionId: sessionId || null
-    };
-  }
-}
+    const plainCommand =
+      (messageText || "").trim().toLowerCase();
 
     if (
-      !messageText
+      !message?.key?.fromMe &&
+      ["save", "send"].includes(plainCommand)
     ) {
+      const found = findCommand(plainCommand);
+
+      if (found) {
+        const context = buildContext(
+          sock,
+          message,
+          {
+            command: plainCommand,
+            args: [],
+            text: "",
+            prefix: ""
+          },
+          sessionId
+        );
+
+        await found.command.handler(context);
+
+        return {
+          success: true,
+          command: plainCommand,
+          sessionId: sessionId || null
+        };
+      }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | IGNORE MESSAGES WITHOUT COMMAND TEXT
+    |--------------------------------------------------------------------------
+    */
+
+    if (!messageText) {
       return {
         success: false,
         ignored: true,
-        reason:
-          "No command text."
+        reason: "No command text."
       };
     }
 
     /*
-     * Parse command.
-     */
+    |--------------------------------------------------------------------------
+    | PARSE COMMAND
+    |--------------------------------------------------------------------------
+    */
 
     const parsed =
-  parseCommand(
-    messageText,
-    sessionId
-  );
+      parseCommand(messageText, sessionId);
 
     if (!parsed) {
       return {
         success: false,
         ignored: true,
-        reason:
-          "Not a command."
+        reason: "Not a command."
       };
     }
 
     /*
-     * Find command.
-     */
+    |--------------------------------------------------------------------------
+    | FIND COMMAND
+    |--------------------------------------------------------------------------
+    */
 
-    const found =
-      findCommand(
-        parsed.command
-      );
+    const found = findCommand(parsed.command);
 
     if (!found) {
       await sendText(
         sock,
         jid,
         [
-          `❌ Unknown command: ${getPrefix()}${parsed.command}`,
+          `❌ Unknown command: ${getPrefix(sessionId)}${parsed.command}`,
           "",
-          `📖 Type ${getPrefix()}menu to see available commands.`,
+          `📖 Type ${getPrefix(sessionId)}menu to see available commands.`,
           "",
           "🦁 TECH BY TOPFEROS MD 🐑"
         ].join("\n")
@@ -1724,132 +1737,95 @@ if (
 
       return {
         success: false,
-        reason:
-          "Unknown command."
+        reason: "Unknown command."
       };
     }
 
     /*
-     * Build command context.
-     */
+    |--------------------------------------------------------------------------
+    | BUILD COMMAND CONTEXT
+    |--------------------------------------------------------------------------
+    */
 
-      const context =
-  buildContext(
-    sock,
-    message,
-    parsed,
-    sessionId
-  );
+    const context = buildContext(
+      sock,
+      message,
+      parsed,
+      sessionId
+    );
 
-      await reactToMessage(
-       sock,
-       message,
-       "🦁"
-       );
+    await reactToMessage(
+      sock,
+      message,
+      "🦁"
+    );
 
     /*
     |--------------------------------------------------------------------------
     | OWNER COMMAND STATISTICS
     |--------------------------------------------------------------------------
-    |
-    | Only valid registered commands used by
-    | the configured OWNER are counted.
-    |
-    |--------------------------------------------------------------------------
     */
 
-    if (
-      context.isOwner
-    ) {
+    if (context.isOwner) {
       try {
         const ownerStats =
-          recordOwnerCommand(
-            found.name
-          );
+          recordOwnerCommand(found.name);
 
-        /*
-         * Keep the latest statistics
-         * available to the command context.
-         */
-
-        context.bot.ownerStats =
-          ownerStats;
+        context.bot.ownerStats = ownerStats;
       } catch (statsError) {
         console.error(
           "[OWNER STATS] Record failed:",
-          statsError?.stack ||
-            statsError
+          statsError?.stack || statsError
         );
       }
     }
 
     /*
-     
-/*
- * Execute command with Auto Typing / Recording.
- */
+    |--------------------------------------------------------------------------
+    | EXECUTE COMMAND WITH AUTO TYPING / RECORDING
+    |--------------------------------------------------------------------------
+    */
 
-const presence = await startAutoPresence(
-  sock,
-  sessionId,
-  jid
-);
-
-let result;
-
-try {
-  result = await found.command.handler(context);
-} finally {
-  await stopAutoPresence(sock, jid, presence);
-}
-
-    return {
-      success: true,
-
-      command:
-        found.name,
-
-      result,
-
-      sessionId:
-        sessionId || null
-    };
-  } catch (error) {
-    console.error(
-      "[MESSAGE HANDLER] Error:",
-      error?.stack ||
-        error
+    const presence = await startAutoPresence(
+      sock,
+      sessionId,
+      jid
     );
 
-    try {
-      const jid =
-        getChatJid(
-          message
-        );
+    let result;
 
-      if (jid) {
-        await sendText(
-          sock,
-          jid,
-          [
-            "❌ An error occurred while processing your request.",
-            "",
-            "🦁 TECH BY TOPFEROS MD 🐑"
-          ].join("\n")
-        );
-      }
-    } catch {
-      /*
-       * Do not throw a second error.
-       */
+    try {
+      result = await found.command.handler(context);
+    } finally {
+      await stopAutoPresence(
+        sock,
+        jid,
+        presence
+      );
     }
 
     return {
-      success: false,
+      success: true,
+      command: found.name,
+      result,
+      sessionId: sessionId || null
+    };
 
-      error:
-        error?.message ||
-        String(error)
+  } catch (error) {
+    /*
+    |--------------------------------------------------------------------------
+    | ERROR LOGGING — NO AUTOMATIC ERROR MESSAGE TO CONTACTS
+    |--------------------------------------------------------------------------
+    */
+
+    console.error(
+      "[MESSAGE HANDLER] Error:",
+      error?.stack || error
+    );
+
+    return {
+      success: false,
+      error: error?.message || String(error)
     };
   }
 }
