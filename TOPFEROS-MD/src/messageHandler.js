@@ -1543,11 +1543,14 @@ async function handleMessage(sock, message, sessionId) {
         Number(contextInfo.forwardingScore || 0) > 0
       );
 
-      const forwardQuestion = isForwarded
-        ? getForwardQuestion(jid, messageText)
-        : null;
+      
+const forwardQuestion = getForwardQuestion(
+  jid,
+  messageText
+);
 
-      const isAIForward = forwardQuestion !== null;
+const isAIForward =
+  isForwarded && forwardQuestion !== null;
 
       const parsedAICommand =
         parseCommand(messageText, sessionId);
