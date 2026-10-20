@@ -1550,7 +1550,7 @@ const forwardQuestion = getForwardQuestion(
 );
 
 const isAIForward =
-  isForwarded && forwardQuestion !== null;
+  forwardQuestion !== null;
 
       const parsedAICommand =
         parseCommand(messageText, sessionId);
