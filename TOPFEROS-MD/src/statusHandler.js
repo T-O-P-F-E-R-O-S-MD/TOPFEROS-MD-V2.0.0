@@ -450,69 +450,53 @@ function getAIEmoji(
 |--------------------------------------------------------------------------
 */
 
-async function sendStatusReaction(
-  sock,
-  message,
-  emoji
-) {
-  if (!sock) {
-    throw new Error(
-      "WhatsApp socket is required."
-    );
+async function sendStatusReaction(sock, message, emoji) {
+  if (!sock || !message?.key) {
+    throw new Error("Socket or status key missing.");
   }
 
-  if (
-    !message?.key
-  ) {
-    throw new Error(
-      "Status message key is missing."
-    );
-  }
-
-  if (
-    typeof emoji !==
-      "string" ||
-    !emoji.trim()
-  ) {
-    throw new Error(
-      "Reaction emoji is missing."
-    );
-  }
-
-  const participant =
-    message.key
-      ?.participant;
+  const participant = message.key.participant;
 
   if (!participant) {
-    throw new Error(
-      "Status participant is missing."
-    );
+    throw new Error("Status participant missing.");
   }
 
-  /*
-   * React immediately.
-   *
-   * There is intentionally NO timer.
-   */
+  if (!message.key.id) {
+    throw new Error("Status message ID missing.");
+  }
 
-  await sock.sendMessage(
+  const reactionKey = {
+    remoteJid: STATUS_JID,
+    id: message.key.id,
+    participant,
+    fromMe: false
+  };
+
+  console.log("[STATUS REACT] Attempt:", {
+    messageId: reactionKey.id,
+    participant,
+    emoji
+  });
+
+  const result = await sock.sendMessage(
     STATUS_JID,
     {
       react: {
-        text:
-          emoji.trim(),
-        key:
-          message.key
+        text: emoji,
+        key: reactionKey
       }
     },
     {
-      statusJidList: [
-        participant
-      ]
+      statusJidList: [participant]
     }
   );
 
-  return true;
+  console.log(
+    "[STATUS REACT] Send result:",
+    JSON.stringify(result?.key || null)
+  );
+
+  return Boolean(result?.key?.id);
 }
 
 /*
