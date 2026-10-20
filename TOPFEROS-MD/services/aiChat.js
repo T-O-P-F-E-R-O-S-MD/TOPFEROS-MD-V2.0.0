@@ -252,7 +252,7 @@ module.exports = {
   isReplyToLastAIMessage,
   isForwardOfLastAIMessage,
   getChatHistory,
-  getSessionInfo
+  getSessionInfo,
   getForwardQuestion,
   setWaitingForQuestion,
   isWaitingForQuestion,
