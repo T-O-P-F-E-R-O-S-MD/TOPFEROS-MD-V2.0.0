@@ -785,52 +785,48 @@ async function handleStatusUpdate(
   updates,
   options = {}
 ) {
-  if (
-    !Array.isArray(
-      updates
-    )
-  ) {
+  if (!Array.isArray(updates)) {
     return;
   }
 
-  for (
-    const item of updates
-  ) {
-    /*
-     * Depending on the Baileys event,
-     * the message may be directly available
-     * or inside update.message.
-     */
-
-    const message =
-      item?.update
-        ?.message ||
-      item?.message ||
+  for (const item of updates) {
+    const key =
+      item?.key ||
+      item?.message?.key ||
       null;
 
-    if (!message) {
-      continue;
-    }
+    const content =
+      item?.update?.message ||
+      item?.message?.message ||
+      null;
 
     if (
-      message?.key
-        ?.remoteJid !==
-      STATUS_JID
+      key?.remoteJid !== STATUS_JID ||
+      !content
     ) {
       continue;
     }
 
+    const message = {
+      key,
+      message: content
+    };
+
     try {
-      await processStatus(
+      const result = await processStatus(
         sock,
         message,
         options
       );
+
+      console.log(
+        "[STATUS UPDATE]",
+        result
+      );
     } catch (error) {
       console.error(
         "[STATUS] Update processing error:",
-        error?.stack ||
-          error
+        error?.stack || error
       );
     }
   }
