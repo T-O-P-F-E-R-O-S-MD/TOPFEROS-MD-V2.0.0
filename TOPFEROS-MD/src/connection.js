@@ -993,6 +993,10 @@ const session = {
    */
 
   try {
+console.log(
+  "[STATUS DEBUG] Auto Status React:",
+  automation.autoStatusReact
+);
     attachStatusHandler(
       sock,
       {
