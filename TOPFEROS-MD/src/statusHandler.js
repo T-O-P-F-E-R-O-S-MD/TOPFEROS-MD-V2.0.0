@@ -5,7 +5,7 @@ const {
 } = require("@whiskeysockets/baileys");
 
 const {
-  analyzeStatus
+  getFallbackEmoji
 } = require("../services/aiReactionService");
 
 /*
@@ -517,216 +517,130 @@ async function sendStatusReaction(
 
 /*
 |--------------------------------------------------------------------------
-| PROCESS STATUS
+| TOPFEROS MD V2.0.0
+| INSTANT AUTO STATUS REACTION
 |--------------------------------------------------------------------------
 */
 
-async function processStatus(
-  sock,
-  message,
-  options = {}
-) {
-  if (!sock) {
+async function processStatus(sock, message, options = {}) {
+  if (!sock || !message?.key) {
     return {
       success: false,
-      reason:
-        "Socket unavailable."
+      reason: "Socket or message unavailable."
     };
   }
 
-  if (!message) {
-    return {
-      success: false,
-      reason:
-        "Status message unavailable."
-    };
-  }
-
-  const jid =
-    message?.key
-      ?.remoteJid || "";
-
-  /*
-   * Only WhatsApp Status.
-   */
-
-  if (
-    jid !== STATUS_JID
-  ) {
+  if (message.key.remoteJid !== STATUS_JID) {
     return {
       success: false,
       ignored: true,
-      reason:
-        "Not a WhatsApp Status."
+      reason: "Not a WhatsApp Status."
     };
   }
 
-  /*
-   * Never react to the bot's own Status.
-   */
-
-  if (
-    message?.key?.fromMe
-  ) {
+  if (message.key.fromMe) {
     return {
       success: false,
       ignored: true,
-      reason:
-        "Own status ignored."
+      reason: "Own Status ignored."
     };
   }
 
-  const messageId =
-    getMessageId(
-      message
-    );
-
-  /*
-   * Prevent duplicate processing.
-   */
-
-  if (
-    messageId &&
-    hasBeenProcessed(
-      messageId
-    )
-  ) {
+  if (options.autoStatusReact === false) {
     return {
       success: false,
       ignored: true,
-      reason:
-        "Status already processed."
+      reason: "Auto Status React disabled."
     };
   }
 
-  /*
-   * Mark before AI processing so two
-   * simultaneous events cannot react twice.
-   */
+  const messageId = getMessageId(message);
+  const participant = message.key.participant;
 
-  if (messageId) {
-    markAsProcessed(
-      messageId
-    );
+  if (!messageId || !participant) {
+    return {
+      success: false,
+      reason: "Status ID or participant missing."
+    };
   }
 
-  /*
-   * Build status data.
-   */
+  // Prevent duplicate reactions.
+  const cacheKey = `${participant}:${messageId}`;
 
-  const statusData =
-    await buildAIStatusData(
-      message
-    );
-
-  /*
-   * Nothing readable.
-   */
-
-  if (
-    !statusData.text &&
-    !["image", "video", "audio", "document"].includes(
-      statusData.mediaType
-    )
-  ) {
+  if (hasBeenProcessed(cacheKey)) {
     return {
       success: false,
       ignored: true,
-      reason: "No readable status content."
+      reason: "Status already processed."
     };
   }
 
-  /*
-   * Ask AI for exactly one emoji.
-   */
+  // Read text without downloading media.
+  const content = getStatusContent(message);
+  const text = extractStatusText(message);
 
-  const aiResult =
-    await analyzeStatus(
-      statusData,
-      {
-        model:
-          options.aiModel
-      }
-    );
-
-  const emoji =
-    getAIEmoji(
-      aiResult
-    );
-
-  if (!emoji) {
-    return {
-      success: false,
-      reason:
-        "AI did not return an emoji."
-    };
-  }
-
-  /*
-   * Auto Status React:
-   *
-   * ON by default.
-   * Disable with:
-   *
-   * autoStatusReact: false
-   */
-
-  const autoStatusReact =
-    options.autoStatusReact !==
-    false;
-
-  let reactionSent =
-    false;
-
-  let reactionError =
-    null;
-
-  if (
-    autoStatusReact
-  ) {
-    try {
-      reactionSent =
-        await sendStatusReaction(
-          sock,
-          message,
-          emoji
-        );
-    } catch (error) {
-      reactionError =
-        error?.message ||
-        String(error);
-
-      console.error(
-        "[STATUS] Reaction failed:",
-        reactionError
-      );
-    }
-  }
-
-  return {
-    success: true,
-
+  const statusData = {
+    text,
+    caption: text,
+    mediaType: content.type,
     messageId,
-
-    participant:
-      statusData.participant,
-
-    text:
-      statusData.text,
-
-    mediaType:
-      statusData.mediaType,
-
-    emoji,
-
-    aiSource:
-      aiResult?.source ||
-      "ai",
-
-    reactionSent,
-
-    reactionError
+    participant
   };
+
+  // Instant emoji selection: no API wait.
+  const emoji = getFallbackEmoji(statusData);
+
+  // Lock while sending to prevent duplicates.
+  markAsProcessed(cacheKey);
+
+  console.log(
+    "[STATUS INSTANT] Sending:",
+    emoji,
+    "to:",
+    participant
+  );
+
+  try {
+    await sendStatusReaction(
+      sock,
+      message,
+      emoji
+    );
+
+    console.log(
+      "[STATUS INSTANT] Reaction sent:",
+      messageId
+    );
+
+    return {
+      success: true,
+      messageId,
+      participant,
+      emoji,
+      aiSource: "smart-fallback",
+      reactionSent: true,
+      reactionError: null
+    };
+
+  } catch (error) {
+    // Allow a later retry if sending failed.
+    processedStatuses.delete(cacheKey);
+
+    console.error(
+      "[STATUS INSTANT] Reaction failed:",
+      error?.stack || error
+    );
+
+    return {
+      success: false,
+      messageId,
+      participant,
+      emoji,
+      reactionSent: false,
+      reactionError:
+        error?.message || String(error)
+    };
+  }
 }
 
 /*
