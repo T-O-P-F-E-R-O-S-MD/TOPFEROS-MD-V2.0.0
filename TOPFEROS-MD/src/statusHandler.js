@@ -624,9 +624,11 @@ async function processStatus(
    */
 
   if (
-    !statusData.text &&
-    !statusData.media
-  ) {
+  !statusData.text &&
+  !["image", "video", "audio", "document"].includes(
+    statusData.mediaType
+  )
+)
     return {
       success: false,
       ignored: true,
