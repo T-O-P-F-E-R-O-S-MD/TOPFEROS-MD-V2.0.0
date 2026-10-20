@@ -624,16 +624,15 @@ async function processStatus(
    */
 
   if (
-  !statusData.text &&
-  !["image", "video", "audio", "document"].includes(
-    statusData.mediaType
-  )
-)
+    !statusData.text &&
+    !["image", "video", "audio", "document"].includes(
+      statusData.mediaType
+    )
+  ) {
     return {
       success: false,
       ignored: true,
-      reason:
-        "No readable status content."
+      reason: "No readable status content."
     };
   }
 
