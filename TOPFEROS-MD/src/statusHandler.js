@@ -542,8 +542,8 @@ async function processStatus(sock, message, options = {}) {
   // Li Status la otomatikman, sof si opsyon an dezaktive.
   const shouldMarkSeen = options.autoStatusSeen !== false;
 
-  // Reyaji sèlman si opsyon sa a aktive.
-  const shouldReact = options.autoStatusReact === true;
+  // Reyaji Status la otomatikman, sof si opsyon an dezaktive.
+  const shouldReact = options.autoStatusReact === false;
 
   if (!shouldMarkSeen && !shouldReact) {
     return {
