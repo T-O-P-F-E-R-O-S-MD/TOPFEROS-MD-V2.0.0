@@ -499,11 +499,10 @@ async function sendStatusReaction(sock, message, emoji) {
 
   return true;
 }
-
 /*
 |--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
-| INSTANT AUTO STATUS REACTION
+| AUTO STATUS SEEN + AUTO STATUS REACT
 |--------------------------------------------------------------------------
 */
 
@@ -515,6 +514,7 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
+  // Verifye se yon WhatsApp Status.
   if (message.key.remoteJid !== STATUS_JID) {
     return {
       success: false,
@@ -523,6 +523,7 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
+  // Pa trete pwòp Status bot la.
   if (message.key.fromMe) {
     return {
       success: false,
@@ -541,8 +542,11 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
+  // Li Status la otomatikman, sof si opsyon an dezaktive.
   const shouldMarkSeen = options.autoStatusSeen !== false;
-  const shouldReact = options.autoStatusReact !== false;
+
+  // Reyaji sèlman si opsyon sa a aktive.
+  const shouldReact = options.autoStatusReact === true;
 
   if (!shouldMarkSeen && !shouldReact) {
     return {
@@ -573,14 +577,12 @@ async function processStatus(sock, message, options = {}) {
     participant
   };
 
-  markAsProcessed(cacheKey);
-
+  // Make yon sèl tantativ pou li Status la.
   let seen = false;
   let reactionSent = false;
   let emoji = null;
   const errors = [];
 
-  // Make statut la kòm li.
   if (shouldMarkSeen) {
     try {
       await sock.readMessages([
@@ -609,7 +611,7 @@ async function processStatus(sock, message, options = {}) {
     }
   }
 
-  // Kenbe fonksyon reyaksyon an opsyonèl.
+  // Reyaksyon an rete apa ak Auto Status Seen.
   if (shouldReact) {
     try {
       emoji = getFallbackEmoji(statusData);
@@ -639,12 +641,14 @@ async function processStatus(sock, message, options = {}) {
     }
   }
 
-  if (!seen && !reactionSent) {
-    processedStatuses.delete(cacheKey);
+  const success = seen || reactionSent;
+
+  if (success) {
+    markAsProcessed(cacheKey);
   }
 
   return {
-    success: seen || reactionSent,
+    success,
     messageId,
     participant,
     seen,
