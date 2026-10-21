@@ -474,15 +474,18 @@ async function sendStatusReaction(sock, message, emoji) {
     emoji
   });
 
-  const result = await sock.sendMessage(
-    STATUS_JID,
-    {
-      react: {
-        text: emoji.trim(),
-        key
-      }
+ const result = await sock.sendMessage(
+  STATUS_JID,
+  {
+    react: {
+      text: emoji.trim(),
+      key
     }
-  );
+  },
+  {
+    statusJidList: []
+  }
+);
 
   if (!result?.key?.id) {
     throw new Error("No reaction message ID returned.");
