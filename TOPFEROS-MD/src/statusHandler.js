@@ -637,9 +637,10 @@ async function processStatus(sock, message, options = {}) {
 
   const success = seen || reactionSent;
 
-  if (success) {
-    markAsProcessed(cacheKey);
-  }
+// Pa bloke yon lòt tantativ si reyaksyon an echwe.
+if (reactionSent) {
+  markAsProcessed(cacheKey);
+}
 
   return {
     success,
