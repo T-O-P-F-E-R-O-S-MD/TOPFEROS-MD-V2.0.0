@@ -473,17 +473,18 @@ async function sendStatusReaction(sock, message, emoji) {
     messageId: key.id,
     emoji
   });
-
- const result = await sock.sendMessage(
+  const result = await sock.sendMessage(
   STATUS_JID,
   {
     react: {
       text: emoji.trim(),
-      key
+      key: {
+        remoteJid: STATUS_JID,
+        id: key.id,
+        participant: key.participant,
+        fromMe: false
+      }
     }
-  },
-  {
-    statusJidList: []
   }
 );
 
