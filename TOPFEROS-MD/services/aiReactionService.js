@@ -31,7 +31,14 @@ const FALLBACK_EMOJIS = [
   "🤔", "😮", "😱", "👀", "😲", "🤯",
   "👍", "👌", "🤝", "👑", "🌹", "🌍",
   "🎶", "🎵", "🎧", "⚽", "🏀", "🎮",
-  "🎂", "🎊", "🌺", "🌞", "💐"
+  "🎂", "🎊", "🌺", "🌞", "💐",
+
+  // Nouvo emoji TOPFEROS MD
+  "🤭", "🥶", "😶‍🌫️", "🫥", "👹", "☠️",
+  "👻", "🥴", "🧠", "👰🏼‍♂️", "👰", "🧟",
+  "🧚‍♀️", "🧜‍♂️", "🦁", "🐜", "🌚", "🌈",
+  "🍇", "🎇", "🌃", "🌌", "🪦", "🩻",
+  "🛏️", "🛌🏿", "💘", "❤️‍🔥", "🔴", "🇭🇹"
 ];
 
 function randomEmoji(emojis) {
@@ -206,7 +213,7 @@ function buildPrompt(statusData = {}) {
     "- No words or explanations.",
     "- No punctuation.",
     "- No multiple emojis.",
-    "- Do not use a predefined emoji list.",
+    `- You may choose any suitable emoji, including these: ${FALLBACK_EMOJIS.join(" ")}`,
     "- Match the status emotion and meaning.",
     "- Match romance, humor, sadness, motivation,",
     "  celebration, faith, music and sports naturally.",
