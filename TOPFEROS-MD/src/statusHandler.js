@@ -436,7 +436,6 @@ function getAIEmoji(
 
   return null;
 }
-
 /*
 |--------------------------------------------------------------------------
 | SEND STATUS REACTION
@@ -476,15 +475,15 @@ async function sendStatusReaction(sock, message, emoji) {
     emoji
   });
 
-const result = await sock.sendMessage(
-  STATUS_JID,
-  {
-    react: {
-      text: emoji,
-      key: reactionKey
+  const result = await sock.sendMessage(
+    STATUS_JID,
+    {
+      react: {
+        text: emoji,
+        key: reactionKey
+      }
     }
-  }
-);
+  );
 
   if (!result?.key?.id) {
     throw new Error(
@@ -499,6 +498,7 @@ const result = await sock.sendMessage(
 
   return true;
 }
+
 /*
 |--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
