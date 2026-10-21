@@ -457,12 +457,10 @@ async function sendStatusReaction(sock, message, emoji) {
 
   const participant = message.key.participant;
 
-  if (!participant) {
-    throw new Error("Status participant missing.");
-  }
-
-  if (!message.key.id) {
-    throw new Error("Status message ID missing.");
+  if (!participant || !message.key.id) {
+    throw new Error(
+      "Status participant or message ID missing."
+    );
   }
 
   const reactionKey = {
@@ -473,30 +471,33 @@ async function sendStatusReaction(sock, message, emoji) {
   };
 
   console.log("[STATUS REACT] Attempt:", {
-    messageId: reactionKey.id,
     participant,
+    messageId: reactionKey.id,
     emoji
   });
 
   const result = await sock.sendMessage(
-    STATUS_JID,
+    participant,
     {
       react: {
         text: emoji,
         key: reactionKey
       }
-    },
-    {
-      statusJidList: [participant]
     }
   );
 
+  if (!result?.key?.id) {
+    throw new Error(
+      "Baileys returned no reaction message ID."
+    );
+  }
+
   console.log(
     "[STATUS REACT] Send result:",
-    JSON.stringify(result?.key || null)
+    result.key.id
   );
 
-  return Boolean(result?.key?.id);
+  return true;
 }
 
 /*
@@ -585,11 +586,17 @@ async function processStatus(sock, message, options = {}) {
   );
 
   try {
-    await sendStatusReaction(
-      sock,
-      message,
-      emoji
-    );
+    const reactionSent = await sendStatusReaction(
+  sock,
+  message,
+  emoji
+);
+
+if (!reactionSent) {
+  throw new Error(
+    "Status reaction was not accepted by Baileys."
+  );
+}
 
     console.log(
       "[STATUS INSTANT] Reaction sent:",
