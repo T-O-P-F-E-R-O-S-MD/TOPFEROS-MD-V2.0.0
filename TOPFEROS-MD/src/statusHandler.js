@@ -454,24 +454,23 @@ async function sendStatusReaction(sock, message, emoji) {
     throw new Error("Socket or status key missing.");
   }
 
-  const participant = message.key.participant;
+  const key = message.key;
 
-  if (!participant || !message.key.id) {
-    throw new Error(
-      "Status participant or message ID missing."
-    );
+  if (
+    key.remoteJid !== STATUS_JID ||
+    !key.participant ||
+    !key.id
+  ) {
+    throw new Error("Invalid WhatsApp Status key.");
   }
 
-  const reactionKey = {
-    remoteJid: STATUS_JID,
-    id: message.key.id,
-    participant,
-    fromMe: false
-  };
+  if (typeof emoji !== "string" || !emoji.trim()) {
+    throw new Error("Reaction emoji missing.");
+  }
 
   console.log("[STATUS REACT] Attempt:", {
-    participant,
-    messageId: reactionKey.id,
+    participant: key.participant,
+    messageId: key.id,
     emoji
   });
 
@@ -479,22 +478,17 @@ async function sendStatusReaction(sock, message, emoji) {
     STATUS_JID,
     {
       react: {
-        text: emoji,
-        key: reactionKey
+        text: emoji.trim(),
+        key
       }
     }
   );
 
   if (!result?.key?.id) {
-    throw new Error(
-      "Baileys returned no reaction message ID."
-    );
+    throw new Error("No reaction message ID returned.");
   }
 
-  console.log(
-    "[STATUS REACT] Send result:",
-    result.key.id
-  );
+  console.log("[STATUS REACT] Send result:", result.key.id);
 
   return true;
 }
