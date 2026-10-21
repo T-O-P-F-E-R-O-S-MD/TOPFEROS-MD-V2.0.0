@@ -476,15 +476,15 @@ async function sendStatusReaction(sock, message, emoji) {
     emoji
   });
 
-  const result = await sock.sendMessage(
-    participant,
-    {
-      react: {
-        text: emoji,
-        key: reactionKey
-      }
+const result = await sock.sendMessage(
+  STATUS_JID,
+  {
+    react: {
+      text: emoji,
+      key: reactionKey
     }
-  );
+  }
+);
 
   if (!result?.key?.id) {
     throw new Error(
