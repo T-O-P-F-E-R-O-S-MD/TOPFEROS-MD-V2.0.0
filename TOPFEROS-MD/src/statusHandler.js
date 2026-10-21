@@ -531,14 +531,6 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
-  if (options.autoStatusReact === false) {
-    return {
-      success: false,
-      ignored: true,
-      reason: "Auto Status React disabled."
-    };
-  }
-
   const messageId = getMessageId(message);
   const participant = message.key.participant;
 
@@ -549,7 +541,17 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
-  // Prevent duplicate reactions.
+  const shouldMarkSeen = options.autoStatusSeen !== false;
+  const shouldReact = options.autoStatusReact !== false;
+
+  if (!shouldMarkSeen && !shouldReact) {
+    return {
+      success: false,
+      ignored: true,
+      reason: "Status automations are disabled."
+    };
+  }
+
   const cacheKey = `${participant}:${messageId}`;
 
   if (hasBeenProcessed(cacheKey)) {
@@ -560,7 +562,6 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
-  // Read text without downloading media.
   const content = getStatusContent(message);
   const text = extractStatusText(message);
 
@@ -572,66 +573,85 @@ async function processStatus(sock, message, options = {}) {
     participant
   };
 
-  // Instant emoji selection: no API wait.
-  const emoji = getFallbackEmoji(statusData);
-
-  // Lock while sending to prevent duplicates.
   markAsProcessed(cacheKey);
 
-  console.log(
-    "[STATUS INSTANT] Sending:",
-    emoji,
-    "to:",
-    participant
-  );
+  let seen = false;
+  let reactionSent = false;
+  let emoji = null;
+  const errors = [];
 
-  try {
-    const reactionSent = await sendStatusReaction(
-  sock,
-  message,
-  emoji
-);
+  // Make statut la kòm li.
+  if (shouldMarkSeen) {
+    try {
+      await sock.readMessages([
+        {
+          remoteJid: STATUS_JID,
+          id: messageId,
+          participant
+        }
+      ]);
 
-if (!reactionSent) {
-  throw new Error(
-    "Status reaction was not accepted by Baileys."
-  );
-}
+      seen = true;
 
-    console.log(
-      "[STATUS INSTANT] Reaction sent:",
-      messageId
-    );
+      console.log(
+        "[STATUS SEEN] Status marked as seen:",
+        messageId
+      );
+    } catch (error) {
+      errors.push(
+        `seen: ${error?.message || String(error)}`
+      );
 
-    return {
-      success: true,
-      messageId,
-      participant,
-      emoji,
-      aiSource: "smart-fallback",
-      reactionSent: true,
-      reactionError: null
-    };
-
-  } catch (error) {
-    // Allow a later retry if sending failed.
-    processedStatuses.delete(cacheKey);
-
-    console.error(
-      "[STATUS INSTANT] Reaction failed:",
-      error?.stack || error
-    );
-
-    return {
-      success: false,
-      messageId,
-      participant,
-      emoji,
-      reactionSent: false,
-      reactionError:
-        error?.message || String(error)
-    };
+      console.error(
+        "[STATUS SEEN] Failed:",
+        error?.stack || error
+      );
+    }
   }
+
+  // Kenbe fonksyon reyaksyon an opsyonèl.
+  if (shouldReact) {
+    try {
+      emoji = getFallbackEmoji(statusData);
+
+      await sendStatusReaction(
+        sock,
+        message,
+        emoji
+      );
+
+      reactionSent = true;
+
+      console.log(
+        "[STATUS REACT] Reaction sent:",
+        messageId,
+        emoji
+      );
+    } catch (error) {
+      errors.push(
+        `reaction: ${error?.message || String(error)}`
+      );
+
+      console.error(
+        "[STATUS REACT] Failed:",
+        error?.stack || error
+      );
+    }
+  }
+
+  if (!seen && !reactionSent) {
+    processedStatuses.delete(cacheKey);
+  }
+
+  return {
+    success: seen || reactionSent,
+    messageId,
+    participant,
+    seen,
+    reactionSent,
+    emoji,
+    errors
+  };
 }
 
 /*
