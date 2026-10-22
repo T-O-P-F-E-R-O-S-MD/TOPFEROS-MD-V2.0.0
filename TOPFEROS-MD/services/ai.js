@@ -66,6 +66,58 @@ function validNumber(value, fallback, min, max) {
     : fallback;
 }
 
+async function askAIWithImage(prompt, imageBuffer, mimeType = "image/jpeg", options = {}) {
+  const text = String(prompt || "").trim();
+
+  if (!text) {
+    throw new Error("AI prompt cannot be empty.");
+  }
+
+  if (!Buffer.isBuffer(imageBuffer) || imageBuffer.length === 0) {
+    throw new Error("Image buffer is empty or invalid.");
+  }
+
+  if (!/^image\/(jpeg|png|webp|gif)$/.test(mimeType)) {
+    throw new Error("Unsupported image MIME type: " + mimeType);
+  }
+
+  const ai = getAIClient();
+  const model = getModel();
+
+  const response = await ai.models.generateContent({
+    model,
+    contents: [
+      {
+        inlineData: {
+          mimeType,
+          data: imageBuffer.toString("base64")
+        }
+      },
+      {
+        text
+      }
+    ],
+    config: {
+      systemInstruction: String(
+        options.systemPrompt ||
+        "Analyze the image and follow the user's instructions."
+      ),
+      temperature: validNumber(options.temperature, 0.2, 0, 2),
+      maxOutputTokens: Math.floor(
+        validNumber(options.maxTokens, 30, 128, 8192)
+      )
+    }
+  });
+
+  const answer = String(response?.text || "").trim();
+
+  if (!answer) {
+    throw new Error("Gemini returned an empty image analysis.");
+  }
+
+  return answer;
+}
+
 async function askAI(prompt, options = {}) {
   const text = String(prompt || "").trim();
 
@@ -146,6 +198,7 @@ async function aiChat(prompt, history = [], options = {}) {
 
 module.exports = {
   askAI,
+  askAIWithImage,
   aiChat,
   isAIConfigured
 };
