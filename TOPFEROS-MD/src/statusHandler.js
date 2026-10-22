@@ -662,6 +662,28 @@ async function processStatus(sock, message, options = {}) {
   }
 }
 
+  // Reyaksyon an rete apa ak Auto Status Seen.
+  if (shouldReact) {
+    try {
+      // Eseye jwenn emoji atravè AI a an premye.
+      try {
+        const aiResult =
+          await chooseEmojiWithSource(statusData);
+
+        emoji = getAIEmoji(aiResult);
+      } catch (aiError) {
+        console.warn(
+          "[STATUS AI] AI pa disponib; n ap itilize fallback:",
+          aiError?.message || String(aiError)
+        );
+      }
+
+      // Si AI a pa bay emoji, sèvi ak lis fallback la.
+      if (!emoji) {
+        emoji = getFallbackEmoji(statusData);
+      }
+
+      // Voye reyaksyon an sou Status orijinal la.
       await sendStatusReaction(
         sock,
         message,
@@ -688,6 +710,11 @@ async function processStatus(sock, message, options = {}) {
   }
 
   const success = seen || reactionSent;
+
+  // Anrejistre status la sèlman si reyaksyon an reyisi.
+  if (reactionSent) {
+    markAsProcessed(cacheKey);
+  }
 
 // Pa bloke yon lòt tantativ si reyaksyon an echwe.
 if (reactionSent) {
