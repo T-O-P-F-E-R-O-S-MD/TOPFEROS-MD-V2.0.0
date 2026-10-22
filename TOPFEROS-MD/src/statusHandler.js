@@ -402,6 +402,14 @@ async function buildAIStatusData(
     timestamp:
       message?.messageTimestamp ||
       null
+mimeType:
+  content.type === "image"
+    ? content.content?.mimetype || "image/jpeg"
+    : content.type === "video"
+      ? content.content?.mimetype || "video/mp4"
+      : content.type === "audio"
+        ? content.content?.mimetype || "audio/ogg"
+        : null,
   };
 }
 
