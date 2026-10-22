@@ -613,14 +613,14 @@ async function processStatus(sock, message, options = {}) {
       );
     }
   }
-    
+  
   // Reyaji sou Status la si Auto Status React aktive.
   if (shouldReact) {
     try {
-      // Sèvis la chwazi emoji atravè AI, oswa fallback si AI echwe.
-      const aiResult = await chooseEmojiWithSource(statusData);
+      const aiResult =
+        await chooseEmojiWithSource(statusData);
 
-      // Rekipere emoji nan objè sèvis la.
+      // Sèvi ak emoji AI a, oswa fallback si rezilta a pa valab.
       emoji =
         typeof aiResult?.emoji === "string" &&
         aiResult.emoji.trim()
@@ -634,7 +634,11 @@ async function processStatus(sock, message, options = {}) {
       );
 
       // Voye yon sèl reyaksyon sou Status orijinal la.
-      await sendStatusReaction(sock, message, emoji);
+      await sendStatusReaction(
+        sock,
+        message,
+        emoji
+      );
 
       reactionSent = true;
 
@@ -657,7 +661,7 @@ async function processStatus(sock, message, options = {}) {
 
   const success = seen || reactionSent;
 
-  // Anrejistre Status la sèlman si reyaksyon an reyisi.
+  // Kenbe cache la sèlman lè reyaksyon an reyisi.
   if (reactionSent) {
     markAsProcessed(cacheKey);
   }
