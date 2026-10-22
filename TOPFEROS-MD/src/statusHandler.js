@@ -402,6 +402,7 @@ async function buildAIStatusData(
     timestamp:
       message?.messageTimestamp ||
       null
+
 mimeType:
   content.type === "image"
     ? content.content?.mimetype || "image/jpeg"
