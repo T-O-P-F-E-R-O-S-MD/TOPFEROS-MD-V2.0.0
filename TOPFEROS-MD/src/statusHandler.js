@@ -403,7 +403,7 @@ async function buildAIStatusData(
       message?.messageTimestamp ||
       null,
 
-    mimeType:
+        mimeType:
       content.type === "image"
         ? content.content?.mimetype || "image/jpeg"
         : content.type === "video"
@@ -411,6 +411,8 @@ async function buildAIStatusData(
           : content.type === "audio"
             ? content.content?.mimetype || "audio/ogg"
             : null
+  };
+}
 
 /*
 |--------------------------------------------------------------------------
