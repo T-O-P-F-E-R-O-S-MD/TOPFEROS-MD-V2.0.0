@@ -568,17 +568,8 @@ async function processStatus(sock, message, options = {}) {
       reason: "Status already processed."
     };
   }
-
-  const content = getStatusContent(message);
-  const text = extractStatusText(message);
-
-  const statusData = {
-    text,
-    caption: text,
-    mediaType: content.type,
-    messageId,
-    participant
-  };
+  
+  const statusData = await buildAIStatusData(message);
 
   // Make yon sèl tantativ pou li Status la.
   let seen = false;
