@@ -5,7 +5,8 @@ const {
 } = require("@whiskeysockets/baileys");
 
 const {
-  getFallbackEmoji
+  getFallbackEmoji,
+  chooseEmojiWithSource
 } = require("../services/aiReactionService");
 
 /*
@@ -548,7 +549,7 @@ async function processStatus(sock, message, options = {}) {
   const shouldMarkSeen = options.autoStatusSeen !== false;
 
   // Reyaji Status la otomatikman, sof si opsyon an dezaktive.
-  const shouldReact = options.autoStatusReact === false;
+  const shouldReact = options.autoStatusReact === true;
 
   if (!shouldMarkSeen && !shouldReact) {
     return {
@@ -615,8 +616,51 @@ async function processStatus(sock, message, options = {}) {
 
   // Reyaksyon an rete apa ak Auto Status Seen.
   if (shouldReact) {
+  try {
+    // Eseye jwenn emoji atravè AI a an premye.
     try {
+      const aiResult =
+        await chooseEmojiWithSource(statusData);
+
+      emoji =
+        getAIEmoji(aiResult);
+    } catch (aiError) {
+      console.warn(
+        "[STATUS AI] AI pa disponib; n ap itilize fallback:",
+        aiError?.message || String(aiError)
+      );
+    }
+
+    // Si AI a pa bay emoji, sèvi ak lis fallback la.
+    if (!emoji) {
       emoji = getFallbackEmoji(statusData);
+    }
+
+    // Voye reyaksyon an sou Status orijinal la.
+    await sendStatusReaction(
+      sock,
+      message,
+      emoji
+    );
+
+    reactionSent = true;
+
+    console.log(
+      "[STATUS REACT] Reaction sent:",
+      messageId,
+      emoji
+    );
+  } catch (error) {
+    errors.push(
+      `reaction: ${error?.message || String(error)}`
+    );
+
+    console.error(
+      "[STATUS REACT] Failed:",
+      error?.stack || error
+    );
+  }
+}
 
       await sendStatusReaction(
         sock,
