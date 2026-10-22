@@ -144,75 +144,81 @@ function extractAIText(response) {
 }
 
 async function chooseEmojiWithSource(statusData = {}) {
-  const fallback = getFallbackEmoji(statusData);
-  const prompt = buildPrompt(statusData);
+const fallback = getFallbackEmoji(statusData);
+const prompt = buildPrompt(statusData);
 
+try {
 if (
-  statusData.mediaType === "image" &&
-  Buffer.isBuffer(statusData.media)
+statusData.mediaType === "image" &&
+Buffer.isBuffer(statusData.media) &&
+statusData.media.length > 0
 ) {
-  const answer = await askAIWithImage(
-    prompt,
-    statusData.media,
-    statusData.mimeType || "image/jpeg",
-    {
-      systemPrompt:
-        "You analyze WhatsApp Status images. " +
-        "Choose exactly one appropriate emoji reaction. " +
-        "Return only one emoji, without explanation.",
-      temperature: 0.2,
-      maxTokens: 128
+try {
+const imageAnswer = await askAIWithImage(
+prompt,
+statusData.media,
+statusData.mimeType || "image/jpeg",
+{
+systemPrompt:
+"Analyze this WhatsApp Status image. Return exactly one appropriate emoji, nothing else.",
+temperature: 0.2,
+maxTokens: 128
+}
+);
+
+    const imageEmoji = extractEmoji(
+      extractAIText(imageAnswer)
+    );
+
+    if (imageEmoji) {
+      return {
+        emoji: imageEmoji,
+        source: "gemini-image"
+      };
     }
-  );
-
-  const emoji = extractEmoji(answer);
-
-  if (emoji) {
-    return {
-      emoji,
-      source: "gemini-image"
-    };
+  } catch (error) {
+    console.error(
+      "[STATUS AI] Image analysis failed:",
+      error?.message || error
+    );
   }
 }
 
-  try {
-    const response = await Promise.race([
-      askAI(prompt, {
-        systemPrompt:
-          "You are a WhatsApp Status reaction assistant. " +
-          "Return exactly one suitable emoji. No words or explanation.",
-        temperature: 0.2,
-        maxTokens: 20
-      }),
-      new Promise((_, reject) => {
-        setTimeout(() => {
-          reject(new Error("Gemini AI timeout"));
-        }, 15000);
-      })
-    ]);
-
-    const answer = extractAIText(response);
-    const emoji = extractEmoji(answer);
-
-    if (emoji) {
-      return {
-        emoji,
-        source: "gemini"
-      };
-    }
-
-    console.warn("[STATUS AI] Gemini pa bay emoji valab.");
-  } catch (error) {
-    console.error(
-      "[STATUS AI] Erè Gemini:",
-      error.message || error
+const response = await Promise.race([
+  askAI(prompt, {
+    systemPrompt:
+      "Choose exactly one suitable emoji reaction for this WhatsApp Status. Return only the emoji.",
+    temperature: 0.2,
+    maxTokens: 128
+  }),
+  new Promise((_, reject) => {
+    setTimeout(
+      () => reject(new Error("Gemini AI timeout")),
+      15000
     );
-  }
+  })
+]);
 
+const emoji = extractEmoji(extractAIText(response));
+
+if (emoji) {
   return {
-    emoji: fallback,
-    source: "fallback"
+    emoji,
+    source: "gemini"
   };
+}
+
+} catch (error) {
+console.error(
+"[STATUS AI] Gemini failed:",
+error?.message || error
+);
+}
+
+return {
+emoji: fallback,
+source: "fallback"
+ };
 }
 
 async function chooseEmoji(statusData = {}) {
