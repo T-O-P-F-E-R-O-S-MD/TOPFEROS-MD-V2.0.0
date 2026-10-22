@@ -568,8 +568,12 @@ async function processStatus(sock, message, options = {}) {
       reason: "Status already processed."
     };
   }
-  
-  const statusData = await buildAIStatusData(message);
+
+  let statusData = null;
+
+ if (shouldReact) {
+  statusData = await buildAIStatusData(message);
+}
 
   // Make yon sèl tantativ pou li Status la.
   let seen = false;
