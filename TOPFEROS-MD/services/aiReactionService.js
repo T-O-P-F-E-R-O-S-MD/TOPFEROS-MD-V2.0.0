@@ -4,8 +4,6 @@
 // 🦁 TOPFEROS MD V2.0.0
 // GEMINI AI STATUS REACTION SERVICE
 
-const { askAI } = require("./ai");
-
 const {
   askAI,
   askAIWithImage
