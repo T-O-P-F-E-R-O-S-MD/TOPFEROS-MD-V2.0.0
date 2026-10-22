@@ -1,434 +1,211 @@
 
 "use strict";
 
-const axios = require("axios");
+// 🦁 TOPFEROS MD V2.0.0
+// GEMINI AI STATUS REACTION SERVICE
+
 const { askAI } = require("./ai");
 
-/*
-|--------------------------------------------------------------------------
-| TOPFEROS MD V2.0.0
-| AI STATUS REACTION SERVICE
-| GEMINI + SMART EMOJI FALLBACK
-|--------------------------------------------------------------------------
-*/
-
-const DEFAULT_TIMEOUT = 15000;
-
-/*
-|--------------------------------------------------------------------------
-| SMART FALLBACK EMOJI
-|--------------------------------------------------------------------------
-*/
-
 const FALLBACK_EMOJIS = [
-  "❤️", "💚", "💙", "💜", "💕", "💖",
-  "😍", "🥰", "😘", "😊", "😎", "🤩",
-  "😂", "🤣", "😅", "😁", "😄", "😆",
-  "🔥", "💯", "👏", "🙌", "💪", "🚀",
-  "✨", "🌟", "⭐", "🎉", "🥳", "🏆",
-  "🙏", "🤲", "🕊️", "😇", "🤍",
-  "😢", "😭", "💔", "🥺", "😔", "😞",
-  "🤔", "😮", "😱", "👀", "😲", "🤯",
-  "👍", "👌", "🤝", "👑", "🌹", "🌍",
-  "🎶", "🎵", "🎧", "⚽", "🏀", "🎮",
-  "🎂", "🎊", "🌺", "🌞", "💐",
-
-  // Nouvo emoji TOPFEROS MD
-  "🤭", "🥶", "😶‍🌫️", "🫥", "👹", "☠️",
-  "👻", "🥴", "🧠", "👰🏼‍♂️", "👰", "🧟",
-  "🧚‍♀️", "🧜‍♂️", "🦁", "🐜", "🌚", "🌈",
-  "🍇", "🎇", "🌃", "🌌", "🪦", "🩻",
-  "🛏️", "🛌🏿", "💘", "❤️‍🔥", "🔴", "🇭🇹"
+  "❤️", "😂", "🔥", "😍", "🥰", "👏",
+  "💯", "😎", "🙏", "✨", "🤔", "😮",
+  "💪", "🤣", "😊", "🙌", "🌹", "💖"
 ];
 
-function randomEmoji(emojis) {
-  return emojis[
-    Math.floor(Math.random() * emojis.length)
-  ];
-}
-
 function getFallbackEmoji(statusData = {}) {
-  const text = String(
-    statusData.text ||
-    statusData.caption ||
-    ""
-  ).toLowerCase();
+  const text = [
+    statusData.text || "",
+    statusData.caption || ""
+  ].join(" ").toLowerCase();
 
-  const categories = [
-    {
-      pattern: /amour|love|renmen|cheri|bébé|heart|lanmou/i,
-      emojis: ["❤️", "🥰", "😍", "💕", "💖"]
-    },
-    {
-      pattern: /lol|mdr|haha|blag|funny|drôle|😂|🤣/i,
-      emojis: ["😂", "🤣", "😆", "😅"]
-    },
-    {
-      pattern: /bondye|dieu|god|jesus|jésus|prière|lapriyè|amen/i,
-      emojis: ["🙏", "🤲", "🕊️", "😇"]
-    },
-    {
-      pattern: /triste|sad|cry|kriye|doulè|mouri|décès|rip/i,
-      emojis: ["😢", "🥺", "😔", "💔"]
-    },
-    {
-      pattern: /success|succès|reyisi|motivation|travay|objectif|goal/i,
-      emojis: ["💪", "🔥", "🚀", "🏆", "💯"]
-    },
-    {
-      pattern: /anniversaire|birthday|fèt|celebration|félicitations/i,
-      emojis: ["🎉", "🥳", "🎂", "🎊"]
-    },
-    {
-      pattern: /football|foutbòl|soccer|match|goal|but/i,
-      emojis: ["⚽", "🏆", "🔥", "👏"]
-    },
-    {
-      pattern: /music|musique|mizik|song|chanson/i,
-      emojis: ["🎶", "🎵", "🎧", "🔥"]
-    }
-  ];
-
-  for (const category of categories) {
-    if (category.pattern.test(text)) {
-      return randomEmoji(category.emojis);
-    }
+  if (/love|lanmou|renmen|amour|cheri|chérie/.test(text)) {
+    return "❤️";
   }
 
-  return randomEmoji(FALLBACK_EMOJIS);
-}
+  if (/lol|haha|komik|drole|drôle|funny|😂/.test(text)) {
+    return "😂";
+  }
 
-/*
-|--------------------------------------------------------------------------
-| EXTRACT EMOJI
-|--------------------------------------------------------------------------
-*/
+  if (/birthday|anivèsè|anniversaire/.test(text)) {
+    return "🎂";
+  }
+
+  if (/amen|bondye|god|jesus|lapriyè|prière/.test(text)) {
+    return "🙏";
+  }
+
+  if (/sad|tris|triste|lapenn/.test(text)) {
+    return "❤️";
+  }
+
+  if (/beautiful|bèl|joli|magnifique/.test(text)) {
+    return "😍";
+  }
+
+  if (statusData.mediaType === "image") {
+    return "😍";
+  }
+
+  return FALLBACK_EMOJIS[
+    Math.floor(Math.random() * FALLBACK_EMOJIS.length)
+  ];
+}
 
 function extractEmoji(text) {
-  if (typeof text !== "string") {
-    return null;
-  }
+  if (typeof text !== "string") return null;
 
-  const value = text
-    .replace(/```/g, "")
-    .trim()
-    .replace(/^["'`]+|["'`]+$/g, "");
+  const matches = text.match(/\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic}|\p{Emoji_Modifier})*/gu);
 
-  if (!value) {
-    return null;
-  }
-
-  const emojiRegex =
-    /\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*/gu;
-
-  const matches = value.match(emojiRegex);
-
-  return matches?.[0] || null;
+  return matches && matches.length ? matches[0] : null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| EXTRACT AI TEXT
-|--------------------------------------------------------------------------
-*/
+function buildPrompt(statusData = {}) {
+  const text = String(
+    statusData.text || statusData.caption || ""
+  ).trim();
 
-function extractAIText(response) {
-  if (!response) {
-    return "";
+  const mediaType = String(
+    statusData.mediaType || "text"
+  ).toLowerCase();
+
+  let context;
+
+  if (text) {
+    context = `Status text/caption: ${text}\nMedia type: ${mediaType}`;
+  } else if (mediaType === "image") {
+    context = "The status contains an image, but its visual content has not been provided.";
+  } else if (mediaType === "video") {
+    context = "The status contains a video, but its visual content has not been provided.";
+  } else if (mediaType === "audio") {
+    context = "The status contains audio, but its contents have not been transcribed.";
+  } else {
+    context = "The status has no readable text.";
   }
 
+  return [
+    "Choose the single most appropriate emoji reaction for this WhatsApp Status.",
+    "Consider the meaning and emotional tone of the supplied status information.",
+    "Return exactly ONE emoji and nothing else.",
+    "Do not explain your choice.",
+    "",
+    context
+  ].join("\n");
+}
+
+function extractAIText(response) {
   if (typeof response === "string") {
     return response.trim();
   }
 
-  const data = response.data || response;
-
-  const content =
-    data?.choices?.[0]?.message?.content;
-
-  if (typeof content === "string") {
-    return content.trim();
+  if (!response || typeof response !== "object") {
+    return "";
   }
 
-  if (Array.isArray(content)) {
-    return content
-      .map(item =>
-        typeof item === "string"
-          ? item
-          : item?.text || ""
-      )
+  if (typeof response.text === "string") {
+    return response.text.trim();
+  }
+
+  if (typeof response.output === "string") {
+    return response.output.trim();
+  }
+
+  if (response.candidates?.[0]?.content?.parts) {
+    return response.candidates[0].content.parts
+      .map(part => part.text || "")
       .join("")
       .trim();
   }
 
-  const completion =
-    data?.choices?.[0]?.text;
+  if (response.choices?.[0]?.message?.content) {
+    const content = response.choices[0].message.content;
 
-  if (typeof completion === "string") {
-    return completion.trim();
-  }
-
-  const geminiParts =
-    data?.candidates?.[0]?.content?.parts;
-
-  if (Array.isArray(geminiParts)) {
-    return geminiParts
-      .map(part => part?.text || "")
-      .join("")
-      .trim();
-  }
-
-  return String(
-    data?.response ||
-    data?.text ||
-    ""
-  ).trim();
-}
-
-/*
-|--------------------------------------------------------------------------
-| BUILD STATUS PROMPT
-|--------------------------------------------------------------------------
-*/
-
-function buildPrompt(statusData = {}) {
-  const text = String(
-    statusData.text ||
-    statusData.caption ||
-    ""
-  ).trim();
-
-  const mediaType = String(
-    statusData.mediaType || "none"
-  ).toLowerCase();
-
-  return [
-    "You are TOPFEROS MD V2.0.0 AI Status Reaction.",
-    "",
-    "Analyze this WhatsApp Status.",
-    "Choose exactly ONE natural Unicode emoji.",
-    "",
-    "STRICT RULES:",
-    "- Return exactly ONE emoji.",
-    "- No words or explanations.",
-    "- No punctuation.",
-    "- No multiple emojis.",
-    `- You may choose any suitable emoji, including these: ${FALLBACK_EMOJIS.join(" ")}`,
-    "- Match the status emotion and meaning.",
-    "- Match romance, humor, sadness, motivation,",
-    "  celebration, faith, music and sports naturally.",
-    "- Never invent information.",
-    "- For unknown content choose a neutral emoji.",
-    "",
-    `STATUS TEXT: ${text || "[No text or caption]"}`,
-    `MEDIA TYPE: ${mediaType}`,
-    "",
-    "Return ONE emoji only."
-  ].join("\n");
-}
-
-/*
-|--------------------------------------------------------------------------
-| CALL AI
-|--------------------------------------------------------------------------
-*/
-
-async function callAI(prompt, options = {}) {
-  const apiUrl = String(
-    options.apiUrl ||
-    process.env.AI_API_URL ||
-    ""
-  ).trim();
-
-  if (apiUrl) {
-    const apiKey = String(
-      options.apiKey ||
-      process.env.AI_API_KEY ||
-      ""
-    ).trim();
-
-    const model = String(
-      options.model ||
-      process.env.AI_MODEL ||
-      "gpt-4o-mini"
-    ).trim();
-
-    const headers = {
-      "Content-Type": "application/json"
-    };
-
-    if (apiKey) {
-      headers.Authorization = `Bearer ${apiKey}`;
+    if (typeof content === "string") {
+      return content.trim();
     }
 
-    const response = await axios.post(
-      apiUrl,
-      {
-        model,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Return exactly one appropriate Unicode emoji."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature:
-          options.temperature ?? 0.4,
-        max_tokens:
-          options.maxTokens ?? 20
-      },
-      {
-        headers,
-        timeout:
-          Number(
-            options.timeout ||
-            process.env.AI_TIMEOUT_MS ||
-            DEFAULT_TIMEOUT
-          ) || DEFAULT_TIMEOUT
-      }
-    );
-
-    return extractAIText(response);
+    if (Array.isArray(content)) {
+      return content
+        .map(item => item.text || "")
+        .join("")
+        .trim();
+    }
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | EXISTING GEMINI SERVICE
-  |--------------------------------------------------------------------------
-  */
-
-  if (typeof askAI !== "function") {
-    throw new Error(
-      "Gemini askAI service is unavailable."
-    );
+  if (response.choices?.[0]?.text) {
+    return response.choices[0].text.trim();
   }
 
-  const response = await askAI(prompt, {
-    systemPrompt:
-      "Return exactly ONE appropriate Unicode emoji. No words.",
-    temperature:
-      options.temperature ?? 0.4,
-    maxTokens:
-      options.maxTokens ?? 20
-  });
-
-  return extractAIText(response);
+  return "";
 }
 
-/*
-|--------------------------------------------------------------------------
-| CHOOSE EMOJI WITH SOURCE TRACKING
-|--------------------------------------------------------------------------
-*/
+async function chooseEmojiWithSource(statusData = {}) {
+  const fallback = getFallbackEmoji(statusData);
+  const prompt = buildPrompt(statusData);
 
-async function chooseEmojiWithSource(
-  statusData = {},
-  options = {}
-) {
   try {
-    const prompt = buildPrompt(statusData);
+    const response = await Promise.race([
+      askAI(prompt, {
+        systemPrompt:
+          "You are a WhatsApp Status reaction assistant. " +
+          "Return exactly one suitable emoji. No words or explanation.",
+        temperature: 0.2,
+        maxTokens: 20
+      }),
+      new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error("Gemini AI timeout"));
+        }, 15000);
+      })
+    ]);
 
-    const response = await callAI(
-      prompt,
-      options
-    );
-
-    const emoji = extractEmoji(response);
+    const answer = extractAIText(response);
+    const emoji = extractEmoji(answer);
 
     if (emoji) {
       return {
         emoji,
-        source: "ai"
+        source: "gemini"
       };
     }
 
-    console.warn(
-      "[AI REACTION] Invalid AI response. Using smart fallback."
-    );
-
+    console.warn("[STATUS AI] Gemini pa bay emoji valab.");
   } catch (error) {
     console.error(
-      "[AI REACTION] AI request failed:",
-      error?.message || error
+      "[STATUS AI] Erè Gemini:",
+      error.message || error
     );
   }
 
   return {
-    emoji: getFallbackEmoji(statusData),
+    emoji: fallback,
     source: "fallback"
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| CHOOSE EMOJI
-|--------------------------------------------------------------------------
-*/
-
-async function chooseEmoji(
-  statusData = {},
-  options = {}
-) {
-  const result = await chooseEmojiWithSource(
-    statusData,
-    options
-  );
-
+async function chooseEmoji(statusData = {}) {
+  const result = await chooseEmojiWithSource(statusData);
   return result.emoji;
 }
 
-/*
-|--------------------------------------------------------------------------
-| ANALYZE STATUS
-|--------------------------------------------------------------------------
-*/
-
-async function analyzeStatus(
-  statusData = {},
-  options = {}
-) {
-  const result = await chooseEmojiWithSource(
-    statusData,
-    options
-  );
+async function analyzeStatus(statusData = {}) {
+  const result = await chooseEmojiWithSource(statusData);
 
   return {
     emoji: result.emoji,
     source: result.source,
-
-    statusText: String(
-      statusData.text ||
-      statusData.caption ||
-      ""
-    ).trim(),
-
-    mediaType:
-      statusData.mediaType || "none",
-
-    messageId:
-      statusData.messageId || null,
-
-    participant:
-      statusData.participant || null
+    statusText: statusData.text || statusData.caption || "",
+    mediaType: statusData.mediaType || "text",
+    messageId: statusData.messageId || null,
+    participant: statusData.participant || null
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| EXPORTS
-|--------------------------------------------------------------------------
-*/
-
 module.exports = {
   chooseEmoji,
+  chooseEmojiWithSource,
   analyzeStatus,
   extractEmoji,
   extractAIText,
   buildPrompt,
-  callAI,
   getFallbackEmoji
 };
