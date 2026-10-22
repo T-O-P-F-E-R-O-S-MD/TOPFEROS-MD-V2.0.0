@@ -9,6 +9,7 @@ const {
   askAIWithImage
 } = require("./ai");
 
+
 const FALLBACK_EMOJIS = [
   "❤️", "😂", "🔥", "😍", "🥰", "👏",
   "💯", "😎", "🙏", "✨", "🤔", "😮",
