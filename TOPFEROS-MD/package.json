@@ -1,40 +1,35 @@
 {
-  "name": "topferos-md-v2",
-  "version": "2.0.0",
-  "description": "TOPFEROS MD V2.0.0 - Multi-session WhatsApp Bot",
-  "main": "index.js",
-  "type": "commonjs",
-  
+"name": "topferos-md-v2",
+"version": "2.0.0",
+"description": "TOPFEROS MD V2.0.0 - Multi-session WhatsApp Bot",
+"main": "index.js",
+"type": "commonjs",
 "scripts": {
-  "start": "node index.js",
-  "dev": "node --watch index.js",
-  "check": "node --check index.js && node --check src/config.js && node --check src/connection.js && node --check src/messageHandler.js && node --check src/sessionManager.js && node --check commands/index.js && node --check panel/server.js",
-  
-"check:media": "python3 -c \"import sys; sys.path.insert(0, './python-packages'); import yt_dlp, imageio_ffmpeg; print('yt-dlp disponib:', yt_dlp.version.__version__); print('FFmpeg disponib:', imageio_ffmpeg.get_ffmpeg_exe())\""
-
-"check": "node --check index.js && node --check src/config.js && node --check src/connection.js && node --check src/messageHandler.js && node --check src/sessionManager.js && node --check src/statusHandler.js && node --check services/aiReactionService.js && node --check commands/index.js && node --check panel/server.js"
-
+"start": "node index.js",
+"dev": "node --watch index.js",
+"check": "node --check index.js && node --check src/config.js && node --check src/connection.js && node --check src/messageHandler.js && node --check src/sessionManager.js && node --check src/statusHandler.js && node --check services/aiReactionService.js && node --check commands/index.js && node --check panel/server.js",
+"check:media": "python3 -c "import sys; sys.path.insert(0, './python-packages'); import yt_dlp, imageio_ffmpeg; print('yt-dlp disponib:', yt_dlp.version.version); print('FFmpeg disponib:', imageio_ffmpeg.get_ffmpeg_exe())""
 },
-  "engines": {
-    "node": "22.x"
-  },
-  "keywords": [
-    "whatsapp",
-    "bot",
-    "baileys",
-    "topferos",
-    "topferos-md"
-  ],
-  "author": "TOPFEROS MD",
-  "license": "MIT",
-  "dependencies": {
-    "@whiskeysockets/baileys": "6.7.23",
-    "@google/genai": "^1.21.0",
-    "axios": "^1.7.9",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-session": "^1.18.1",
-    "pino": "^9.6.0",
-    "qrcode": "^1.5.4"
-  }
+"engines": {
+"node": "22.x"
+},
+"keywords": [
+"whatsapp",
+"bot",
+"baileys",
+"topferos",
+"topferos-md"
+],
+"author": "TOPFEROS MD",
+"license": "MIT",
+"dependencies": {
+"@whiskeysockets/baileys": "6.7.23",
+"@google/genai": "^1.21.0",
+"axios": "^1.7.9",
+"dotenv": "^16.4.7",
+"express": "^4.21.2",
+"express-session": "^1.18.1",
+"pino": "^9.6.0",
+"qrcode": "^1.5.4"
+}
 }
