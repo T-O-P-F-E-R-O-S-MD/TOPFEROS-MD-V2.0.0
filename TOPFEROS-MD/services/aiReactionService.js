@@ -6,6 +6,11 @@
 
 const { askAI } = require("./ai");
 
+const {
+  askAI,
+  askAIWithImage
+} = require("./ai");
+
 const FALLBACK_EMOJIS = [
   "❤️", "😂", "🔥", "😍", "🥰", "👏",
   "💯", "😎", "🙏", "✨", "🤔", "😮",
@@ -141,6 +146,34 @@ function extractAIText(response) {
 async function chooseEmojiWithSource(statusData = {}) {
   const fallback = getFallbackEmoji(statusData);
   const prompt = buildPrompt(statusData);
+
+if (
+  statusData.mediaType === "image" &&
+  Buffer.isBuffer(statusData.media)
+) {
+  const answer = await askAIWithImage(
+    prompt,
+    statusData.media,
+    statusData.mimeType || "image/jpeg",
+    {
+      systemPrompt:
+        "You analyze WhatsApp Status images. " +
+        "Choose exactly one appropriate emoji reaction. " +
+        "Return only one emoji, without explanation.",
+      temperature: 0.2,
+      maxTokens: 128
+    }
+  );
+
+  const emoji = extractEmoji(answer);
+
+  if (emoji) {
+    return {
+      emoji,
+      source: "gemini-image"
+    };
+  }
+}
 
   try {
     const response = await Promise.race([
