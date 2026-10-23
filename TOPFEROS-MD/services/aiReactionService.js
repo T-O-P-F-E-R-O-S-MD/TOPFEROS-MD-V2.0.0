@@ -3,18 +3,33 @@
 
 // 🦁 TOPFEROS MD V2.0.0
 // GEMINI AI STATUS REACTION SERVICE
+//
+// AI analyzes a Status AFTER the bot's
+// initial automatic reaction.
+//
+// If AI fails, the original emoji stays.
+// Gemini model is managed by services/ai.js.
 
 const {
   askAI,
   askAIWithImage
 } = require("./ai");
 
+const AI_TIMEOUT_MS = 15000;
+
+const DEFAULT_EMOJI = "❤️";
 
 const FALLBACK_EMOJIS = [
   "❤️", "😂", "🔥", "😍", "🥰", "👏",
   "💯", "😎", "🙏", "✨", "🤔", "😮",
   "💪", "🤣", "😊", "🙌", "🌹", "💖"
 ];
+
+/*
+|--------------------------------------------------------------------------
+| FALLBACK EMOJI
+|--------------------------------------------------------------------------
+*/
 
 function getFallbackEmoji(statusData = {}) {
   const text = [
@@ -50,51 +65,114 @@ function getFallbackEmoji(statusData = {}) {
     return "😍";
   }
 
-  return FALLBACK_EMOJIS[
-    Math.floor(Math.random() * FALLBACK_EMOJIS.length)
-  ];
+  return DEFAULT_EMOJI;
 }
+
+/*
+|--------------------------------------------------------------------------
+| EXTRACT ONE COMPLETE EMOJI
+|--------------------------------------------------------------------------
+*/
 
 function extractEmoji(text) {
-  if (typeof text !== "string") return null;
+  if (typeof text !== "string") {
+    return null;
+  }
 
-  const matches = text.match(/\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic}|\p{Emoji_Modifier})*/gu);
+  const value = text.trim();
 
-  return matches && matches.length ? matches[0] : null;
+  if (!value) {
+    return null;
+  }
+
+  // Intl.Segmenter preserves combined emoji sequences.
+  if (
+    typeof Intl !== "undefined" &&
+    typeof Intl.Segmenter === "function"
+  ) {
+    const segmenter = new Intl.Segmenter(
+      "en",
+      { granularity: "grapheme" }
+    );
+
+    for (const item of segmenter.segment(value)) {
+      const segment = item.segment;
+
+      if (
+        /\p{Extended_Pictographic}/u.test(segment) ||
+        /[\u{1F1E6}-\u{1F1FF}]{2}/u.test(segment) ||
+        /^[0-9#*]\uFE0F?\u20E3$/u.test(segment)
+      ) {
+        return segment;
+      }
+    }
+
+    return null;
+  }
+
+  const match = value.match(
+    /\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic}|\p{Emoji_Modifier})*/u
+  );
+
+  return match ? match[0] : null;
 }
+
+/*
+|--------------------------------------------------------------------------
+| BUILD GEMINI PROMPT
+|--------------------------------------------------------------------------
+*/
 
 function buildPrompt(statusData = {}) {
   const text = String(
-    statusData.text || statusData.caption || ""
+    statusData.text ||
+    statusData.caption ||
+    ""
   ).trim();
 
   const mediaType = String(
     statusData.mediaType || "text"
   ).toLowerCase();
 
-  let context;
+  let context = "";
 
   if (text) {
-    context = `Status text/caption: ${text}\nMedia type: ${mediaType}`;
+    context =
+      `Status text/caption: ${text}\n` +
+      `Media type: ${mediaType}`;
   } else if (mediaType === "image") {
-    context = "The status contains an image, but its visual content has not been provided.";
+    context =
+      "The status contains an image. " +
+      "Analyze the supplied image if available.";
   } else if (mediaType === "video") {
-    context = "The status contains a video, but its visual content has not been provided.";
+    context =
+      "The status contains a video. " +
+      "No video frames or transcript are available.";
   } else if (mediaType === "audio") {
-    context = "The status contains audio, but its contents have not been transcribed.";
+    context =
+      "The status contains audio. " +
+      "No audio transcript is available.";
   } else {
     context = "The status has no readable text.";
   }
 
   return [
-    "Choose the single most appropriate emoji reaction for this WhatsApp Status.",
-    "Consider the meaning and emotional tone of the supplied status information.",
-    "Return exactly ONE emoji and nothing else.",
-    "Do not explain your choice.",
+    "You are the emoji reaction assistant for TOPFEROS MD.",
+    "Analyze the meaning and emotional tone of this WhatsApp Status.",
+    "Choose exactly ONE appropriate emoji.",
+    "Do not invent information about media you cannot inspect.",
+    "Return only the emoji.",
+    "Do not explain your answer.",
     "",
     context
   ].join("\n");
 }
+
+/*
+|--------------------------------------------------------------------------
+| EXTRACT GEMINI RESPONSE TEXT
+|--------------------------------------------------------------------------
+*/
 
 function extractAIText(response) {
   if (typeof response === "string") {
@@ -120,123 +198,234 @@ function extractAIText(response) {
       .trim();
   }
 
-  if (response.choices?.[0]?.message?.content) {
-    const content = response.choices[0].message.content;
+  const content =
+    response.choices?.[0]?.message?.content;
 
-    if (typeof content === "string") {
-      return content.trim();
-    }
-
-    if (Array.isArray(content)) {
-      return content
-        .map(item => item.text || "")
-        .join("")
-        .trim();
-    }
+  if (typeof content === "string") {
+    return content.trim();
   }
 
-  if (response.choices?.[0]?.text) {
+  if (Array.isArray(content)) {
+    return content
+      .map(item => item.text || "")
+      .join("")
+      .trim();
+  }
+
+  if (typeof response.choices?.[0]?.text === "string") {
     return response.choices[0].text.trim();
   }
 
   return "";
 }
 
-async function chooseEmojiWithSource(statusData = {}) {
-const fallback = getFallbackEmoji(statusData);
-const prompt = buildPrompt(statusData);
+/*
+|--------------------------------------------------------------------------
+| AI TIMEOUT
+|--------------------------------------------------------------------------
+*/
 
-try {
-if (
-statusData.mediaType === "image" &&
-Buffer.isBuffer(statusData.media) &&
-statusData.media.length > 0
-) {
-try {
-const imageAnswer = await askAIWithImage(
-prompt,
-statusData.media,
-statusData.mimeType || "image/jpeg",
-{
-systemPrompt:
-"Analyze this WhatsApp Status image. Return exactly one appropriate emoji, nothing else.",
-temperature: 0.2,
-maxTokens: 128
-}
-);
+async function withTimeout(promise, timeoutMs = AI_TIMEOUT_MS) {
+  let timer;
 
-    const imageEmoji = extractEmoji(
-      extractAIText(imageAnswer)
-    );
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
 
-    if (imageEmoji) {
-      return {
-        emoji: imageEmoji,
-        source: "gemini-image"
-      };
+      new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          reject(
+            new Error(
+              `Gemini AI timeout after ${timeoutMs}ms`
+            )
+          );
+        }, timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
     }
-  } catch (error) {
-    console.error(
-      "[STATUS AI] Image analysis failed:",
-      error?.message || error
-    );
   }
 }
 
-const response = await Promise.race([
-  askAI(prompt, {
-    systemPrompt:
-      "Choose exactly one suitable emoji reaction for this WhatsApp Status. Return only the emoji.",
-    temperature: 0.2,
-    maxTokens: 128
-  }),
-  new Promise((_, reject) => {
-    setTimeout(
-      () => reject(new Error("Gemini AI timeout")),
-      15000
+/*
+|--------------------------------------------------------------------------
+| GEMINI EMOJI SELECTION
+|--------------------------------------------------------------------------
+*/
+
+async function chooseEmojiWithSource(statusData = {}) {
+  const fallback = getFallbackEmoji(statusData);
+  const prompt = buildPrompt(statusData);
+
+  const hasImage =
+    statusData.mediaType === "image" &&
+    Buffer.isBuffer(statusData.media) &&
+    statusData.media.length > 0;
+
+  const hasReadableText =
+    Boolean(
+      String(
+        statusData.text ||
+        statusData.caption ||
+        ""
+      ).trim()
     );
-  })
-]);
 
-const emoji = extractEmoji(extractAIText(response));
+  /*
+   * Do not ask Gemini to guess unseen media.
+   */
 
-if (emoji) {
+  if (
+    !hasImage &&
+    !hasReadableText
+  ) {
+    return {
+      emoji: fallback,
+      source: "fallback"
+    };
+  }
+
+  /*
+   * Analyze an actual image when available.
+   */
+
+  if (hasImage) {
+    try {
+      const imageAnswer = await withTimeout(
+        askAIWithImage(
+          prompt,
+          statusData.media,
+          statusData.mimeType || "image/jpeg",
+          {
+            systemPrompt:
+              "Analyze the supplied WhatsApp Status image. " +
+              "Return exactly one appropriate emoji.",
+            temperature: 0.2,
+            maxTokens: 128
+          }
+        )
+      );
+
+      const imageEmoji = extractEmoji(
+        extractAIText(imageAnswer)
+      );
+
+      if (imageEmoji) {
+        return {
+          emoji: imageEmoji,
+          source: "gemini-image"
+        };
+      }
+
+      console.warn(
+        "[STATUS AI] Image response contained no emoji."
+      );
+
+    } catch (error) {
+      console.error(
+        "[STATUS AI] Image analysis failed:",
+        error?.message || error
+      );
+    }
+  }
+
+  /*
+   * Analyze text or image captions.
+   */
+
+  if (hasReadableText) {
+    try {
+      const response = await withTimeout(
+        askAI(prompt, {
+          systemPrompt:
+            "Choose exactly one suitable emoji " +
+            "for this WhatsApp Status. " +
+            "Return only the emoji.",
+          temperature: 0.2,
+          maxTokens: 128
+        })
+      );
+
+      const emoji = extractEmoji(
+        extractAIText(response)
+      );
+
+      if (emoji) {
+        return {
+          emoji,
+          source: "gemini"
+        };
+      }
+
+      console.warn(
+        "[STATUS AI] Text response contained no emoji."
+      );
+
+    } catch (error) {
+      console.error(
+        "[STATUS AI] Gemini failed:",
+        error?.message || error
+      );
+    }
+  }
+
+  /*
+   * AI unavailable or invalid response.
+   * Return fallback without inventing AI success.
+   */
+
   return {
-    emoji,
-    source: "gemini"
+    emoji: fallback,
+    source: "fallback"
   };
 }
 
-} catch (error) {
-console.error(
-"[STATUS AI] Gemini failed:",
-error?.message || error
-);
-}
-
-return {
-emoji: fallback,
-source: "fallback"
- };
-}
+/*
+|--------------------------------------------------------------------------
+| CHOOSE EMOJI
+|--------------------------------------------------------------------------
+*/
 
 async function chooseEmoji(statusData = {}) {
-  const result = await chooseEmojiWithSource(statusData);
+  const result =
+    await chooseEmojiWithSource(statusData);
+
   return result.emoji;
 }
 
+/*
+|--------------------------------------------------------------------------
+| ANALYZE STATUS
+|--------------------------------------------------------------------------
+*/
+
 async function analyzeStatus(statusData = {}) {
-  const result = await chooseEmojiWithSource(statusData);
+  const result =
+    await chooseEmojiWithSource(statusData);
 
   return {
     emoji: result.emoji,
     source: result.source,
-    statusText: statusData.text || statusData.caption || "",
-    mediaType: statusData.mediaType || "text",
-    messageId: statusData.messageId || null,
-    participant: statusData.participant || null
+    statusText:
+      statusData.text ||
+      statusData.caption ||
+      "",
+    mediaType:
+      statusData.mediaType || "text",
+    messageId:
+      statusData.messageId || null,
+    participant:
+      statusData.participant || null
   };
 }
+
+/*
+|--------------------------------------------------------------------------
+| EXPORTS
+|--------------------------------------------------------------------------
+*/
 
 module.exports = {
   chooseEmoji,
