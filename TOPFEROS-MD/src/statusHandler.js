@@ -366,8 +366,11 @@ async function processStatus(
     };
   }
 
-  const cacheKey =
-    `${participant}:${messageId}`;
+ const cacheKey = [
+  sock.user?.id || "unknown-session",
+  participant,
+  messageId
+].join(":");
 
   if (
     hasBeenProcessed(cacheKey) ||
