@@ -359,12 +359,12 @@ const session = {
   /*
    * Baileys authentication directory.
    */
-
+    
   directory:
-    envString(
-      "SESSION_DIR",
-      "sessions"
-    ),
+  envString(
+    "SESSION_DIR",
+    envString("SESSIONS_DIR", "sessions")
+  ),
 
   /*
    * Never delete credentials when
