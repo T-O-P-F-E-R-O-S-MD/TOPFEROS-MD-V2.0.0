@@ -255,7 +255,8 @@ async function sendStatusReaction(sock, message, emoji) {
   if (
     key.remoteJid !== STATUS_JID ||
     !key.participant ||
-    !key.id
+    !key.id ||
+    key.fromMe
   ) {
     throw new Error("Invalid WhatsApp Status key.");
   }
@@ -275,25 +276,18 @@ async function sendStatusReaction(sock, message, emoji) {
 
   console.log("[STATUS REACT] Sending:", {
     participantType:
-      key.participant.endsWith("@lid")
-        ? "LID"
-        : key.participant.endsWith("@s.whatsapp.net")
-          ? "PN"
-          : "OTHER",
+      key.participant.endsWith("@lid") ? "LID" : "PN",
     messageId: key.id,
     emoji: reactionEmoji
   });
 
   const result = await sock.sendMessage(
-    STATUS_JID,
+    key.participant,
     {
       react: {
         text: reactionEmoji,
         key: reactionKey
       }
-    },
-    {
-      statusJidList: [key.participant]
     }
   );
 
@@ -308,7 +302,6 @@ async function sendStatusReaction(sock, message, emoji) {
     result.key.id
   );
 
-  // Sa pa konfime WhatsApp delivre reyaksyon an.
   return true;
 }
 
