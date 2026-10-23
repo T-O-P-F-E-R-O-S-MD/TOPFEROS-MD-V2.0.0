@@ -987,32 +987,97 @@ const session = {
   }
 );
 
-  /* |--------------------------------------------------------------------------
-   | STATUS HANDLER
-   |--------------------------------------------------------------------------
-   */
+  
+  /*
+  |--------------------------------------------------------------------------
+  | TOPFEROS MD V2.0.0
+  | STATUS HANDLER - LIVE AUTOMATION SETTINGS
+  |--------------------------------------------------------------------------
+  */
 
   try {
-console.log(
-  "[STATUS DEBUG] Auto Status React:",
-  automation.autoStatusReact
-);
+    const statusOptions = {};
+
+    Object.defineProperties(statusOptions, {
+      autoStatusReact: {
+        enumerable: true,
+        get() {
+          const current =
+            activeSessions.get(sessionId);
+
+          const settings =
+            settingPanel.getSessionSettings(sessionId);
+
+          const panelValue =
+            settings?.automation?.autoStatusReact;
+
+          if (typeof panelValue === "boolean") {
+            return panelValue;
+          }
+
+          return current?.automation
+            ?.autoStatusReact === true;
+        }
+      },
+
+      autoStatusSeen: {
+        enumerable: true,
+        get() {
+          const current =
+            activeSessions.get(sessionId);
+
+          const settings =
+            settingPanel.getSessionSettings(sessionId);
+
+          const panelValue =
+            settings?.automation?.autoStatusSeen;
+
+          if (typeof panelValue === "boolean") {
+            return panelValue;
+          }
+
+          return current?.automation
+            ?.autoStatusSeen === true;
+        }
+      },
+
+      autoStatusReply: {
+        enumerable: true,
+        get() {
+          const current =
+            activeSessions.get(sessionId);
+
+          const settings =
+            settingPanel.getSessionSettings(sessionId);
+
+          const panelValue =
+            settings?.automation?.autoStatusReply;
+
+          if (typeof panelValue === "boolean") {
+            return panelValue;
+          }
+
+          return current?.automation
+            ?.autoStatusReply === true;
+        }
+      }
+    });
+
+    statusOptions.aiModel =
+      process.env.GEMINI_MODEL ||
+      config?.ai?.model;
+
     attachStatusHandler(
       sock,
-      {
-        autoStatusReact:
-          automation.autoStatusReact === true,
-
-        autoStatusSeen:
-          automation.autoStatusSeen === true,
-
-        autoStatusReply:
-          automation.autoStatusReply === true,
-
-        aiModel:
-          config?.ai?.model || undefined
-      }
+      statusOptions
     );
+
+    logger.info(
+      `[${sessionId}] Status handler attached. ` +
+      `AutoReact=${statusOptions.autoStatusReact}, ` +
+      `AutoSeen=${statusOptions.autoStatusSeen}`
+    );
+
   } catch (error) {
     logger.error(
       {
@@ -1097,20 +1162,24 @@ console.log(
           `[${sessionId}] 🟢 TOPFEROS MD V2.0.0 connected.`
         );
 
-        logger.info(
-          `[${sessionId}] Automations: ` +
-          `alwaysOnline=${automation.alwaysOnline}, ` +
-          `autoStatusSeen=${automation.autoStatusSeen}, ` +
-          `autoStatusReply=${automation.autoStatusReply}, ` +
-          `autoStatusReact=${automation.autoStatusReact}, ` +
-          `antiDelete=${automation.antiDelete}, ` +
-          `antiDeleteMode=${automation.antiDeleteMode}`
-        );
+logger.info(
+  `[${sessionId}] 🟢 TOPFEROS MD V2.0.0 connected.`
+);
 
-        /*
-         * Send welcome only once for
-         * this socket connection.
-         */
+logger.info(
+  `[${sessionId}] Automations: ` +
+  `alwaysOnline=${automation.alwaysOnline}, ` +
+  `autoStatusSeen=${automation.autoStatusSeen}, ` +
+  `autoStatusReply=${automation.autoStatusReply}, ` +
+  `autoStatusReact=${automation.autoStatusReact}, ` +
+  `antiDelete=${automation.antiDelete}, ` +
+  `antiDeleteMode=${automation.antiDeleteMode}`
+);
+
+/*
+ * Send welcome only once for
+ * this socket connection.
+ */
 
         if (
           !current.welcomeSent
