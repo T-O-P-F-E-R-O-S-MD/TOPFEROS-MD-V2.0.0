@@ -497,9 +497,10 @@ async function processStatus(
           getAIEmoji(aiResult);
 
         if (
-          aiEmoji &&
-          aiEmoji !== emoji
-        ) {
+       aiEmoji &&
+    aiResult?.source?.startsWith("gemini") &&
+      aiEmoji !== emoji
+       ) {
           try {
             await sendStatusReaction(
               sock,
