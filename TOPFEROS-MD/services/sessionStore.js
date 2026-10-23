@@ -151,8 +151,11 @@ async function getSessionFile(
     ]
   );
 
-  return result.rows[0]?.content ?? null;
-}
+ const content = result.rows[0]?.content;
+
+return content == null
+  ? null
+  : decryptSessionData(content);
 
 async function listSessionFiles(sessionId) {
   await initializeSessionStore();
@@ -169,8 +172,10 @@ async function listSessionFiles(sessionId) {
     ]
   );
 
-  return result.rows;
-}
+ return result.rows.map(row => ({
+  file_name: row.file_name,
+  content: decryptSessionData(row.content)
+}));
 
 async function listSessionIds() {
   await initializeSessionStore();
@@ -217,6 +222,8 @@ async function closeSessionStore() {
 }
 
 module.exports = {
+encryptSessionData,
+decryptSessionData
   getPool,
   initializeSessionStore,
   saveSessionFile,
