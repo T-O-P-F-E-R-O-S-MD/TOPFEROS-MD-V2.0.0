@@ -1,3 +1,4 @@
+
 "use strict";
 
 const {
@@ -12,24 +13,23 @@ const {
 /*
 |--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
-| STATUS HANDLER
+| AUTO STATUS SEEN + AUTO STATUS REACT
 |--------------------------------------------------------------------------
-|
-| Responsibilities:
-| - Detect WhatsApp Status messages
-| - Read status text/caption
-| - Detect image/video/audio/document status
-| - Download supported media
-| - Send status information to AI
-| - Let AI choose one natural emoji
-| - React to the Status immediately
-| - Prevent duplicate processing
-|
+| 1. React immediately with ❤️
+| 2. Mark status as seen if enabled
+| 3. Let AI analyze after the first reaction
+| 4. Update emoji only when AI chooses another
+| 5. Keep original reaction if AI fails
 |--------------------------------------------------------------------------
 */
 
-const STATUS_JID =
-  "status@broadcast";
+const STATUS_JID = "status@broadcast";
+
+const PROCESS_CACHE_TIME =
+  10 * 60 * 1000;
+
+const processedStatuses = new Map();
+const inFlightStatuses = new Set();
 
 /*
 |--------------------------------------------------------------------------
@@ -37,109 +37,27 @@ const STATUS_JID =
 |--------------------------------------------------------------------------
 */
 
-const processedStatuses =
-  new Map();
-
-const PROCESS_CACHE_TIME =
-  10 * 60 * 1000;
-
-/*
-|--------------------------------------------------------------------------
-| CLEAN OLD CACHE
-|--------------------------------------------------------------------------
-*/
-
 function cleanProcessedCache() {
-  const now =
-    Date.now();
+  const now = Date.now();
 
-  for (
-    const [
-      id,
-      timestamp
-    ] of processedStatuses
-  ) {
-    if (
-      now - timestamp >
-      PROCESS_CACHE_TIME
-    ) {
-      processedStatuses.delete(
-        id
-      );
+  for (const [id, timestamp] of processedStatuses) {
+    if (now - timestamp > PROCESS_CACHE_TIME) {
+      processedStatuses.delete(id);
     }
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET MESSAGE ID
-|--------------------------------------------------------------------------
-*/
-
-function getMessageId(
-  message
-) {
-  return (
-    message?.key?.id ||
-    null
-  );
+function getMessageId(message) {
+  return message?.key?.id || null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| CHECK IF PROCESSED
-|--------------------------------------------------------------------------
-*/
-
-function hasBeenProcessed(
-  messageId
-) {
-  if (!messageId) {
-    return false;
-  }
-
-  const timestamp =
-    processedStatuses.get(
-      messageId
-    );
-
-  if (!timestamp) {
-    return false;
-  }
-
-  if (
-    Date.now() -
-      timestamp >
-    PROCESS_CACHE_TIME
-  ) {
-    processedStatuses.delete(
-      messageId
-    );
-
-    return false;
-  }
-
-  return true;
+function hasBeenProcessed(id) {
+  cleanProcessedCache();
+  return processedStatuses.has(id);
 }
 
-/*
-|--------------------------------------------------------------------------
-| MARK AS PROCESSED
-|--------------------------------------------------------------------------
-*/
-
-function markAsProcessed(
-  messageId
-) {
-  if (!messageId) {
-    return;
-  }
-
-  processedStatuses.set(
-    messageId,
-    Date.now()
-  );
-
+function markAsProcessed(id) {
+  processedStatuses.set(id, Date.now());
   cleanProcessedCache();
 }
 
@@ -149,81 +67,42 @@ function markAsProcessed(
 |--------------------------------------------------------------------------
 */
 
-function getStatusContent(
-  message
-) {
-  if (
-    !message?.message
-  ) {
+function getStatusContent(message) {
+  const msg = message?.message;
+
+  if (!msg) {
     return {
       type: "unknown",
       content: null
     };
   }
 
-  const msg =
-    message.message;
-
-  if (
-    typeof msg.conversation ===
-    "string"
-  ) {
+  if (typeof msg.conversation === "string") {
     return {
       type: "text",
-      content:
-        msg.conversation
+      content: msg.conversation
     };
   }
 
-  if (
-    msg.extendedTextMessage
-  ) {
+  if (msg.extendedTextMessage) {
     return {
       type: "text",
-      content:
-        msg.extendedTextMessage
-          .text || ""
+      content: msg.extendedTextMessage.text || ""
     };
   }
 
-  if (
-    msg.imageMessage
-  ) {
-    return {
-      type: "image",
-      content:
-        msg.imageMessage
-    };
-  }
-
-  if (
-    msg.videoMessage
-  ) {
-    return {
-      type: "video",
-      content:
-        msg.videoMessage
-    };
-  }
-
-  if (
-    msg.audioMessage
-  ) {
-    return {
-      type: "audio",
-      content:
-        msg.audioMessage
-    };
-  }
-
-  if (
-    msg.documentMessage
-  ) {
-    return {
-      type: "document",
-      content:
-        msg.documentMessage
-    };
+  for (const type of [
+    "image",
+    "video",
+    "audio",
+    "document"
+  ]) {
+    if (msg[`${type}Message`]) {
+      return {
+        type,
+        content: msg[`${type}Message`]
+      };
+    }
   }
 
   return {
@@ -238,43 +117,17 @@ function getStatusContent(
 |--------------------------------------------------------------------------
 */
 
-function extractStatusText(
-  message
-) {
-  const content =
-    getStatusContent(
-      message
-    );
+function extractStatusText(message) {
+  const { type, content } =
+    getStatusContent(message);
 
-  if (
-    content.type ===
-    "text"
-  ) {
-    return String(
-      content.content ||
-        ""
-    ).trim();
+  if (type === "text") {
+    return String(content || "").trim();
   }
 
-  if (
-    content.type ===
-    "image"
-  ) {
+  if (type === "image" || type === "video") {
     return String(
-      content.content
-        ?.caption ||
-        ""
-    ).trim();
-  }
-
-  if (
-    content.type ===
-    "video"
-  ) {
-    return String(
-      content.content
-        ?.caption ||
-        ""
+      content?.caption || ""
     ).trim();
   }
 
@@ -287,27 +140,18 @@ function extractStatusText(
 |--------------------------------------------------------------------------
 */
 
-async function downloadStatusMedia(
-  message,
-  type
-) {
+async function downloadStatusMedia(message, type) {
   try {
-    const mediaMessage =
-      message?.message?.[
-        `${type}Message`
-      ];
-
-    if (!mediaMessage) {
+    if (
+      !["image", "video", "audio"].includes(type)
+    ) {
       return null;
     }
 
-    if (
-      ![
-        "image",
-        "video",
-        "audio"
-      ].includes(type)
-    ) {
+    const mediaMessage =
+      message?.message?.[`${type}Message`];
+
+    if (!mediaMessage) {
       return null;
     }
 
@@ -319,22 +163,16 @@ async function downloadStatusMedia(
 
     const chunks = [];
 
-    for await (
-      const chunk of stream
-    ) {
-      chunks.push(
-        Buffer.from(chunk)
-      );
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk));
     }
 
-    return Buffer.concat(
-      chunks
-    );
+    return Buffer.concat(chunks);
+
   } catch (error) {
     console.error(
       "[STATUS] Media download failed:",
-      error?.message ||
-        error
+      error?.message || error
     );
 
     return null;
@@ -347,121 +185,75 @@ async function downloadStatusMedia(
 |--------------------------------------------------------------------------
 */
 
-async function buildAIStatusData(
-  message
-) {
+async function buildAIStatusData(message) {
   const content =
-    getStatusContent(
-      message
-    );
+    getStatusContent(message);
 
   const text =
-    extractStatusText(
-      message
-    );
+    extractStatusText(message);
 
-  let media =
-    null;
+  const media =
+    ["image", "video", "audio"].includes(content.type)
+      ? await downloadStatusMedia(
+          message,
+          content.type
+        )
+      : null;
 
-  if (
-    content.type ===
-      "image" ||
-    content.type ===
-      "video" ||
-    content.type ===
-      "audio"
-  ) {
-    media =
-      await downloadStatusMedia(
-        message,
-        content.type
-      );
-  }
+  const mimeType =
+    content.type === "image"
+      ? content.content?.mimetype || "image/jpeg"
+      : content.type === "video"
+        ? content.content?.mimetype || "video/mp4"
+        : content.type === "audio"
+          ? content.content?.mimetype || "audio/ogg"
+          : null;
 
   return {
     text,
-
-    caption:
-      text,
-
-    mediaType:
-      content.type,
-
+    caption: text,
+    mediaType: content.type,
     media,
-
-    messageId:
-      getMessageId(
-        message
-      ),
-
+    messageId: getMessageId(message),
     participant:
-      message?.key
-        ?.participant ||
-      null,
-
-        timestamp:
-      message?.messageTimestamp ||
-      null,
-
-        mimeType:
-      content.type === "image"
-        ? content.content?.mimetype || "image/jpeg"
-        : content.type === "video"
-          ? content.content?.mimetype || "video/mp4"
-          : content.type === "audio"
-            ? content.content?.mimetype || "audio/ogg"
-            : null
+      message?.key?.participant || null,
+    timestamp:
+      message?.messageTimestamp || null,
+    mimeType
   };
 }
 
 /*
 |--------------------------------------------------------------------------
-| NORMALIZE AI RESULT
+| NORMALIZE AI EMOJI
 |--------------------------------------------------------------------------
 */
 
-function getAIEmoji(
-  aiResult
-) {
-  if (
-    typeof aiResult ===
-    "string"
-  ) {
-    return (
-      aiResult.trim() ||
-      null
-    );
+function getAIEmoji(aiResult) {
+  if (typeof aiResult === "string") {
+    return aiResult.trim() || null;
   }
 
-  if (
-    aiResult &&
-    typeof aiResult.emoji ===
-      "string"
-  ) {
-    return (
-      aiResult.emoji.trim() ||
-      null
-    );
-  }
-
-  return null;
+  return typeof aiResult?.emoji === "string"
+    ? aiResult.emoji.trim() || null
+    : null;
 }
+
 /*
 |--------------------------------------------------------------------------
-| SEND STATUS REACTION
-|--------------------------------------------------------------------------
-|
-| Personal WhatsApp Status reaction.
-|
-| The exact Status is identified by
-| the original message key.
-|
+| SEND WHATSAPP STATUS REACTION
 |--------------------------------------------------------------------------
 */
 
-async function sendStatusReaction(sock, message, emoji) {
+async function sendStatusReaction(
+  sock,
+  message,
+  emoji
+) {
   if (!sock || !message?.key) {
-    throw new Error("Socket or status key missing.");
+    throw new Error(
+      "Socket or status key missing."
+    );
   }
 
   const key = message.key;
@@ -471,54 +263,67 @@ async function sendStatusReaction(sock, message, emoji) {
     !key.participant ||
     !key.id
   ) {
-    throw new Error("Invalid WhatsApp Status key.");
+    throw new Error(
+      "Invalid WhatsApp Status key."
+    );
   }
 
-  if (typeof emoji !== "string" || !emoji.trim()) {
-    throw new Error("Reaction emoji missing.");
+  if (
+    typeof emoji !== "string" ||
+    !emoji.trim()
+  ) {
+    throw new Error(
+      "Reaction emoji missing."
+    );
   }
 
-  console.log("[STATUS REACT] Attempt:", {
-    participant: key.participant,
-    messageId: key.id,
-    emoji
-  });
-  
-const result = await sock.sendMessage(
-  STATUS_JID,
-  {
-    react: {
-      text: emoji.trim(),
-      key: message.key
+  console.log(
+    "[STATUS REACT] Attempt:",
+    {
+      participant: key.participant,
+      messageId: key.id,
+      emoji
     }
-  },
-  {
-    statusJidList: [message.key.participant]
-  }
-);
+  );
 
-console.log(
-  "[STATUS REACT] Result:",
-  JSON.stringify(result)
-);
+  const result = await sock.sendMessage(
+    STATUS_JID,
+    {
+      react: {
+        text: emoji.trim(),
+        key
+      }
+    },
+    {
+      statusJidList: [key.participant]
+    }
+  );
+
+  console.log(
+    "[STATUS REACT] Send result:",
+    result?.key?.id || "No message ID"
+  );
 
   if (!result?.key?.id) {
-    throw new Error("No reaction message ID returned.");
+    throw new Error(
+      "No reaction message ID returned."
+    );
   }
-
-  console.log("[STATUS REACT] Send result:", result.key.id);
 
   return true;
 }
 
 /*
 |--------------------------------------------------------------------------
-| TOPFEROS MD V2.0.0
-| AUTO STATUS SEEN + AUTO STATUS REACT
+| PROCESS STATUS
 |--------------------------------------------------------------------------
 */
 
-async function processStatus(sock, message, options = {}) {
+async function processStatus(
+  sock,
+  message,
+  options = {}
+) {
   if (!sock || !message?.key) {
     return {
       success: false,
@@ -526,7 +331,6 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
-  // Verifye se yon WhatsApp Status.
   if (message.key.remoteJid !== STATUS_JID) {
     return {
       success: false,
@@ -535,7 +339,6 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
-  // Pa trete pwòp Status bot la.
   if (message.key.fromMe) {
     return {
       success: false,
@@ -544,8 +347,11 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
-  const messageId = getMessageId(message);
-  const participant = message.key.participant;
+  const messageId =
+    getMessageId(message);
+
+  const participant =
+    message.key.participant;
 
   if (!messageId || !participant) {
     return {
@@ -554,11 +360,11 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
-  // Li Status la otomatikman, sof si opsyon an dezaktive.
-  const shouldMarkSeen = options.autoStatusSeen !== false;
+  const shouldMarkSeen =
+    options.autoStatusSeen !== false;
 
-  // Reyaji Status la otomatikman, sof si opsyon an dezaktive.
-  const shouldReact = options.autoStatusReact === true;
+  const shouldReact =
+    options.autoStatusReact === true;
 
   if (!shouldMarkSeen && !shouldReact) {
     return {
@@ -568,117 +374,192 @@ async function processStatus(sock, message, options = {}) {
     };
   }
 
-  const cacheKey = `${participant}:${messageId}`;
+  const cacheKey =
+    `${participant}:${messageId}`;
 
-  if (hasBeenProcessed(cacheKey)) {
+  if (
+    hasBeenProcessed(cacheKey) ||
+    inFlightStatuses.has(cacheKey)
+  ) {
     return {
       success: false,
       ignored: true,
-      reason: "Status already processed."
+      reason: "Status already processed or in progress."
     };
   }
 
-  let statusData = null;
+  inFlightStatuses.add(cacheKey);
 
- if (shouldReact) {
-  statusData = await buildAIStatusData(message);
-}
-
-  // Make yon sèl tantativ pou li Status la.
   let seen = false;
   let reactionSent = false;
   let emoji = null;
+
   const errors = [];
 
-  if (shouldMarkSeen) {
-    try {
-      await sock.readMessages([
-        {
-          remoteJid: STATUS_JID,
-          id: messageId,
-          participant
+  try {
+
+    /*
+    |--------------------------------------------------------------------------
+    | IMMEDIATE EMOJI REACTION
+    |--------------------------------------------------------------------------
+    | No Gemini AI waiting.
+    | No media download waiting.
+    |--------------------------------------------------------------------------
+    */
+
+    if (shouldReact) {
+      emoji = "❤️";
+
+      try {
+        await sendStatusReaction(
+          sock,
+          message,
+          emoji
+        );
+
+        reactionSent = true;
+
+        markAsProcessed(cacheKey);
+
+        console.log(
+          "[STATUS REACT] Immediate fallback sent:",
+          messageId,
+          emoji
+        );
+
+      } catch (error) {
+        errors.push(
+          `reaction: ${error?.message || String(error)}`
+        );
+
+        console.error(
+          "[STATUS REACT] Immediate reaction failed:",
+          error?.stack || error
+        );
+      }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTO STATUS SEEN
+    |--------------------------------------------------------------------------
+    */
+
+    if (shouldMarkSeen) {
+      try {
+        await sock.readMessages([
+          {
+            remoteJid: STATUS_JID,
+            id: messageId,
+            participant
+          }
+        ]);
+
+        seen = true;
+
+        console.log(
+          "[STATUS SEEN] Status marked as seen:",
+          messageId
+        );
+
+      } catch (error) {
+        errors.push(
+          `seen: ${error?.message || String(error)}`
+        );
+
+        console.error(
+          "[STATUS SEEN] Failed:",
+          error?.stack || error
+        );
+      }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GEMINI AI EMOJI REFINEMENT
+    |--------------------------------------------------------------------------
+    | Run only after initial reaction succeeds.
+    | If AI fails, original emoji remains.
+    |--------------------------------------------------------------------------
+    */
+
+    if (reactionSent) {
+      try {
+        const statusData =
+          await buildAIStatusData(message);
+
+        const aiResult =
+          await chooseEmojiWithSource(
+            statusData
+          );
+
+        const aiEmoji =
+          getAIEmoji(aiResult);
+
+        if (
+          aiEmoji &&
+          aiEmoji !== emoji
+        ) {
+          try {
+            await sendStatusReaction(
+              sock,
+              message,
+              aiEmoji
+            );
+
+            emoji = aiEmoji;
+
+            console.log(
+              "[STATUS AI] Emoji update sent:",
+              messageId,
+              emoji
+            );
+
+          } catch (error) {
+            errors.push(
+              `ai-reaction: ${error?.message || String(error)}`
+            );
+
+            console.error(
+              "[STATUS AI] Emoji update failed; original reaction kept:",
+              error?.message || error
+            );
+          }
+
+        } else {
+          console.log(
+            "[STATUS AI] Original emoji kept:",
+            messageId,
+            emoji,
+            aiResult?.source || "no-change"
+          );
         }
-      ]);
 
-      seen = true;
+      } catch (error) {
+        errors.push(
+          `ai: ${error?.message || String(error)}`
+        );
 
-      console.log(
-        "[STATUS SEEN] Status marked as seen:",
-        messageId
-      );
-    } catch (error) {
-      errors.push(
-        `seen: ${error?.message || String(error)}`
-      );
-
-      console.error(
-        "[STATUS SEEN] Failed:",
-        error?.stack || error
-      );
+        console.error(
+          "[STATUS AI] Analysis failed; original reaction kept:",
+          error?.message || error
+        );
+      }
     }
+
+    return {
+      success: seen || reactionSent,
+      messageId,
+      participant,
+      seen,
+      reactionSent,
+      emoji,
+      errors
+    };
+
+  } finally {
+    inFlightStatuses.delete(cacheKey);
   }
-  
-  // Reyaji sou Status la si Auto Status React aktive.
-  if (shouldReact) {
-    try {
-      const aiResult =
-        await chooseEmojiWithSource(statusData);
-
-      // Sèvi ak emoji AI a, oswa fallback si rezilta a pa valab.
-      emoji =
-        typeof aiResult?.emoji === "string" &&
-        aiResult.emoji.trim()
-          ? aiResult.emoji.trim()
-          : getFallbackEmoji(statusData);
-
-      console.log(
-        "[STATUS AI] Emoji source:",
-        aiResult?.source || "fallback",
-        emoji
-      );
-
-      // Voye yon sèl reyaksyon sou Status orijinal la.
-      await sendStatusReaction(
-        sock,
-        message,
-        emoji
-      );
-
-      reactionSent = true;
-
-      console.log(
-        "[STATUS REACT] Reaction sent:",
-        messageId,
-        emoji
-      );
-    } catch (error) {
-      errors.push(
-        `reaction: ${error?.message || String(error)}`
-      );
-
-      console.error(
-        "[STATUS REACT] Failed:",
-        error?.stack || error
-      );
-    }
-  }
-
-  const success = seen || reactionSent;
-
-  // Kenbe cache la sèlman lè reyaksyon an reyisi.
-  if (reactionSent) {
-    markAsProcessed(cacheKey);
-  }
-
-  return {
-    success,
-    messageId,
-    participant,
-    seen,
-    reactionSent,
-    emoji,
-    errors
-  };
 }
 
 /*
@@ -693,19 +574,13 @@ async function handleStatusUpsert(
   options = {}
 ) {
   const messages =
-    Array.isArray(
-      event?.messages
-    )
+    Array.isArray(event?.messages)
       ? event.messages
       : [];
 
-  for (
-    const message of messages
-  ) {
+  for (const message of messages) {
     if (
-      message?.key
-        ?.remoteJid !==
-      STATUS_JID
+      message?.key?.remoteJid !== STATUS_JID
     ) {
       continue;
     }
@@ -719,8 +594,7 @@ async function handleStatusUpsert(
     } catch (error) {
       console.error(
         "[STATUS] Processing error:",
-        error?.stack ||
-          error
+        error?.stack || error
       );
     }
   }
@@ -759,22 +633,22 @@ async function handleStatusUpdate(
       continue;
     }
 
-    const message = {
-      key,
-      message: content
-    };
-
     try {
-      const result = await processStatus(
-        sock,
-        message,
-        options
-      );
+      const result =
+        await processStatus(
+          sock,
+          {
+            key,
+            message: content
+          },
+          options
+        );
 
       console.log(
         "[STATUS UPDATE]",
         result
       );
+
     } catch (error) {
       console.error(
         "[STATUS] Update processing error:",
@@ -800,28 +674,17 @@ function attachStatusHandler(
     );
   }
 
-  /*
-   * Prevent duplicate listeners.
-   */
-
   if (
     sock.__topferosStatusHandlerAttached
   ) {
     return false;
   }
 
-  sock.__topferosStatusHandlerAttached =
-    true;
-
-  /*
-   * Primary Status event.
-   */
+  sock.__topferosStatusHandlerAttached = true;
 
   sock.ev.on(
     "messages.upsert",
-    async (
-      event
-    ) => {
+    async event => {
       try {
         await handleStatusUpsert(
           sock,
@@ -831,22 +694,15 @@ function attachStatusHandler(
       } catch (error) {
         console.error(
           "[STATUS] Upsert handler error:",
-          error?.stack ||
-            error
+          error?.stack || error
         );
       }
     }
   );
 
-  /*
-   * Status message updates.
-   */
-
   sock.ev.on(
     "messages.update",
-    async (
-      updates
-    ) => {
+    async updates => {
       try {
         await handleStatusUpdate(
           sock,
@@ -855,9 +711,8 @@ function attachStatusHandler(
         );
       } catch (error) {
         console.error(
-          "[STATUS] Update handler error:",
-          error?.stack ||
-            error
+          "[STATUS] Update processing error:",
+          error?.stack || error
         );
       }
     }
@@ -878,6 +733,7 @@ function attachStatusHandler(
 
 function clearProcessedStatusCache() {
   processedStatuses.clear();
+  inFlightStatuses.clear();
 }
 
 /*
@@ -888,7 +744,6 @@ function clearProcessedStatusCache() {
 
 function getProcessedStatusCount() {
   cleanProcessedCache();
-
   return processedStatuses.size;
 }
 
@@ -900,26 +755,15 @@ function getProcessedStatusCount() {
 
 module.exports = {
   STATUS_JID,
-
   processStatus,
-
   attachStatusHandler,
-
   handleStatusUpsert,
-
   handleStatusUpdate,
-
   sendStatusReaction,
-
   extractStatusText,
-
   getStatusContent,
-
   downloadStatusMedia,
-
   buildAIStatusData,
-
   clearProcessedStatusCache,
-
   getProcessedStatusCount
 };
