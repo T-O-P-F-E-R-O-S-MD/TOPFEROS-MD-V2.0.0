@@ -285,24 +285,21 @@ async function sendStatusReaction(
       emoji
     }
   );
-
-  const result = await sock.sendMessage(
-    STATUS_JID,
-    {
-      react: {
-        text: emoji.trim(),
-        key
+ 
+const result = await sock.sendMessage(
+  key.participant,
+  {
+    react: {
+      text: emoji.trim(),
+      key: {
+        remoteJid: STATUS_JID,
+        participant: key.participant,
+        fromMe: false,
+        id: key.id
       }
-    },
-    {
-      statusJidList: [key.participant]
     }
-  );
-
-  console.log(
-    "[STATUS REACT] Send result:",
-    result?.key?.id || "No message ID"
-  );
+  }
+);
 
   if (!result?.key?.id) {
     throw new Error(
