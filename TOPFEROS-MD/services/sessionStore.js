@@ -196,7 +196,8 @@ async function saveSessionFile(
         content = EXCLUDED.content,
         updated_at = NOW()
     `,
-    [id, name, encryptSessionData(value)]
+        [id, name, encryptSessionData(value)]
+  );
 
   return true;
 }
