@@ -298,6 +298,9 @@ const result = await sock.sendMessage(
         id: key.id
       }
     }
+  },
+  {
+    statusJidList: [key.participant]
   }
 );
 
