@@ -245,15 +245,9 @@ function getAIEmoji(aiResult) {
 |--------------------------------------------------------------------------
 */
 
-async function sendStatusReaction(
-  sock,
-  message,
-  emoji
-) {
+async function sendStatusReaction(sock, message, emoji) {
   if (!sock || !message?.key) {
-    throw new Error(
-      "Socket or status key missing."
-    );
+    throw new Error("Socket or status key missing.");
   }
 
   const key = message.key;
@@ -263,53 +257,58 @@ async function sendStatusReaction(
     !key.participant ||
     !key.id
   ) {
-    throw new Error(
-      "Invalid WhatsApp Status key."
-    );
+    throw new Error("Invalid WhatsApp Status key.");
   }
 
-  if (
-    typeof emoji !== "string" ||
-    !emoji.trim()
-  ) {
+  const reactionEmoji = String(emoji || "").trim();
+
+  if (!reactionEmoji) {
+    throw new Error("Reaction emoji missing.");
+  }
+
+  const reactionKey = {
+    remoteJid: STATUS_JID,
+    participant: key.participant,
+    fromMe: false,
+    id: key.id
+  };
+
+  console.log("[STATUS REACT] Sending:", {
+    participantType:
+      key.participant.endsWith("@lid")
+        ? "LID"
+        : key.participant.endsWith("@s.whatsapp.net")
+          ? "PN"
+          : "OTHER",
+    messageId: key.id,
+    emoji: reactionEmoji
+  });
+
+  const result = await sock.sendMessage(
+    STATUS_JID,
+    {
+      react: {
+        text: reactionEmoji,
+        key: reactionKey
+      }
+    },
+    {
+      statusJidList: [key.participant]
+    }
+  );
+
+  if (!result?.key?.id) {
     throw new Error(
-      "Reaction emoji missing."
+      "Baileys did not return a reaction message ID."
     );
   }
 
   console.log(
-    "[STATUS REACT] Attempt:",
-    {
-      participant: key.participant,
-      messageId: key.id,
-      emoji
-    }
+    "[STATUS REACT] Submitted to Baileys:",
+    result.key.id
   );
- 
-const result = await sock.sendMessage(
-  key.participant,
-  {
-    react: {
-      text: emoji.trim(),
-      key: {
-        remoteJid: STATUS_JID,
-        participant: key.participant,
-        fromMe: false,
-        id: key.id
-      }
-    }
-  },
-  {
-    statusJidList: [key.participant]
-  }
-);
 
-  if (!result?.key?.id) {
-    throw new Error(
-      "No reaction message ID returned."
-    );
-  }
-
+  // Sa pa konfime WhatsApp delivre reyaksyon an.
   return true;
 }
 
