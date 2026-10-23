@@ -626,6 +626,7 @@ async function sendWelcomeMessage(
 | WAIT FOR PAIRING READY
 |--------------------------------------------------------------------------
 */
+
 function waitForPairingReady(
   sock,
   sessionId,
@@ -633,9 +634,14 @@ function waitForPairingReady(
 ) {
   return new Promise((resolve, reject) => {
     let finished = false;
+    let timer = null;
 
     function cleanup() {
-      clearTimeout(timer);
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
+
       sock.ev.off(
         "connection.update",
         onUpdate
@@ -680,16 +686,12 @@ function waitForPairingReady(
     const current =
       activeSessions.get(sessionId);
 
-    if (
-      !current ||
-      current.sock !== sock
-    ) {
+    if (!current || current.sock !== sock) {
       finish(
         new Error(
           "Sesyon WhatsApp la pa aktif ankò."
         )
       );
-
       return;
     }
 
@@ -698,11 +700,12 @@ function waitForPairingReady(
       onUpdate
     );
 
-    const timer = setTimeout(() => {
+    timer = setTimeout(() => {
       finish();
     }, timeoutMs);
   });
 }
+
 /*
 |--------------------------------------------------------------------------
 | CONNECT SESSION
@@ -1157,10 +1160,6 @@ const session = {
 
         current.pairingCode =
           null;
-
-        logger.info(
-          `[${sessionId}] 🟢 TOPFEROS MD V2.0.0 connected.`
-        );
 
 logger.info(
   `[${sessionId}] 🟢 TOPFEROS MD V2.0.0 connected.`
