@@ -426,12 +426,20 @@ async function processStatus(
           `reaction: ${error?.message || String(error)}`
         );
 
-        console.error(
-          "[STATUS REACT] Immediate reaction failed:",
-          error?.stack || error
-        );
-      }
-    }
+console.error(
+  "[STATUS REACT] Immediate reaction failed:",
+  {
+    message: error?.message,
+    statusCode: error?.output?.statusCode,
+    reason: error?.output?.payload?.error,
+    details: error?.output?.payload?.message,
+    participantType:
+      participant.endsWith("@lid")
+        ? "LID"
+        : "PN",
+    statusId: messageId
+  }
+);
 
     /*
     |--------------------------------------------------------------------------
