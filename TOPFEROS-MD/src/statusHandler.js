@@ -246,19 +246,16 @@ function getAIEmoji(aiResult) {
 */
 
 async function sendStatusReaction(sock, message, emoji) {
-  if (!sock || !message?.key) {
-    throw new Error("Socket or status key missing.");
-  }
-
-  const key = message.key;
+  const key = message?.key;
 
   if (
-    key.remoteJid !== STATUS_JID ||
-    !key.participant ||
-    !key.id ||
-    key.fromMe
+    !sock ||
+    key?.remoteJid !== "status@broadcast" ||
+    !key?.participant ||
+    !key?.id ||
+    key?.fromMe
   ) {
-    throw new Error("Invalid WhatsApp Status key.");
+    throw new Error("Invalid WhatsApp status key.");
   }
 
   const reactionEmoji = String(emoji || "").trim();
@@ -267,38 +264,40 @@ async function sendStatusReaction(sock, message, emoji) {
     throw new Error("Reaction emoji missing.");
   }
 
-  const reactionKey = {
-    remoteJid: STATUS_JID,
-    participant: key.participant,
-    fromMe: false,
-    id: key.id
-  };
-
-  console.log("[STATUS REACT] Sending:", {
-    participantType:
-      key.participant.endsWith("@lid") ? "LID" : "PN",
-    messageId: key.id,
+  console.log("[STATUS REACT] Attempt:", {
+    jidType: key.participant.endsWith("@lid")
+      ? "LID"
+      : "PN",
+    statusId: key.id,
     emoji: reactionEmoji
   });
 
   const result = await sock.sendMessage(
-    key.participant,
+    "status@broadcast",
     {
       react: {
         text: reactionEmoji,
-        key: reactionKey
+        key: {
+          remoteJid: "status@broadcast",
+          id: key.id,
+          participant: key.participant,
+          fromMe: false
+        }
       }
+    },
+    {
+      statusJidList: [key.participant]
     }
   );
 
   if (!result?.key?.id) {
     throw new Error(
-      "Baileys did not return a reaction message ID."
+      "Baileys returned no reaction message ID."
     );
   }
 
   console.log(
-    "[STATUS REACT] Submitted to Baileys:",
+    "[STATUS REACT] Submitted, not confirmed delivered:",
     result.key.id
   );
 
