@@ -1231,7 +1231,18 @@ logger.info(
       if (
         connection ===
         "close"
-      ) {
+      ) { const latestSession =
+  activeSessions.get(sessionId);
+
+if (
+  !latestSession ||
+  latestSession.sock !== sock
+) {
+  logger.warn(
+    `[${sessionId}] Ignoring close event from an old socket.`
+  );
+  return;
+}
         const current =
           activeSessions.get(
             sessionId
