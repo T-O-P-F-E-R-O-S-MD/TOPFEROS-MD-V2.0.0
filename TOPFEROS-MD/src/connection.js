@@ -1740,6 +1740,129 @@ async function disconnectSession(
 
 /*
 |--------------------------------------------------------------------------
+| DISCONNECT SESSION
+|--------------------------------------------------------------------------
+|
+| TOPFEROS MD V2.0.0
+|
+| IMPORTANT:
+| - Save pending Neon authentication writes
+| - Close WhatsApp socket
+| - Preserve stored credentials
+| - Allow future reconnection
+|--------------------------------------------------------------------------
+*/
+
+async function disconnectSession(
+  number
+) {
+  const sessionId =
+    getSessionId(number);
+
+  manuallyStopped.add(
+    sessionId
+  );
+
+  /*
+   * Cancel reconnect timer.
+   */
+
+  const timer =
+    reconnectTimers.get(
+      sessionId
+    );
+
+  if (timer) {
+    clearTimeout(
+      timer
+    );
+
+    reconnectTimers.delete(
+      sessionId
+    );
+  }
+
+  /*
+   * Get active session.
+   */
+
+  const session =
+    activeSessions.get(
+      sessionId
+    );
+
+  if (!session?.sock) {
+    return false;
+  }
+
+  /*
+   * Flush pending Neon authentication writes
+   * BEFORE closing the socket.
+   */
+
+  if (
+    typeof session.flushAuth === "function"
+  ) {
+    try {
+      await session.flushAuth();
+
+      logger.info(
+        `[${sessionId}] 🟢 Neon authentication writes flushed.`
+      );
+    } catch (error) {
+      logger.error(
+        {
+          error:
+            error?.stack ||
+            error?.message ||
+            String(error)
+        },
+        `[${sessionId}] Failed to flush Neon authentication.`
+      );
+
+      // Do not close the socket if saving failed.
+      throw error;
+    }
+  }
+
+  /*
+   * Close WhatsApp socket only.
+   */
+
+  try {
+    session.sock.end(
+      undefined
+    );
+  } catch (error) {
+    logger.warn(
+      {
+        error:
+          error?.message ||
+          String(error)
+      },
+      `[${sessionId}] Error while closing WhatsApp socket.`
+    );
+  }
+
+  /*
+   * Remove from active memory.
+   *
+   * Neon authentication remains preserved.
+   */
+
+  activeSessions.delete(
+    sessionId
+  );
+
+  logger.info(
+    `[${sessionId}] 🔴 WhatsApp disconnected without deleting session credentials.`
+  );
+
+  return true;
+}
+
+/*
+|--------------------------------------------------------------------------
 | RECONNECT SESSION
 |--------------------------------------------------------------------------
 */
