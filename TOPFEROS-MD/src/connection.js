@@ -935,7 +935,9 @@ const session = {
   number:
     sessionId,
 
-  sessionPath,
+    sessionPath,
+
+  flushAuth: flush,
 
   automation,
 
