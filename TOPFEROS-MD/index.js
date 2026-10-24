@@ -5,9 +5,14 @@ require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 const pino = require("pino");
-
+const {
+  initializeSessionStore,
+  listSessionIds,
+  getSessionFile
+} = require("./services/sessionStore");
 const connection = require("./src/connection");
 const sessionManager = require("./src/sessionManager");
+
 const loadCommands = require("./commands");
 
 const logger = pino({
@@ -29,52 +34,51 @@ require("./panel/server");
 */
 
 async function restoreSessions() {
-  const sessionsDir =
-    sessionManager.ensureSessionsDirectory();
+  await initializeSessionStore();
 
-  const entries = await fs.promises.readdir(
-    sessionsDir,
-    { withFileTypes: true }
-  );
-
-  const sessionIds = entries
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .filter((name) => /^\d{8,15}$/.test(name));
+  const sessionIds = (await listSessionIds())
+    .filter((id) => /^\d{8,15}$/.test(id));
 
   if (sessionIds.length === 0) {
-    logger.info("ℹ️ No stored WhatsApp sessions to restore.");
+    logger.info(
+      "ℹ️ No WhatsApp sessions found in Neon."
+    );
     return;
   }
 
   logger.info(
-    `🔄 Restoring ${sessionIds.length} stored WhatsApp session(s)...`
+    `🔄 Found ${sessionIds.length} session(s) in Neon.`
   );
 
   for (const sessionId of sessionIds) {
-    const sessionPath = path.join(
-      sessionsDir,
-      sessionId
-    );
-
-    const credentialsPath = path.join(
-      sessionPath,
-      "creds.json"
-    );
-
-    if (!fs.existsSync(credentialsPath)) {
-      logger.warn(
-        `[${sessionId}] ⚠️ Session skipped: creds.json not found.`
-      );
-      continue;
-    }
-
     try {
+      const credentials = await getSessionFile(
+        sessionId,
+        "creds.json"
+      );
+
+      if (!credentials) {
+        logger.warn(
+          `[${sessionId}] Skipped: no Neon credentials.`
+        );
+        continue;
+      }
+
+      const parsed = JSON.parse(credentials);
+
+      if (parsed?.registered !== true) {
+        logger.warn(
+          `[${sessionId}] Skipped: pairing incomplete.`
+        );
+        continue;
+      }
+
       await connection.connectSession(sessionId);
 
       logger.info(
-        `[${sessionId}] 🟢 Stored WhatsApp session restoration requested.`
+        `[${sessionId}] 🟢 Neon session restoration requested.`
       );
+
     } catch (error) {
       logger.error(
         {
@@ -83,7 +87,7 @@ async function restoreSessions() {
             error?.message ||
             String(error)
         },
-        `[${sessionId}] ❌ Failed to restore WhatsApp session.`
+        `[${sessionId}] Session restoration failed.`
       );
     }
   }
