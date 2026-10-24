@@ -16,6 +16,10 @@ const antiDelete =
 
 const baileys = require("@whiskeysockets/baileys");
 
+const {
+  useNeonAuthState
+} = require("../services/neonAuthState");
+
 const makeWASocket = baileys.default;
 
 const {
@@ -760,13 +764,11 @@ async function connectSession(
    * Load multi-file authentication.
    */
 
-  const {
-    state,
-    saveCreds
-  } =
-    await useMultiFileAuthState(
-      sessionPath
-    );
+    const {
+  state,
+  saveCreds,
+  flush
+} = await useNeonAuthState(sessionId);
 
   /*
    * Fetch latest supported version.
@@ -976,8 +978,16 @@ const session = {
   sock.ev.on(
   "creds.update",
   async (creds) => {
-    await saveCreds(creds);
-
+    try {
+  await saveCreds();
+} catch (error) {
+  logger.error(
+    {
+      error: error?.stack || error?.message
+    },
+    `[${sessionId}] Failed to save Neon credentials.`
+  );
+}
     const currentSession =
       activeSessions.get(
         sessionId
@@ -1716,6 +1726,10 @@ async function disconnectSession(
   activeSessions.delete(
     sessionId
   );
+
+ if (typeof session.flushAuth === "function") {
+  await session.flushAuth();
+}
 
   logger.info(
     `[${sessionId}] 🔴 WhatsApp disconnected without deleting session credentials.`
