@@ -1344,13 +1344,42 @@ logger.info(
               }
 
               try {
-                activeSessions.delete(
-                  sessionId
-                );
+                // 🦁 TOPFEROS MD V2.0.0
+// SAFE NEON SESSION RECONNECTION
 
-                await connectSession(
-                  sessionId,
-                  {
+const currentSession =
+  activeSessions.get(sessionId);
+
+// Verifye ansyen socket la toujou
+// se socket ki asosye ak sesyon an.
+if (
+  !currentSession ||
+  currentSession.sock !== sock
+) {
+  logger.warn(
+    `[${sessionId}] Old socket ignored during reconnection.`
+  );
+  return;
+}
+
+// Tann tout ekriti Neon ki an atant yo.
+if (
+  typeof currentSession.flushAuth === "function"
+) {
+  await currentSession.flushAuth();
+
+  logger.info(
+    `[${sessionId}] Neon authentication flushed before reconnect.`
+  );
+}
+
+// Retire ansyen socket la nan memwa.
+activeSessions.delete(sessionId);
+
+// Kreye nouvo koneksyon an.
+await connectSession(sessionId, {
+  automation: currentSession.automation || automation
+});
                     automation
                   }
                 );
@@ -1646,99 +1675,6 @@ async function pairSession(number) {
   }
 }
 /*
-|--------------------------------------------------------------------------
-| DISCONNECT SESSION
-|--------------------------------------------------------------------------
-|
-| IMPORTANT:
-| - Socket is closed
-| - Session remains on disk
-| - Credentials are NOT deleted
-| - User can reconnect later
-|--------------------------------------------------------------------------
-*/
-
-async function disconnectSession(
-  number
-) {
-  const sessionId =
-    getSessionId(number);
-
-  manuallyStopped.add(
-    sessionId
-  );
-
-  /*
-   * Cancel reconnect timer.
-   */
-
-  const timer =
-    reconnectTimers.get(
-      sessionId
-    );
-
-  if (timer) {
-    clearTimeout(
-      timer
-    );
-
-    reconnectTimers.delete(
-      sessionId
-    );
-  }
-
-  /*
-   * Get active session.
-   */
-
-  const session =
-    activeSessions.get(
-      sessionId
-    );
-
-  if (!session?.sock) {
-    return false;
-  }
-
-  /*
-   * Close socket only.
-   */
-
-  try {
-    session.sock.end(
-      undefined
-    );
-  } catch (error) {
-    logger.warn(
-      {
-        error:
-          error?.message ||
-          String(error)
-      },
-      `[${sessionId}] Error while closing WhatsApp socket.`
-    );
-  }
-
-  /*
-   * Remove from active memory.
-   *
-   * Authentication files remain untouched.
-   */
-
-  activeSessions.delete(
-    sessionId
-  );
-
- if (typeof session.flushAuth === "function") {
-  await session.flushAuth();
-}
-
-  logger.info(
-    `[${sessionId}] 🔴 WhatsApp disconnected without deleting session credentials.`
-  );
-
-  return true;
-}
 
 /*
 |--------------------------------------------------------------------------
