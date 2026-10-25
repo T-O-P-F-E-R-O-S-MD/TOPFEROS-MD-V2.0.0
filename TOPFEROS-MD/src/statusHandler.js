@@ -241,19 +241,19 @@ function getAIEmoji(aiResult) {
 
 /*
 |--------------------------------------------------------------------------
-| SEND WHATSAPP STATUS REACTION
+| SEND WHATSAPP STATUS REACTION (KORIJE)
 |--------------------------------------------------------------------------
 */
 
 async function sendStatusReaction(sock, message, emoji) {
-  const key = message?.key;
+  const originalKey = message?.key;
 
   if (
     !sock ||
-    key?.remoteJid !== "status@broadcast" ||
-    !key?.participant ||
-    !key?.id ||
-    key?.fromMe
+    originalKey?.remoteJid !== "status@broadcast" ||
+    !originalKey?.participant ||
+    !originalKey?.id ||
+    originalKey?.fromMe
   ) {
     throw new Error("Invalid WhatsApp status key.");
   }
@@ -265,28 +265,23 @@ async function sendStatusReaction(sock, message, emoji) {
   }
 
   console.log("[STATUS REACT] Attempt:", {
-    jidType: key.participant.endsWith("@lid")
-      ? "LID"
-      : "PN",
-    statusId: key.id,
+    jidType: originalKey.participant.endsWith("@lid") ? "LID" : "PN",
+    statusId: originalKey.id,
     emoji: reactionEmoji
   });
 
+  // Nou pase originalKey la dirèkteman pou Baileys pa pèdi referans estati a
   const result = await sock.sendMessage(
     "status@broadcast",
     {
       react: {
         text: reactionEmoji,
-        key: {
-          remoteJid: "status@broadcast",
-          id: key.id,
-          participant: key.participant,
-          fromMe: false
-        }
+        key: originalKey 
       }
     },
     {
-      statusJidList: [key.participant]
+      // Sa enpòtan anpil pou WhatsApp konnen pou ki patisipan estati sa a ye
+      statusJidList: [originalKey.participant]
     }
   );
 
