@@ -1,10 +1,18 @@
-
 "use strict";
 
 // 🦁 TOPFEROS MD V2.0.0
-// GEMINI AI SERVICE
+// GEMINI AI SERVICE (KORIJE POU RENDER/COMMONJS)
 
-const { GoogleGenAI } = require("@google/genai");
+let GoogleGenAIInstance = null;
+
+async function loadGoogleGenAI() {
+  if (!GoogleGenAIInstance) {
+    // Sèvi ak import() dinamik pou evite erè SyntaxError sou Render
+    const module = await import("@google/genai");
+    GoogleGenAIInstance = module.GoogleGenAI;
+  }
+  return GoogleGenAIInstance;
+}
 
 function getApiKey() {
   return String(
@@ -18,7 +26,7 @@ function getApiKey() {
 function getModel() {
   return String(
     process.env.GEMINI_MODEL ||
-    "gemini-3.8-flash"
+    "gemini-2.5-flash"
   ).trim();
 }
 
@@ -26,7 +34,7 @@ function isAIConfigured() {
   return Boolean(getApiKey());
 }
 
-function getAIClient() {
+async function getAIClient() {
   const apiKey = getApiKey();
 
   if (!apiKey) {
@@ -35,6 +43,7 @@ function getAIClient() {
     );
   }
 
+  const GoogleGenAI = await loadGoogleGenAI();
   return new GoogleGenAI({ apiKey });
 }
 
@@ -81,7 +90,8 @@ async function askAIWithImage(prompt, imageBuffer, mimeType = "image/jpeg", opti
     throw new Error("Unsupported image MIME type: " + mimeType);
   }
 
-  const ai = getAIClient();
+  // Nou ajoute await isit la paske getAIClient kounye a se yon pwomès (async)
+  const ai = await getAIClient();
   const model = getModel();
 
   const response = await ai.models.generateContent({
@@ -125,7 +135,8 @@ async function askAI(prompt, options = {}) {
     throw new Error("AI prompt cannot be empty.");
   }
 
-  const ai = getAIClient();
+  // Nou ajoute await isit la tou
+  const ai = await getAIClient();
   const model = getModel();
   const history = normalizeHistory(options.history);
 
