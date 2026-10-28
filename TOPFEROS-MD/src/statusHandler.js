@@ -247,15 +247,24 @@ function getAIEmoji(aiResult) {
 
 async function sendStatusReaction(sock, message, emoji) {
   const originalKey = message?.key;
+  const participant = originalKey?.participant;
 
   if (
     !sock ||
     originalKey?.remoteJid !== "status@broadcast" ||
-    !originalKey?.participant ||
+    !participant ||
     !originalKey?.id ||
     originalKey?.fromMe
   ) {
-    throw new Error("Invalid WhatsApp status key.");
+    throw new Error(
+      "Invalid WhatsApp status key: " +
+      JSON.stringify({
+        remoteJid: originalKey?.remoteJid,
+        participant,
+        statusId: originalKey?.id,
+        fromMe: originalKey?.fromMe
+      })
+    );
   }
 
   const reactionEmoji = String(emoji || "").trim();
@@ -264,39 +273,60 @@ async function sendStatusReaction(sock, message, emoji) {
     throw new Error("Reaction emoji missing.");
   }
 
-  console.log("[STATUS REACT] Attempt:", {
-    jidType: originalKey.participant.endsWith("@lid") ? "LID" : "PN",
+  console.log("[STATUS REACT] Sending reaction:", {
     statusId: originalKey.id,
-    emoji: reactionEmoji
+    participant,
+    participantType: participant.endsWith("@lid")
+      ? "LID"
+      : "PN",
+    emoji: reactionEmoji,
+    connectionState: sock.ws?.readyState
   });
 
-  // Nou pase originalKey la dirèkteman pou Baileys pa pèdi referans estati a
-  const result = await sock.sendMessage(
-    "status@broadcast",
-    {
-      react: {
-        text: reactionEmoji,
-        key: originalKey 
+  try {
+    const result = await sock.sendMessage(
+      "status@broadcast",
+      {
+        react: {
+          text: reactionEmoji,
+          key: originalKey
+        }
+      },
+      {
+        statusJidList: [participant]
       }
-    },
-    {
-      // Sa enpòtan anpil pou WhatsApp konnen pou ki patisipan estati sa a ye
-      statusJidList: [originalKey.participant]
-    }
-  );
-
-  if (!result?.key?.id) {
-    throw new Error(
-      "Baileys returned no reaction message ID."
     );
+
+    console.log("[STATUS REACT] WhatsApp send result:", {
+      returnedId: result?.key?.id || null,
+      returnedRemoteJid: result?.key?.remoteJid || null,
+      participant,
+      statusId: originalKey.id
+    });
+
+    if (!result?.key?.id) {
+      throw new Error(
+        "Baileys returned no reaction message ID."
+      );
+    }
+
+    return true;
+
+  } catch (error) {
+    console.error("[STATUS REACT] WhatsApp send error:", {
+      message: error?.message || String(error),
+      statusCode: error?.output?.statusCode || null,
+      errorPayload: error?.output?.payload || null,
+      data: error?.data || null,
+      participant,
+      participantType: participant.endsWith("@lid")
+        ? "LID"
+        : "PN",
+      statusId: originalKey.id
+    });
+
+    throw error;
   }
-
-  console.log(
-    "[STATUS REACT] Submitted, not confirmed delivered:",
-    result.key.id
-  );
-
-  return true;
 }
 
 /*
