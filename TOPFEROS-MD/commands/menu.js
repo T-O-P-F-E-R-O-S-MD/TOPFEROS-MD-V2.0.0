@@ -1,3 +1,4 @@
+
 "use strict";
 
 const config = require("../src/config");
@@ -51,23 +52,23 @@ function buildMenu(message) {
 
   return `
 ╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮
-┃      🦁 ${botName} 🐑       ┃
-┃          V${version}              ┃
+┃      🦁 ${botName} 🐑
+┃          V${version}
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
 
 ╭───────❖ 𝐂𝐎𝐍𝐍𝐄𝐂𝐓𝐄𝐃 ❖───────╮
-│                              │
-│ 🎉 🦁 𝕋𝕆ℙ𝔽𝔼ℝ𝕆𝕊 𝕄𝔻 𝕍${version} 𝕆ℕ𝕃𝕀ℕ𝔼 🎉
-│                              │
+│
+│ 🎉 🦁 TOPFEROS MD V${version} ONLINE 🎉
+│
 │ ⚡ Prefix   : ${prefix}
 │ 🌐 Mode     : ${mode}
 │ 👤 User     : ${user}
 │ 📍 Location : ${location}
-│                              │
+│
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
 
 ╭──────❖ 𝐅𝐄𝐀𝐓𝐔𝐑𝐄𝐒 ❖──────╮
-│                            │
+│
 │ 🟢 Always Online
 │ ⌨️ Fake Typing
 │ 🎙️ Fake Recording
@@ -84,21 +85,113 @@ function buildMenu(message) {
 │ 🎵 Music & Media
 │ 🎬 Video Download
 │ 🎀 & Many More Features...
-│                            │
+│
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
 
+╭──────❖ 𝐆𝐄𝐍𝐄𝐑𝐀𝐋 𝐌𝐄𝐍𝐔 ❖──────╮
+│
+│ 📋 ${prefix}menu
+│ 📖 ${prefix}help
+│ ℹ️ ${prefix}info
+│ 🤖 ${prefix}botinfo
+│ 💚 ${prefix}alive
+│ ⚡ ${prefix}ping
+│ ⏱️ ${prefix}runtime
+│ 👑 ${prefix}owner
+│ 🧮 ${prefix}calc
+│
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+
+╭──────❖ 𝐀𝐈 & 𝐂𝐇𝐀𝐓 ❖──────╮
+│
+│ 🧠 ${prefix}ai
+│ 💭 ${prefix}prompt
+│
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+
+╭──────❖ 𝐂𝐎𝐍𝐍𝐄𝐂𝐓𝐈𝐎𝐍 ❖──────╮
+│
+│ 🔗 ${prefix}pair
+│ 🎟️ ${prefix}parrain
+│ ⚙️ ${prefix}setting
+│ ⚙️ ${prefix}settings
+│
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+
+╭──────❖ 𝐕𝐈𝐄𝐖 𝐎𝐍𝐂𝐄 ❖──────╮
+│
+│ 👁️ ${prefix}vv2
+│ 👁️ ${prefix}vvv
+│
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+
+╭──────❖ 𝐌𝐄𝐃𝐈𝐀 & 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃 ❖──────╮
+│
+│ 🎵 ${prefix}play
+│ 🎬 ${prefix}video
+│ 🎞️ ${prefix}film
+│ 📺 ${prefix}serie
+│ 📸 ${prefix}ss
+│ 🔗 ${prefix}shorturl
+│ 🔳 ${prefix}qr
+│ 🌍 ${prefix}translate
+│ 🗣️ ${prefix}tts
+│ 🎨 ${prefix}sticker
+│ 🖼️ ${prefix}toimg
+│ 🏷️ ${prefix}take
+│
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+
+╭──────❖ 𝐌𝐄𝐒𝐒𝐀𝐆𝐄 & 𝐒𝐓𝐀𝐓𝐔𝐒 ❖──────╮
+│
+│ 🗑️ ${prefix}del
+│ 🗑️ ${prefix}delt
+│ 🧹 ${prefix}delete
+│ 💾 ${prefix}save
+│ 📤 ${prefix}send
+│
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+
+╭──────❖ 𝐆𝐑𝐎𝐔𝐏 𝐌𝐄𝐍𝐔 ❖──────╮
+│
+│ 🔗 ${prefix}link
+│ ➕ ${prefix}add @member
+│ ❌ ${prefix}kick @member
+│ ⬆️ ${prefix}promote @member
+│ ⬇️ ${prefix}demote @admin
+│ 👥 ${prefix}groupinfo
+│ 📢 ${prefix}tagall
+│ 🕵️ ${prefix}hidetag
+│ 🚪 ${prefix}open
+│ 🔒 ${prefix}close
+│ 🔇 ${prefix}mute
+│ 🔊 ${prefix}unmute
+│ 🧹 ${prefix}remove
+│ ✏️ ${prefix}setname
+│ 📝 ${prefix}setdesc
+│ 🖼️ ${prefix}setpic
+│ 📲 ${prefix}gstatus
+│
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+
 ╭──────❖ 𝐐𝐔𝐈𝐂𝐊 𝐌𝐄𝐍𝐔 ❖──────╮
-│                              │
+│
 │ 📋 Type ${prefix}menu
-│    ➜ To view all commands
+│    ➜ To view the command menu
 │
 │ 👁️ Type ${prefix}vv2
 │    ➜ Decode a replied ViewOnce
 │
 │ ⚙️ Type ${prefix}setting
-│    ➜ To open the settings portal
-│                              │
+│    ➜ Open the settings portal
+│
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+
+🌐 Web Connect
+└──➤ https://topferos-md-v2-0-0.onrender.com
+
+🌐 Web Channel
+└──➤ https://whatsapp.com/channel/0029VbDJULz30LKTYe95S91l
 
 ╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮
 │ 🦁  TECH BY TOPFEROS MD 🐑
