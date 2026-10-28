@@ -4,13 +4,9 @@
 // 🦁 TOPFEROS MD V2.0.0
 // NEON AUTHENTICATION STATE FOR BAILEYS
 
-const baileys = require("@whiskeysockets/baileys");
-
 const {
-  initAuthCreds,
-  BufferJSON,
-  proto
-} = baileys;
+  getBaileys
+} = require("./baileysRuntime");
 
 const {
   initializeSessionStore,
@@ -23,6 +19,14 @@ function useNeonAuthState(sessionId) {
 }
 
 async function createNeonAuthState(sessionId) {
+  const baileys = await getBaileys();
+
+  const {
+    initAuthCreds,
+    BufferJSON,
+    proto
+  } = baileys;
+
   const id = String(sessionId || "").trim();
 
   if (!/^\d{8,15}$/.test(id)) {
