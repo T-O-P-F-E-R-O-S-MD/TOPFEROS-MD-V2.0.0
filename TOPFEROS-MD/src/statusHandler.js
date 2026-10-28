@@ -2,8 +2,8 @@
 "use strict";
 
 const {
-  downloadContentFromMessage
-} = require("@whiskeysockets/baileys");
+  getBaileys
+} = require("../services/baileysRuntime");
 
 const {
   getFallbackEmoji,
@@ -142,6 +142,9 @@ function extractStatusText(message) {
 
 async function downloadStatusMedia(message, type) {
   try {
+    const {
+      downloadContentFromMessage
+    } = await getBaileys();
     if (
       !["image", "video", "audio"].includes(type)
     ) {
