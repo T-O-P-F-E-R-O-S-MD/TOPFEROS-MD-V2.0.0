@@ -1391,18 +1391,16 @@ activeSessions.delete(sessionId);
 await connectSession(sessionId, {
   automation: currentSession.automation || automation
 });
-                    automation
-                  }
-                );
-              } catch (error) {
-                logger.error(
-                  {
-                    error:
-                      error?.stack ||
-                      error?.message ||
-                      String(error)
-                  },
-                  `[${sessionId}] Reconnection failed.`
+
+} catch (error) {
+logger.error(
+{
+error:
+error?.stack ||
+error?.message ||
+String(error)
+},
+`[${sessionId}] Reconnection failed.`
                 );
               }
             },
