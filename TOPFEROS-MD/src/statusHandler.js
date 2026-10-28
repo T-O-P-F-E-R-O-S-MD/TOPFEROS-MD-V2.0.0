@@ -294,10 +294,21 @@ async function sendStatusReaction(sock, message, emoji) {
     });
 
     if (!result?.key?.id) {
-      throw new Error("No reaction message ID returned.");
-    }
+  throw new Error(
+    "Baileys pa retounen ID pou reyaksyon an."
+  );
+}
 
-    return true;
+console.log(
+  "[STATUS REACT] Message queued; waiting for server confirmation.",
+  {
+    reactionId: result.key.id,
+    statusId: originalKey.id,
+    participant
+  }
+);
+
+return true;
   } catch (error) {
     console.error("[STATUS REACT] Failed:", {
       message: error?.message || String(error),
