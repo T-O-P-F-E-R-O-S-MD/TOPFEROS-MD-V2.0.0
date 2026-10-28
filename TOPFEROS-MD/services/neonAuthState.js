@@ -40,14 +40,6 @@ async function createNeonAuthState(sessionId) {
     "creds.json"
   );
 
-async function deleteNeonAuthState(sessionId) {
-  const {
-    deleteSessionData
-  } = require("./sessionStore");
-
-  await deleteSessionData(sessionId);
-}
-
   const creds = storedCreds
     ? JSON.parse(storedCreds, BufferJSON.reviver)
     : initAuthCreds();
@@ -71,7 +63,6 @@ async function deleteNeonAuthState(sessionId) {
 
   const keys = {
     async get(type, ids) {
-      // Wait for previous writes before reading.
       await pendingWrite;
 
       const result = {};
@@ -162,6 +153,21 @@ async function deleteNeonAuthState(sessionId) {
     saveCreds,
     flush
   };
+}
+
+// Fonksyon an plase deyò createNeonAuthState.
+async function deleteNeonAuthState(sessionId) {
+  const id = String(sessionId || "").trim();
+
+  if (!/^\d{8,15}$/.test(id)) {
+    throw new Error("Invalid WhatsApp session ID.");
+  }
+
+  const {
+    deleteSessionData
+  } = require("./sessionStore");
+
+  await deleteSessionData(id);
 }
 
 async function deleteStoredKey(id, filename) {
