@@ -4,11 +4,11 @@
 // 🦁 TOPFEROS MD V2.0.0
 // MEDIA SERVICE
 // Compatible with commands/vv2.js
-// Baileys 6.7.x
+// Baileys 7.x — TOPFEROS MD V2.0.0
 
 const {
-  downloadContentFromMessage
-} = require("@whiskeysockets/baileys");
+  getBaileys
+} = require("./baileysRuntime");
 
 const MEDIA_TYPES = [
   ["imageMessage", "image"],
@@ -82,6 +82,10 @@ function findMedia(message) {
 }
 
 async function downloadMedia(media, type) {
+  const {
+    downloadContentFromMessage
+  } = await getBaileys();
+
   const stream = await downloadContentFromMessage(
     media,
     type
