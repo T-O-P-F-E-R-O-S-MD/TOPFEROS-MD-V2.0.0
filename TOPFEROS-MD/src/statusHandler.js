@@ -257,15 +257,7 @@ async function sendStatusReaction(sock, message, emoji) {
     !participant ||
     originalKey.fromMe
   ) {
-    throw new Error(
-      "Invalid Status key: " +
-      JSON.stringify({
-        remoteJid: originalKey?.remoteJid,
-        id: originalKey?.id,
-        participant,
-        fromMe: originalKey?.fromMe
-      })
-    );
+    throw new Error("Invalid WhatsApp Status message key.");
   }
 
   const reactionEmoji = String(emoji || "").trim();
@@ -274,14 +266,13 @@ async function sendStatusReaction(sock, message, emoji) {
     throw new Error("Reaction emoji is missing.");
   }
 
-  try {
-    console.log("[STATUS REACT] Sending:", {
-      statusId: originalKey.id,
-      participant,
-      emoji: reactionEmoji
-    });
+  console.log("[STATUS REACT] Sending:", {
+    statusId: originalKey.id,
+    participant,
+    emoji: reactionEmoji
+  });
 
-    // Konsève kle orijinal Status WhatsApp la.
+  try {
     const result = await sock.sendMessage(
       STATUS_JID,
       {
@@ -295,30 +286,25 @@ async function sendStatusReaction(sock, message, emoji) {
       }
     );
 
-    if (!result?.key?.id) {
-      throw new Error(
-        "Baileys did not return a reaction message ID."
-      );
-    }
-
-    console.log("[STATUS REACT] Send completed:", {
-      reactionId: result.key.id,
+    console.log("[STATUS REACT] Result:", {
+      id: result?.key?.id || null,
       statusId: originalKey.id,
       participant,
       emoji: reactionEmoji
     });
 
-    return true;
+    if (!result?.key?.id) {
+      throw new Error("No reaction message ID returned.");
+    }
 
+    return true;
   } catch (error) {
     console.error("[STATUS REACT] Failed:", {
       message: error?.message || String(error),
       statusCode: error?.output?.statusCode || null,
       payload: error?.output?.payload || null,
-      data: error?.data || null,
-      statusId: originalKey.id,
       participant,
-      emoji: reactionEmoji
+      statusId: originalKey.id
     });
 
     throw error;
