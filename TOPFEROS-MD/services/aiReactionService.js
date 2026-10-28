@@ -17,7 +17,23 @@ const {
 
 const AI_TIMEOUT_MS = 30000;
 
-const DEFAULT_EMOJI = "❤️";
+const DEFAULT_EMOJIS = [
+  "🥰", "😭", "🤔", "🤭", "🤩", "🥳",
+  "😎", "🥶", "😶‍🌫️", "🫥", "👹", "☠️",
+  "👻", "🥴", "👀", "🧠", "👰🏼‍♂️", "👰",
+  "🧟", "🧚‍♀️", "🧜‍♂️", "🦁", "🐜", "🕊️",
+  "🌚", "🌈", "🍇", "🎇", "🌃", "🌌",
+  "🪦", "🩻", "🛏️", "🛌🏿", "🎊", "💙",
+  "❤️", "💘", "❤️‍🔥", "🔴", "🇭🇹",
+  "🤣", "🫵", "🔥", "🐑", "💯", "💥",
+  "🥃", "🍺", "🎂"
+];
+
+function getRandomDefaultEmoji() {
+  return getRandomDefaultEmoji();
+    Math.floor(Math.random() * DEFAULT_EMOJIS.length)
+  ];
+}
 
 const FALLBACK_EMOJIS = [
   "❤️", "😂", "🔥", "😍", "🥰", "👏",
