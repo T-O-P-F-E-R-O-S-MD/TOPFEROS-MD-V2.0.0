@@ -3,12 +3,6 @@
 
 // 🦁 TOPFEROS MD V2.0.0
 // GEMINI AI STATUS REACTION SERVICE
-//
-// AI analyzes a Status AFTER the bot's
-// initial automatic reaction.
-//
-// If AI fails, the original emoji stays.
-// Gemini model is managed by services/ai.js.
 
 const {
   askAI,
@@ -29,17 +23,17 @@ const DEFAULT_EMOJIS = [
   "🥃", "🍺", "🎂"
 ];
 
-function getRandomDefaultEmoji() {
-  return getRandomDefaultEmoji();
-    Math.floor(Math.random() * DEFAULT_EMOJIS.length)
-  ];
-}
-
 const FALLBACK_EMOJIS = [
   "❤️", "😂", "🔥", "😍", "🥰", "👏",
   "💯", "😎", "🙏", "✨", "🤔", "😮",
   "💪", "🤣", "😊", "🙌", "🌹", "💖"
 ];
+
+function getRandomDefaultEmoji() {
+  return DEFAULT_EMOJIS[
+    Math.floor(Math.random() * DEFAULT_EMOJIS.length)
+  ];
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -81,7 +75,7 @@ function getFallbackEmoji(statusData = {}) {
     return "😍";
   }
 
-  return DEFAULT_EMOJI;
+  return getRandomDefaultEmoji();
 }
 
 /*
@@ -101,7 +95,6 @@ function extractEmoji(text) {
     return null;
   }
 
-  // Intl.Segmenter preserves combined emoji sequences.
   if (
     typeof Intl !== "undefined" &&
     typeof Intl.Segmenter === "function"
@@ -241,7 +234,10 @@ function extractAIText(response) {
 |--------------------------------------------------------------------------
 */
 
-async function withTimeout(promise, timeoutMs = AI_TIMEOUT_MS) {
+async function withTimeout(
+  promise,
+  timeoutMs = AI_TIMEOUT_MS
+) {
   let timer;
 
   try {
@@ -280,32 +276,20 @@ async function chooseEmojiWithSource(statusData = {}) {
     Buffer.isBuffer(statusData.media) &&
     statusData.media.length > 0;
 
-  const hasReadableText =
-    Boolean(
-      String(
-        statusData.text ||
-        statusData.caption ||
-        ""
-      ).trim()
-    );
+  const hasReadableText = Boolean(
+    String(
+      statusData.text ||
+      statusData.caption ||
+      ""
+    ).trim()
+  );
 
-  /*
-   * Do not ask Gemini to guess unseen media.
-   */
-
-  if (
-    !hasImage &&
-    !hasReadableText
-  ) {
+  if (!hasImage && !hasReadableText) {
     return {
       emoji: fallback,
       source: "fallback"
     };
   }
-
-  /*
-   * Analyze an actual image when available.
-   */
 
   if (hasImage) {
     try {
@@ -338,7 +322,6 @@ async function chooseEmojiWithSource(statusData = {}) {
       console.warn(
         "[STATUS AI] Image response contained no emoji."
       );
-
     } catch (error) {
       console.error(
         "[STATUS AI] Image analysis failed:",
@@ -346,10 +329,6 @@ async function chooseEmojiWithSource(statusData = {}) {
       );
     }
   }
-
-  /*
-   * Analyze text or image captions.
-   */
 
   if (hasReadableText) {
     try {
@@ -378,7 +357,6 @@ async function chooseEmojiWithSource(statusData = {}) {
       console.warn(
         "[STATUS AI] Text response contained no emoji."
       );
-
     } catch (error) {
       console.error(
         "[STATUS AI] Gemini failed:",
@@ -386,11 +364,6 @@ async function chooseEmojiWithSource(statusData = {}) {
       );
     }
   }
-
-  /*
-   * AI unavailable or invalid response.
-   * Return fallback without inventing AI success.
-   */
 
   return {
     emoji: fallback,
