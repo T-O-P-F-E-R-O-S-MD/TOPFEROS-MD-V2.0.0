@@ -40,6 +40,14 @@ async function createNeonAuthState(sessionId) {
     "creds.json"
   );
 
+async function deleteNeonAuthState(sessionId) {
+  const {
+    deleteSessionData
+  } = require("./sessionStore");
+
+  await deleteSessionData(sessionId);
+}
+
   const creds = storedCreds
     ? JSON.parse(storedCreds, BufferJSON.reviver)
     : initAuthCreds();
@@ -165,5 +173,6 @@ async function deleteStoredKey(id, filename) {
 }
 
 module.exports = {
-  useNeonAuthState
+  useNeonAuthState,
+  deleteNeonAuthState
 };
