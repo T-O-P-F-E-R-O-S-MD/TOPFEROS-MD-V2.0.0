@@ -2,8 +2,8 @@
 "use strict";
 
 const {
-  downloadContentFromMessage
-} = require("@whiskeysockets/baileys");
+  getBaileys
+} = require("./baileysRuntime");
 
 const settingPanel = require("../src/settingPanel");
 
@@ -244,9 +244,19 @@ async function getLocationName(sock, chatId) {
 }
 
 async function downloadMedia(mediaMessage, type) {
-  if (!mediaMessage) throw new Error("Media message is missing.");
+  if (!mediaMessage) {
+    throw new Error("Media message is missing.");
+  }
 
-  const stream = await downloadContentFromMessage(mediaMessage, type);
+  const {
+    downloadContentFromMessage
+  } = await getBaileys();
+
+  const stream = await downloadContentFromMessage(
+    mediaMessage,
+    type
+  );
+
   const chunks = [];
 
   for await (const chunk of stream) {
