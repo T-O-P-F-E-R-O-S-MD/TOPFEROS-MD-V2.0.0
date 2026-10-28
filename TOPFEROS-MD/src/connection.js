@@ -1323,6 +1323,22 @@ if (
   settingPanel.removePanelSession(
     sessionId
   );
+try {
+  await deleteNeonAuthState(sessionId);
+
+  logger.info(
+    `[${sessionId}] Old WhatsApp authentication deleted.`
+  );
+} catch (error) {
+  logger.error(
+    {
+      error: error?.message || String(error)
+    },
+    `[${sessionId}] Failed to clear old authentication.`
+  );
+
+  return;
+}
 
   activeSessions.delete(
     sessionId
