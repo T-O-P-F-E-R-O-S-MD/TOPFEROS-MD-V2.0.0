@@ -14,21 +14,13 @@ const settingPanel =
 const antiDelete =
   require("../services/antiDelete");
 
-const baileys = require("@whiskeysockets/baileys");
+const {
+  getBaileys
+} = require("../services/baileysRuntime");
 
 const {
   useNeonAuthState
 } = require("../services/neonAuthState");
-
-const makeWASocket = baileys.default;
-
-const {
-  DisconnectReason,
-  useMultiFileAuthState,
-  Browsers,
-  makeCacheableSignalKeyStore,
-  fetchLatestBaileysVersion
-} = baileys;
 
 const config = require("./config");
 
@@ -759,10 +751,36 @@ async function connectSession(
   }
 
   /*
-   * Load multi-file authentication.
-   */
+|--------------------------------------------------------------------------
+| LOAD BAILEYS 7
+|--------------------------------------------------------------------------
+*/
 
-    const {
+const baileys = await getBaileys();
+
+const makeWASocket =
+  baileys.default || baileys.makeWASocket;
+
+const {
+  DisconnectReason,
+  Browsers,
+  makeCacheableSignalKeyStore,
+  fetchLatestBaileysVersion
+} = baileys;
+
+if (typeof makeWASocket !== "function") {
+  throw new Error(
+    "Baileys 7: makeWASocket pa disponib."
+  );
+}
+
+/*
+|--------------------------------------------------------------------------
+| LOAD SESSION AUTHENTICATION
+|--------------------------------------------------------------------------
+*/
+
+const {
   state,
   saveCreds,
   flush
