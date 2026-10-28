@@ -1,8 +1,25 @@
 "use strict";
 
-const {
-  getContentType
-} = require("@whiskeysockets/baileys");
+/*
+|--------------------------------------------------------------------------
+| GET CONTENT TYPE — TOPFEROS MD
+|--------------------------------------------------------------------------
+*/
+
+function getContentType(message) {
+  if (!message || typeof message !== "object") {
+    return undefined;
+  }
+
+  const ignoredKeys = new Set([
+    "messageContextInfo",
+    "senderKeyDistributionMessage"
+  ]);
+
+  return Object.keys(message).find(
+    key => !ignoredKeys.has(key)
+  );
+}
 
 const config = require("./config");
 
