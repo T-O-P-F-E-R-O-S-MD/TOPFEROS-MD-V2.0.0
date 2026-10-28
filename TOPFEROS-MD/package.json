@@ -24,7 +24,7 @@
   "author": "TOPFEROS MD",
   "license": "MIT",
   "dependencies": {
-    "@whiskeysockets/baileys": "6.7.23",
+  "@whiskeysockets/baileys": "7.0.0-rc14",
     "@google/genai": "^1.21.0",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
