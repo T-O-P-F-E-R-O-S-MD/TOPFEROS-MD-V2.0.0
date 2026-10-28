@@ -12,6 +12,31 @@ const {
 
 /*
 |--------------------------------------------------------------------------
+| RANDOM INITIAL STATUS EMOJI
+|--------------------------------------------------------------------------
+*/
+
+const INITIAL_STATUS_EMOJIS = [
+  "🤣", "🫵", "🔥", "🐑", "🦁", "💯",
+  "💥", "🥃", "🍺", "🎂", "🥰", "😭",
+  "🤔", "🤭", "🤩", "🥳", "😎", "🥶",
+  "😶‍🌫️", "🫥", "👹", "☠️", "👻", "🥴",
+  "👀", "🧠", "🧟", "🧚‍♀️", "🧜‍♂️",
+  "🐜", "🕊️", "🌚", "🌈", "🍇", "🎇",
+  "🌃", "🌌", "🪦", "🩻", "🎊", "💙",
+  "❤️", "💘", "❤️‍🔥", "🔴", "🇭🇹"
+];
+
+function getRandomInitialStatusEmoji() {
+  return INITIAL_STATUS_EMOJIS[
+    Math.floor(
+      Math.random() * INITIAL_STATUS_EMOJIS.length
+    )
+  ];
+}
+
+/*
+|--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
 | AUTO STATUS SEEN + AUTO STATUS REACT
 |--------------------------------------------------------------------------
@@ -423,7 +448,7 @@ async function processStatus(
     */
 
     if (shouldReact) {
-      emoji = "❤️";
+      emoji = getRandomInitialStatusEmoji();
 
       try {
         await sendStatusReaction(
