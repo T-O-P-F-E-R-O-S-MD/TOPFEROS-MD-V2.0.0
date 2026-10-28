@@ -284,6 +284,34 @@ async function deleteSessionFile(
 
   return true;
 }
+/*
+|--------------------------------------------------------------------------
+| DELETE ALL AUTH FILES FOR ONE SESSION
+|--------------------------------------------------------------------------
+*/
+
+async function deleteSessionData(sessionId) {
+  await initializeSessionStore();
+
+  const id = validateName(
+    sessionId,
+    "session ID"
+  );
+
+  await getPool().query(
+    `
+      DELETE FROM whatsapp_sessions
+      WHERE session_id = $1
+    `,
+    [id]
+  );
+
+  console.log(
+    `[NEON] Authentication data cleared for session ${id}.`
+  );
+
+  return true;
+}
 
 async function closeSessionStore() {
   if (pool) {
