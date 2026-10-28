@@ -276,9 +276,7 @@ async function sendStatusReaction(sock, message, emoji) {
   console.log("[STATUS REACT] Sending reaction:", {
     statusId: originalKey.id,
     participant,
-    participantType: participant.endsWith("@lid")
-      ? "LID"
-      : "PN",
+    participantType: participant.endsWith("@lid") ? "LID" : "PN",
     emoji: reactionEmoji,
     connectionState: sock.ws?.readyState
   });
@@ -289,7 +287,12 @@ async function sendStatusReaction(sock, message, emoji) {
       {
         react: {
           text: reactionEmoji,
-          key: originalKey
+          key: {
+            remoteJid: "status@broadcast",
+            id: originalKey.id,
+            participant: participant,
+            fromMe: true // <--- SA SE TI DETAY KI BLOKE L LAN! Pou nouvo reyaksyon an afiche, fòk li soti nan non pa w (true)
+          }
         }
       },
       {
@@ -319,9 +322,7 @@ async function sendStatusReaction(sock, message, emoji) {
       errorPayload: error?.output?.payload || null,
       data: error?.data || null,
       participant,
-      participantType: participant.endsWith("@lid")
-        ? "LID"
-        : "PN",
+      participantType: participant.endsWith("@lid") ? "LID" : "PN",
       statusId: originalKey.id
     });
 
