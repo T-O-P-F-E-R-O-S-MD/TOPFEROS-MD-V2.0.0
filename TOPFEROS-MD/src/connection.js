@@ -841,7 +841,6 @@ const socketConfig = {
   browser: Browsers.ubuntu("Chrome"),
 
   printQRInTerminal: false,
-
   syncFullHistory: false,
 
   markOnlineOnConnect:
