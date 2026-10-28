@@ -282,6 +282,7 @@ async function sendStatusReaction(sock, message, emoji) {
   });
 
   try {
+    // CORRECTIONS POUR COMPATIBILITÉ AVEC LES CLÉS LID ET LES SERVEURS META
     const result = await sock.sendMessage(
       "status@broadcast",
       {
@@ -291,11 +292,12 @@ async function sendStatusReaction(sock, message, emoji) {
             remoteJid: "status@broadcast",
             id: originalKey.id,
             participant: participant,
-            fromMe: true // <--- SA SE TI DETAY KI BLOKE L LAN! Pou nouvo reyaksyon an afiche, fòk li soti nan non pa w (true)
+            fromMe: true // Obligatoire pour l'affichage final
           }
         }
       },
       {
+        // On s'assure d'inclure le participant exact fourni par WhatsApp (LID ou PN)
         statusJidList: [participant]
       }
     );
@@ -329,6 +331,7 @@ async function sendStatusReaction(sock, message, emoji) {
     throw error;
   }
 }
+
 
 /*
 |--------------------------------------------------------------------------
