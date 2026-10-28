@@ -1,8 +1,8 @@
 "use strict";
 
 const {
-  downloadContentFromMessage
-} = require("@whiskeysockets/baileys");
+  getBaileys
+} = require("../services/baileysRuntime");
 
 const {
   STATUS_JID,
@@ -43,11 +43,15 @@ function getQuotedMessage(message) {
 
 /*
 |--------------------------------------------------------------------------
-| DOWNLOAD STATUS MEDIA
+| DOWNLOAD STATUS MEDIA — BAILEYS 7.x
 |--------------------------------------------------------------------------
 */
 
 async function downloadMedia(media, type) {
+  const {
+    downloadContentFromMessage
+  } = await getBaileys();
+
   const stream = await downloadContentFromMessage(
     media,
     type
