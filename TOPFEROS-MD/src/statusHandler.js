@@ -241,7 +241,8 @@ function getAIEmoji(aiResult) {
 
 /*
 |--------------------------------------------------------------------------
-| SEND WHATSAPP STATUS REACTION (KORIJE)
+| TOPFEROS MD V2.0.0
+| SEND WHATSAPP STATUS REACTION
 |--------------------------------------------------------------------------
 */
 
@@ -251,17 +252,17 @@ async function sendStatusReaction(sock, message, emoji) {
 
   if (
     !sock ||
-    originalKey?.remoteJid !== "status@broadcast" ||
-    !participant ||
+    originalKey?.remoteJid !== STATUS_JID ||
     !originalKey?.id ||
-    originalKey?.fromMe
+    !participant ||
+    originalKey.fromMe
   ) {
     throw new Error(
-      "Invalid WhatsApp status key: " +
+      "Invalid Status key: " +
       JSON.stringify({
         remoteJid: originalKey?.remoteJid,
+        id: originalKey?.id,
         participant,
-        statusId: originalKey?.id,
         fromMe: originalKey?.fromMe
       })
     );
@@ -270,68 +271,59 @@ async function sendStatusReaction(sock, message, emoji) {
   const reactionEmoji = String(emoji || "").trim();
 
   if (!reactionEmoji) {
-    throw new Error("Reaction emoji missing.");
+    throw new Error("Reaction emoji is missing.");
   }
 
-  console.log("[STATUS REACT] Sending reaction:", {
-    statusId: originalKey.id,
-    participant,
-    participantType: participant.endsWith("@lid") ? "LID" : "PN",
-    emoji: reactionEmoji,
-    connectionState: sock.ws?.readyState
-  });
-
   try {
-    // CORRECTIONS POUR COMPATIBILITÉ AVEC LES CLÉS LID ET LES SERVEURS META
+    console.log("[STATUS REACT] Sending:", {
+      statusId: originalKey.id,
+      participant,
+      emoji: reactionEmoji
+    });
+
+    // Konsève kle orijinal Status WhatsApp la.
     const result = await sock.sendMessage(
-      "status@broadcast",
+      STATUS_JID,
       {
         react: {
           text: reactionEmoji,
-          key: {
-            remoteJid: "status@broadcast",
-            id: originalKey.id,
-            participant: participant,
-            fromMe: true // Obligatoire pour l'affichage final
-          }
+          key: originalKey
         }
       },
       {
-        // On s'assure d'inclure le participant exact fourni par WhatsApp (LID ou PN)
         statusJidList: [participant]
       }
     );
 
-    console.log("[STATUS REACT] WhatsApp send result:", {
-      returnedId: result?.key?.id || null,
-      returnedRemoteJid: result?.key?.remoteJid || null,
-      participant,
-      statusId: originalKey.id
-    });
-
     if (!result?.key?.id) {
       throw new Error(
-        "Baileys returned no reaction message ID."
+        "Baileys did not return a reaction message ID."
       );
     }
+
+    console.log("[STATUS REACT] Send completed:", {
+      reactionId: result.key.id,
+      statusId: originalKey.id,
+      participant,
+      emoji: reactionEmoji
+    });
 
     return true;
 
   } catch (error) {
-    console.error("[STATUS REACT] WhatsApp send error:", {
+    console.error("[STATUS REACT] Failed:", {
       message: error?.message || String(error),
       statusCode: error?.output?.statusCode || null,
-      errorPayload: error?.output?.payload || null,
+      payload: error?.output?.payload || null,
       data: error?.data || null,
+      statusId: originalKey.id,
       participant,
-      participantType: participant.endsWith("@lid") ? "LID" : "PN",
-      statusId: originalKey.id
+      emoji: reactionEmoji
     });
 
     throw error;
   }
 }
-
 
 /*
 |--------------------------------------------------------------------------
