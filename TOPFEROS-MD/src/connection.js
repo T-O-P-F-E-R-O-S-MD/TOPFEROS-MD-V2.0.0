@@ -825,40 +825,25 @@ async function connectSession(
    * Socket configuration.
    */
 
-const socketConfig = {
-  logger,
+  const socketConfig = {
+    logger,
 
-  auth: {
-    creds: state.creds,
-    keys: makeCacheableSignalKeyStore(
-      state.keys,
-      logger
-    )
-  },
+    auth: {
+      creds: state.creds,
 
-  getMessage: getCachedMessage,
+      keys: makeCacheableSignalKeyStore(
+        state.keys,
+        logger
+      )
+    },
 
-  browser: Browsers.ubuntu("Chrome"),
+    getMessage: getCachedMessage,
 
-  printQRInTerminal: false,
-  syncFullHistory: false,
+    browser: Browsers.ubuntu("Chrome"),
 
-  markOnlineOnConnect:
-    automation.alwaysOnline === true
-};
+    printQRInTerminal: false,
 
-getMessage: getCachedMessage,
-
-    browser:
-      Browsers.ubuntu(
-        "Chrome"
-      ),
-
-    printQRInTerminal:
-      false,
-
-    syncFullHistory:
-      false,
+    syncFullHistory: false,
 
     markOnlineOnConnect:
       automation.alwaysOnline === true
