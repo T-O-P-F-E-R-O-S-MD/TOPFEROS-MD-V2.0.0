@@ -48,7 +48,7 @@ const {
 */
 
 const logger = pino({
-  level: "trace"
+  level: "debug"
 });
 
 /*
