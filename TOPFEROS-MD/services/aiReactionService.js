@@ -15,7 +15,7 @@ const {
   askAIWithImage
 } = require("./ai");
 
-const AI_TIMEOUT_MS = 15000;
+const AI_TIMEOUT_MS = 30000;
 
 const DEFAULT_EMOJI = "❤️";
 
