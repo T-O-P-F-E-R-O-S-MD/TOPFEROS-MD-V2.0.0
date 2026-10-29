@@ -245,15 +245,17 @@ async function settingsCommand(ctx) {
 
     await sendOverviewWithLogo(ctx, overview);
 
-    // Message 2: panel link and login details.
-    await ctx.send([
+    // Message 2: Settings login with native Copy Code button.
+    const accessCode = String(code).toUpperCase();
+
+    const loginText = [
       "🦁✧･ﾟ: *✧･ﾟ:* 🔐 *TOPFEROS MD SETTINGS LOGIN* 🔐 *:･ﾟ✧*:･ﾟ✧🐑",
       "",
       "📱 *Bot Session Number*",
       `╰┈➤ ${sessionId}`,
       "",
       "🔐 *6-Character Settings Code*",
-      `╰┈➤ ${String(code).toUpperCase()}`,
+      `╰┈➤ ${accessCode}`,
       "",
       "🌐 *Web Settings Panel*",
       `╰┈➤ ${panelUrl}`,
@@ -261,10 +263,40 @@ async function settingsCommand(ctx) {
       "✨ Kòd aksè a dwe rete prive.",
       "",
       "🦁 *TECH BY TOPFEROS MD* 🐑"
-    ].join("\n"));
+    ].join("\n");
 
-    // Message 3: standalone code for easy copying.
-    await ctx.send(String(code).toUpperCase());
+    await ctx.sock.sendMessage(ctx.jid, {
+      interactiveMessage: {
+        body: {
+          text: loginText
+        },
+        footer: {
+          text: "🦁 TECH BY TOPFEROS MD 🐑"
+        },
+        nativeFlowMessage: {
+          buttons: [
+            {
+              name: "cta_copy",
+              buttonParamsJson: JSON.stringify({
+                display_text: "📋 Copy Settings Code",
+                copy_code: accessCode
+              })
+            }
+          ]
+        }
+      }
+    });
+
+    // Message 3: Instructions.
+    await ctx.send([
+      "To change your bot settings, open the Settings Panel link above.",
+      "",
+      "Enter the bot session number and the 6-character code.",
+      "",
+      "The panel must verify that the code is valid and that the matching bot session is active.",
+      "",
+      "🦁 *TECH BY TOPFEROS MD* 🐑"
+    ].join("\n"));
 
     // Message 4: instructions.
     await ctx.send([
