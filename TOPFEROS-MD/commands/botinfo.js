@@ -26,9 +26,9 @@ async function botInfoCommand(ctx) {
       "🦁 TECH BY TOPFEROS MD 🐑",
       "",
       "🌐 *Web Connect*",
-      "└──➤TRUE",
+      "└──➤ https://whatsapp.com/channel/0029VbDJULz30LKTYe95S91",
       "🌐 *Web Channel*",
-      "└──➤https://whatsapp.com/channel/0029Vb98522IXnlxdL8Sxj2m"
+      "└──➤ https://whatsapp.com/channel/0029VbDJULz30LKTYe95S91"
     ].join("\n");
 
     await ctx.sock.sendMessage(
