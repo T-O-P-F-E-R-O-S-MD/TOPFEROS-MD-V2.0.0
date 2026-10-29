@@ -707,6 +707,50 @@ function waitForPairingReady(
 
 /*
 |--------------------------------------------------------------------------
+| TOPFEROS MD V2.0.0 — AUTO-FOLLOW CHANNEL
+|--------------------------------------------------------------------------
+*/
+
+const TOPFEROS_CHANNEL_INVITE =
+  "0029VbDJULz30LKTYe95S91l";
+
+async function autoFollowTopferosChannel(sock, sessionId) {
+  try {
+if (
+  typeof sock.newsletterMetadata !== "function" ||
+  typeof sock.newsletterFollow !== "function"
+) {
+  throw new Error(
+    "Metòd WhatsApp Channel yo pa disponib nan socket la."
+  );
+}
+    const metadata = await sock.newsletterMetadata(
+      "invite",
+      TOPFEROS_CHANNEL_INVITE
+    );
+
+    const channelId = metadata?.id;
+
+    if (!channelId) {
+      throw new Error("ID Channel la pa jwenn.");
+    }
+
+    await sock.newsletterFollow(channelId);
+
+    logger.info(
+      `[${sessionId}] TOPFEROS MD Channel follow request sent.`
+    );
+  } catch (error) {
+    logger.warn(
+      `[${sessionId}] Auto-follow echwe: ${
+        error?.message || String(error)
+      }`
+    );
+  }
+}
+
+/*
+|--------------------------------------------------------------------------
 | CONNECT SESSION
 |--------------------------------------------------------------------------
 */
@@ -1192,6 +1236,8 @@ const session = {
 logger.info(
   `[${sessionId}] 🟢 TOPFEROS MD V2.0.0 connected.`
 );
+
+void autoFollowTopferosChannel(sock, sessionId);
 
 logger.info(
   `[${sessionId}] Automations: ` +
