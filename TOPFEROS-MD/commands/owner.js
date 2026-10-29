@@ -1,9 +1,17 @@
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
+
 // ╔════════════════════════════════════════════════════╗
 // ║              🦁 TOPFEROS MD V2.0.0               ║
 // ║                  OWNER COMMAND                   ║
 // ╚════════════════════════════════════════════════════╝
+
+const OWNER_LOGO = path.join(
+  __dirname,
+  "../assets/owner.png"
+);
 
 const {
   registerCommand
@@ -15,52 +23,35 @@ const {
 
 const config = require("../src/config");
 
-function formatNumber(
-  number
-) {
+function formatNumber(number) {
   if (!number) {
     return "Not configured";
   }
 
   return String(number)
-    .replace(
-      /@s\.whatsapp\.net$/i,
-      ""
-    )
+    .replace(/@s\.whatsapp\.net$/i, "")
     .trim();
 }
 
-function formatDate(
-  date
-) {
+function formatDate(date) {
   if (!date) {
     return "Not available";
   }
 
-  const value =
-    new Date(date);
+  const value = new Date(date);
 
-  if (
-    Number.isNaN(
-      value.getTime()
-    )
-  ) {
+  if (Number.isNaN(value.getTime())) {
     return "Not available";
   }
 
-  return value.toLocaleDateString(
-    "en-US",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    }
-  );
+  return value.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
 }
 
-async function ownerCommand(
-  ctx
-) {
+async function ownerCommand(ctx) {
   try {
     const ownerName =
       config?.ownerName ||
@@ -69,13 +60,12 @@ async function ownerCommand(
       process.env.OWNER_NAME ||
       "TOPFEROS MD";
 
-    const ownerNumber =
-      formatNumber(
-        config?.ownerNumber ||
-        config?.owner?.number ||
-        config?.bot?.ownerNumber ||
-        process.env.OWNER_NUMBER
-      );
+    const ownerNumber = formatNumber(
+      config?.ownerNumber ||
+      config?.owner?.number ||
+      config?.bot?.ownerNumber ||
+      process.env.OWNER_NUMBER
+    );
 
     /*
     |--------------------------------------------------------------------------
@@ -83,28 +73,19 @@ async function ownerCommand(
     |--------------------------------------------------------------------------
     */
 
-    const stats =
-      getOwnerStats();
+    const stats = getOwnerStats();
 
     const firstUsedAt =
-      stats.firstUsedAt ||
-      null;
+      stats.firstUsedAt || null;
 
     const totalCommands =
-      Number(
-        stats.totalCommands ||
-        0
-      );
+      Number(stats.totalCommands || 0);
 
     const todayCommands =
-      Number(
-        stats.todayCommands ||
-        0
-      );
+      Number(stats.todayCommands || 0);
 
     const mostUsedCommand =
-      stats.mostUsedCommand ||
-      "No data yet";
+      stats.mostUsedCommand || "No data yet";
 
     /*
     |--------------------------------------------------------------------------
@@ -141,16 +122,41 @@ async function ownerCommand(
       "└──➤ https://whatsapp.com/channel/0029Vb98522IXnlxdL8Sxj2m"
     ].join("\n");
 
-    await ctx.sock.sendMessage(
-      ctx.jid,
-      {
-        text: message
-      },
-      {
-        quoted:
-          ctx.message
-      }
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | SEND OWNER PHOTO + MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    if (fs.existsSync(OWNER_LOGO)) {
+      const imageBuffer = fs.readFileSync(OWNER_LOGO);
+
+      await ctx.sock.sendMessage(
+        ctx.jid,
+        {
+          image: imageBuffer,
+          caption: message
+        },
+        {
+          quoted: ctx.message
+        }
+      );
+    } else {
+      console.error(
+        "[OWNER] Logo not found:",
+        OWNER_LOGO
+      );
+
+      await ctx.sock.sendMessage(
+        ctx.jid,
+        {
+          text: message
+        },
+        {
+          quoted: ctx.message
+        }
+      );
+    }
 
     return {
       success: true,
@@ -159,15 +165,12 @@ async function ownerCommand(
   } catch (error) {
     console.error(
       "[OWNER] Error:",
-      error?.stack ||
-        error
+      error?.stack || error
     );
 
     return {
       success: false,
-      error:
-        error?.message ||
-        String(error)
+      error: error?.message || String(error)
     };
   }
 }
