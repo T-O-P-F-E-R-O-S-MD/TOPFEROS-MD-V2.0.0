@@ -18,9 +18,12 @@ const {
   getBaileys
 } = require("../services/baileysRuntime");
 
+
 const {
-  useNeonAuthState
+  useNeonAuthState,
+  deleteNeonAuthState
 } = require("../services/neonAuthState");
+
 
 const config = require("./config");
 
@@ -40,7 +43,9 @@ const {
 */
 
 const logger = pino({
-  level: "debug"
+  level:
+    process.env.LOG_LEVEL ||
+    "info"
 });
 
 /*
