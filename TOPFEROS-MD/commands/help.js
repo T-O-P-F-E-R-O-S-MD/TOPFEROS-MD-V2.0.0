@@ -6,10 +6,6 @@
 const fs = require("fs");
 const path = require("path");
 
-const {
-  registerCommand
-} = require("../src/messageHandler");
-
 async function helpCommand(ctx) {
   try {
     const prefix = ctx.prefix || ".";
@@ -237,17 +233,6 @@ async function helpCommand(ctx) {
     };
   }
 }
-
-registerCommand(
-  "help",
-  helpCommand,
-  {
-    aliases: [],
-    description: "Show the help guide with the bot logo.",
-    usage: ".help",
-    category: "INFO"
-  }
-);
 
 module.exports = {
   helpCommand
