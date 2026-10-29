@@ -4,8 +4,43 @@
 // 🦁 TOPFEROS MD V2.0.0
 // HELP COMMAND — LOGO + ENGLISH USER GUIDE
 
-const fs = require("fs");
-const path = require("path");
+  const logoPath = path.join(
+    __dirname,
+    "../assets/logo.png"
+  );
+
+  try {
+    if (
+      ctx.sock &&
+      ctx.jid &&
+      fs.existsSync(logoPath)
+    ) {
+      const logo = await fs.promises.readFile(
+        logoPath
+      );
+
+      await ctx.sock.sendMessage(
+        ctx.jid,
+        {
+          image: logo,
+          caption: help
+        }
+      );
+    } else {
+      await ctx.send(help);
+    }
+  } catch (error) {
+    console.error(
+      "[TOPFEROS MD HELP ERROR]",
+      error?.message || error
+    );
+
+    await ctx.send(help);
+  }
+
+  return {
+    success: true
+  };
 
 async function helpCommand(ctx) {
   const prefix = ctx.prefix || ".";
