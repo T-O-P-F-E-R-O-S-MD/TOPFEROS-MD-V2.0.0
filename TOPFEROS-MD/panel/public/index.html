@@ -354,6 +354,7 @@ body {
   }
 });
 
+      
       $("copyButton").addEventListener("click", async () => {
         if (!currentCode) return;
 
@@ -376,48 +377,52 @@ body {
           statusMessage.textContent = success
             ? t.copied
             : t.copyFailed;
-
-<audio id="panelMusic" loop preload="auto">
-  <source src="/panel-music.mp3" type="audio/mpeg">
-</audio>
-
-<button
-  id="musicToggle"
-  type="button"
-  style="position:fixed;bottom:16px;right:16px;z-index:9999;"
->
-  ▶ PLAY MUSIC
-</button>
-
-<script>
-(() => {
-  const music = document.getElementById("panelMusic");
-  const button = document.getElementById("musicToggle");
-
-  music.volume = 0.35;
-
-  async function playMusic() {
-    try {
-      await music.play();
-      button.textContent = "⏸ PAUSE MUSIC";
-    } catch {
-      button.textContent = "▶ PLAY MUSIC";
-    }
-  }
-
-  button.addEventListener("click", () => {
-    if (music.paused) {
-      playMusic();
-    } else {
-      music.pause();
-      button.textContent = "▶ PLAY MUSIC";
-    }
-  });
-
-  playMusic();
-})();
-</script>
         }
+      });
+    })();
+  </script>
+
+  <audio id="panelMusic" loop preload="auto">
+    <source src="/panel-music.mp3" type="audio/mpeg">
+  </audio>
+
+  <button
+    id="musicToggle"
+    type="button"
+    style="position:fixed;bottom:16px;right:16px;z-index:9999;"
+  >
+    ▶ PLAY MUSIC
+  </button>
+
+  <script>
+    (() => {
+      const music = document.getElementById("panelMusic");
+      const button = document.getElementById("musicToggle");
+
+      if (!music || !button) return;
+
+      music.volume = 0.35;
+
+      async function playMusic() {
+        try {
+          await music.play();
+          button.textContent = "⏸ PAUSE MUSIC";
+        } catch (error) {
+          button.textContent = "▶ PLAY MUSIC";
+        }
+      }
+
+      button.addEventListener("click", async () => {
+        if (music.paused) {
+          await playMusic();
+        } else {
+          music.pause();
+          button.textContent = "▶ PLAY MUSIC";
+        }
+      });
+
+      music.addEventListener("error", () => {
+        button.textContent = "⚠ MUSIC UNAVAILABLE";
       });
     })();
   </script>
