@@ -1905,6 +1905,107 @@ registerCommand("send", sendCommand, {
 
 /*
 |--------------------------------------------------------------------------
+| TOPFEROS MD V2.0.0
+| REGISTER COMMANDS MISSING FROM MESSAGE HANDLER
+|--------------------------------------------------------------------------
+*/
+
+const { aliveCommand } = require("../commands/alive");
+const { botInfoCommand } = require("../commands/botinfo");
+const { calcCommand } = require("../commands/calc");
+const { filmCommand } = require("../commands/film");
+const { groupLinkCommand } = require("../commands/groupLink");
+const { addCommand } = require("../commands/groupadd");
+const { closeCommand } = require("../commands/groupclose");
+const { demoteCommand } = require("../commands/groupdemote");
+const { hideTagCommand } = require("../commands/grouphidetag");
+const { groupInfoCommand } = require("../commands/groupinfo");
+const { kickCommand } = require("../commands/groupkick");
+const { muteCommand } = require("../commands/groupmute");
+const { openCommand } = require("../commands/groupopen");
+const { promoteCommand } = require("../commands/grouppromote");
+const { removeCommand } = require("../commands/groupremove");
+const { setGroupDescriptionCommand } = require("../commands/groupsetdesc");
+const { setGroupNameCommand } = require("../commands/groupsetname");
+const { setGroupPicCommand } = require("../commands/groupsetpic");
+const { groupStatusCommand } = require("../commands/groupstatus");
+const { tagAllCommand } = require("../commands/grouptagall");
+const { unmuteCommand } = require("../commands/groupunmute");
+const { ownerCommand } = require("../commands/owner");
+const { pingCommand } = require("../commands/ping");
+const { qrCommand } = require("../commands/qr");
+const { runtimeCommand } = require("../commands/runtime");
+const { serieCommand } = require("../commands/serie");
+const { shortUrlCommand } = require("../commands/shorturl");
+const { screenshotCommand } = require("../commands/ss");
+const { stickerCommand } = require("../commands/sticker");
+const { takeCommand } = require("../commands/take");
+const { toImageCommand } = require("../commands/toimg");
+const { translateCommand } = require("../commands/translate");
+const { ttsCommand } = require("../commands/tts");
+
+const missingCommandRegistrations = [
+  ["alive", aliveCommand, "SYSTEM"],
+  ["botinfo", botInfoCommand, "SYSTEM"],
+  ["calc", calcCommand, "UTILITY"],
+  ["film", filmCommand, "MEDIA"],
+  ["grouplink", groupLinkCommand, "GROUP"],
+  ["groupadd", addCommand, "GROUP"],
+  ["groupclose", closeCommand, "GROUP"],
+  ["groupdemote", demoteCommand, "GROUP"],
+  ["grouphidetag", hideTagCommand, "GROUP"],
+  ["groupinfo", groupInfoCommand, "GROUP"],
+  ["groupkick", kickCommand, "GROUP"],
+  ["groupmute", muteCommand, "GROUP"],
+  ["groupopen", openCommand, "GROUP"],
+  ["grouppromote", promoteCommand, "GROUP"],
+  ["groupremove", removeCommand, "GROUP"],
+  ["groupsetdesc", setGroupDescriptionCommand, "GROUP"],
+  ["groupsetname", setGroupNameCommand, "GROUP"],
+  ["groupsetpic", setGroupPicCommand, "GROUP"],
+  ["groupstatus", groupStatusCommand, "GROUP"],
+  ["grouptagall", tagAllCommand, "GROUP"],
+  ["groupunmute", unmuteCommand, "GROUP"],
+  ["owner", ownerCommand, "OWNER"],
+  ["ping", pingCommand, "SYSTEM"],
+  ["qr", qrCommand, "UTILITY"],
+  ["runtime", runtimeCommand, "SYSTEM"],
+  ["serie", serieCommand, "MEDIA"],
+  ["shorturl", shortUrlCommand, "UTILITY"],
+  ["ss", screenshotCommand, "UTILITY"],
+  ["sticker", stickerCommand, "MEDIA"],
+  ["take", takeCommand, "MEDIA"],
+  ["toimg", toImageCommand, "MEDIA"],
+  ["translate", translateCommand, "UTILITY"],
+  ["tts", ttsCommand, "MEDIA"]
+];
+
+for (const [name, handler, category] of missingCommandRegistrations) {
+  if (typeof handler !== "function") {
+    console.error(
+      `[TOPFEROS MD] Kòmand ${name} pa anrejistre: handler la pa yon fonksyon.`
+    );
+    continue;
+  }
+
+  // Pa ranplase kòmand ki deja anrejistre yo.
+  if (commands.has(name)) {
+    continue;
+  }
+
+  registerCommand(name, handler, {
+    description: `TOPFEROS MD ${name} command.`,
+    usage: `${getPrefix("default")}${name}`,
+    category
+  });
+
+  console.log(
+    `[TOPFEROS MD] Registered command: ${name}`
+  );
+}
+
+/*
+|--------------------------------------------------------------------------
 | EXPORTS
 |--------------------------------------------------------------------------
 */
