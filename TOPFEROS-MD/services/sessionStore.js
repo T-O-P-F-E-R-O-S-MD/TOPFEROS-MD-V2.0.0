@@ -323,6 +323,7 @@ async function closeSessionStore() {
 }
 
 
+
 module.exports = {
   encryptSessionData,
   decryptSessionData,
@@ -333,5 +334,7 @@ module.exports = {
   listSessionFiles,
   listSessionIds,
   deleteSessionFile,
+  deleteSessionData,
   closeSessionStore
 };
+
