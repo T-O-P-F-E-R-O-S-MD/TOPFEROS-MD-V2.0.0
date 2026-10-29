@@ -135,7 +135,7 @@ async function ownerCommand(
       "🦁 TECH BY TOPFEROS MD 🐑",
       "",
       "🌐 Web Connect",
-      "└──➤ TRUE",
+      "└──➤ https://topferos-md-v2-0-0.onrender.com/setting",
       "",
       "🌐 Web Channel",
       "└──➤ https://whatsapp.com/channel/0029Vb98522IXnlxdL8Sxj2m"
