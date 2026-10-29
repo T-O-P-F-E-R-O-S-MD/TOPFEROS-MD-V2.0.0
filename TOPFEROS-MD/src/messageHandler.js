@@ -1995,7 +1995,7 @@ for (const [name, handler, category] of missingCommandRegistrations) {
 
   registerCommand(name, handler, {
     description: `TOPFEROS MD ${name} command.`,
-    usage: `${getPrefix("default")}${name}`,
+    usage: `${getPrefix() || "."}${name}`,
     category
   });
 
