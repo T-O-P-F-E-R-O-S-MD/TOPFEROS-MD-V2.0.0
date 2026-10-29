@@ -1,5 +1,8 @@
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
+
 // ╔════════════════════════════════════════════════════╗
 // ║              🦁 TOPFEROS MD V2.0.0               ║
 // ║                   PING COMMAND                   ║
@@ -26,30 +29,47 @@ async function pingCommand(ctx) {
       );
     }
 
-    await ctx.sock.sendMessage(
-      ctx.jid,
-      {
-        text:
-          [
-            "🏓 PONG!",
-            "",
-            `⚡ Response: ${responseTime} ms`,
-            "🤖 Bot: TOPFEROS MD",
-            "📦 Version: V2.0.0",
-            "",
-            "🦁 TECH BY TOPFEROS MD 🐑"
-          ].join("\n")
-      },
-      {
-        quoted:
-          ctx.message
-      }
+    
+    const logoPath = path.join(
+      __dirname,
+      "../assets/logo.png"
     );
 
-    return {
-      success: true,
-      responseTime
-    };
+    const caption = [
+      "🏓 PONG!",
+      "",
+      `⚡ Response: ${responseTime} ms`,
+      "🤖 Bot: TOPFEROS MD",
+      "📦 Version: V2.0.0",
+      "",
+      "🦁 TECH BY TOPFEROS MD 🐑"
+    ].join("\n");
+
+    if (fs.existsSync(logoPath)) {
+      const logo = await fs.promises.readFile(logoPath);
+
+      await ctx.sock.sendMessage(
+        ctx.jid,
+        {
+          image: logo,
+          caption
+        },
+        {
+          quoted: ctx.message
+        }
+      );
+    } else {
+      await ctx.sock.sendMessage(
+        ctx.jid,
+        {
+          text: caption
+        },
+        {
+          quoted: ctx.message
+        }
+      );
+    }
+
   } catch (error) {
     console.error(
       "[PING] Error:",
