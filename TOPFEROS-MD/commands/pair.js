@@ -25,22 +25,48 @@ async function pairCommand(
     message?.key?.remoteJid || "";
 
   if (!number) {
+  
     if (jid && sock) {
-      await sock.sendMessage(
-        jid,
-        {
-          text: [
-            "❌ PHONE NUMBER REQUIRED",
-            "",
-            "Use:",
-            ".pair 509XXXXXXXX",
-            "",
-            "📱 Use the international country code.",
-            "",
-            "🦁 TECH BY TOPFEROS MD 🐑"
-          ].join("\n")
+      const pairingCode = String(result.pairingCode);
+
+      await sock.sendMessage(jid, {
+        interactiveMessage: {
+          body: {
+            text: [
+              "╭━━━〔 🦁 TOPFEROS MD V2.0.0 🐑 〕━━━╮",
+              "┃",
+              "┃ 🔐 PAIRING CODE",
+              "┃",
+              `┃ 📱 NUMBER: ${result.sessionId}`,
+              "┃",
+              `┃ 🔑 CODE: ${pairingCode}`,
+              "┃",
+              "┃ 📲 Open WhatsApp on this number.",
+              "┃ ⚙️ Go to Linked Devices.",
+              "┃ 🔗 Choose Link a Device.",
+              "┃ 🔢 Enter the pairing code above.",
+              "┃",
+              "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯",
+              "",
+              "🟢 Waiting for WhatsApp pairing..."
+            ].join("\n")
+          },
+          footer: {
+            text: "🦁 TECH BY TOPFEROS MD 🐑"
+          },
+          nativeFlowMessage: {
+            buttons: [
+              {
+                name: "cta_copy",
+                buttonParamsJson: JSON.stringify({
+                  display_text: "📋 Copy Pairing Code",
+                  copy_code: pairingCode
+                })
+              }
+            ]
+          }
         }
-      );
+      });
     }
 
     return {
