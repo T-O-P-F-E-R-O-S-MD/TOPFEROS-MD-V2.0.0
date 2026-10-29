@@ -45,37 +45,57 @@ function formatUptime(seconds) {
   return parts.join(" ");
 }
 
+
 async function aliveCommand(ctx) {
   try {
-    const uptime =
-      formatUptime(
-        process.uptime()
+    const uptime = formatUptime(process.uptime());
+
+    const helpText = [
+      "╭━━━〔 🦁 TOPFEROS MD 〕━━━╮",
+      "",
+      "        ✅ I'M ALIVE",
+      "",
+      "🤖 Bot: TOPFEROS MD",
+      "📦 Version: V2.0.0",
+      "🟢 Status: ONLINE",
+      `⏱️ Uptime: ${uptime}`,
+      "",
+      "╰━━━━━━━━━━━━━━━━━━━━━━╯",
+      "",
+      "🦁 TECH BY TOPFEROS MD 🐑"
+    ].join("\n");
+
+    const logoPath = path.join(
+      __dirname,
+      "../assets/logo.png"
+    );
+
+    if (fs.existsSync(logoPath)) {
+      const logo = await fs.promises.readFile(logoPath);
+
+      await ctx.sock.sendMessage(
+        ctx.jid,
+        {
+          image: logo,
+          caption: helpText
+        },
+        {
+          quoted: ctx.message
+        }
+      );
+    } else {
+      await ctx.sock.sendMessage(
+        ctx.jid,
+        {
+          text: helpText
+        },
+        {
+          quoted: ctx.message
+        }
       );
 
-    await ctx.sock.sendMessage(
-      ctx.jid,
-      {
-        text:
-          [
-            "╭━━━〔 🦁 TOPFEROS MD 〕━━━╮",
-            "",
-            "        ✅ I'M ALIVE",
-            "",
-            "🤖 Bot: TOPFEROS MD",
-            "📦 Version: V2.0.0",
-            "🟢 Status: ONLINE",
-            `⏱️ Uptime: ${uptime}`,
-            "",
-            "╰━━━━━━━━━━━━━━━━━━━━━━╯",
-            "",
-            "🦁 TECH BY TOPFEROS MD 🐑"
-          ].join("\n")
-      },
-      {
-        quoted:
-          ctx.message
-      }
-    );
+      console.error("[ALIVE] Logo pa jwenn:", logoPath);
+    }
 
     return {
       success: true,
@@ -84,18 +104,16 @@ async function aliveCommand(ctx) {
   } catch (error) {
     console.error(
       "[ALIVE] Error:",
-      error?.stack ||
-        error
+      error?.stack || error
     );
 
     return {
       success: false,
-      error:
-        error?.message ||
-        String(error)
+      error: error?.message || String(error)
     };
   }
 }
+
 
 registerCommand(
   "alive",
