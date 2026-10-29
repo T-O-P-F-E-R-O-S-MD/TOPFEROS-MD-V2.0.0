@@ -1,3 +1,4 @@
+
 "use strict";
 
 // ╔════════════════════════════════════════════════════╗
@@ -5,46 +6,29 @@
 // ║                  ALIVE COMMAND                   ║
 // ╚════════════════════════════════════════════════════╝
 
+const fs = require("fs");
+const path = require("path");
+
 const {
   registerCommand
 } = require("../src/messageHandler");
 
 function formatUptime(seconds) {
-  const days =
-    Math.floor(seconds / 86400);
-
-  const hours =
-    Math.floor(
-      (seconds % 86400) / 3600
-    );
-
-  const minutes =
-    Math.floor(
-      (seconds % 3600) / 60
-    );
-
-  const secs =
-    Math.floor(seconds % 60);
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
 
   const parts = [];
 
-  if (days > 0) {
-    parts.push(`${days}d`);
-  }
-
-  if (hours > 0) {
-    parts.push(`${hours}h`);
-  }
-
-  if (minutes > 0) {
-    parts.push(`${minutes}m`);
-  }
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
 
   parts.push(`${secs}s`);
 
   return parts.join(" ");
 }
-
 
 async function aliveCommand(ctx) {
   try {
@@ -70,31 +54,43 @@ async function aliveCommand(ctx) {
       "../assets/logo.png"
     );
 
+    // Verifye si sistèm mesaj la bay enfòmasyon ki nesesè yo.
+    const sock = ctx?.sock;
+    const jid = ctx?.jid;
+    const message = ctx?.message;
+
+    if (!sock || !jid) {
+      throw new Error(
+        "ctx.sock oswa ctx.jid pa disponib nan messageHandler.js"
+      );
+    }
+
+    // Voye logo a ansanm ak mesaj ALIVE la.
     if (fs.existsSync(logoPath)) {
       const logo = await fs.promises.readFile(logoPath);
 
-      await ctx.sock.sendMessage(
-        ctx.jid,
+      await sock.sendMessage(
+        jid,
         {
           image: logo,
           caption: helpText
         },
-        {
-          quoted: ctx.message
-        }
+        message ? { quoted: message } : {}
       );
     } else {
-      await ctx.sock.sendMessage(
-        ctx.jid,
+      // Si logo a pa jwenn, voye tèks la sèlman.
+      await sock.sendMessage(
+        jid,
         {
           text: helpText
         },
-        {
-          quoted: ctx.message
-        }
+        message ? { quoted: message } : {}
       );
 
-      console.error("[ALIVE] Logo pa jwenn:", logoPath);
+      console.error(
+        "[TOPFEROS MD ALIVE] Logo pa jwenn:",
+        logoPath
+      );
     }
 
     return {
@@ -103,7 +99,7 @@ async function aliveCommand(ctx) {
     };
   } catch (error) {
     console.error(
-      "[ALIVE] Error:",
+      "[TOPFEROS MD ALIVE ERROR]",
       error?.stack || error
     );
 
@@ -114,20 +110,14 @@ async function aliveCommand(ctx) {
   }
 }
 
-
 registerCommand(
   "alive",
   aliveCommand,
   {
-    aliases: [
-      "online"
-    ],
-    description:
-      "Check whether the bot is alive and online.",
-    usage:
-      ".alive",
-    category:
-      "UTILITY"
+    aliases: ["online"],
+    description: "Check whether the bot is alive and online.",
+    usage: ".alive",
+    category: "UTILITY"
   }
 );
 
