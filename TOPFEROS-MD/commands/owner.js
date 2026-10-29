@@ -119,7 +119,7 @@ async function ownerCommand(ctx) {
       "└──➤ https://topferos-md-v2-0-0.onrender.com/setting",
       "",
       "🌐 Web Channel",
-      "└──➤ https://whatsapp.com/channel/0029Vb98522IXnlxdL8Sxj2m"
+      "└──➤ https://whatsapp.com/channel/0029VbDJULz30LKTYe95S91l"
     ].join("\n");
 
     /*
