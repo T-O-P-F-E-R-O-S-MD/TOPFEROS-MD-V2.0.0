@@ -84,9 +84,31 @@ function normalizeJid(jid) {
 
 function formatUser(jid) {
   const clean = normalizeJid(jid);
+
   if (!clean) return "Unknown";
-  if (clean.endsWith("@g.us")) return clean;
-  return `@${clean.split("@")[0]}`;
+
+  // Pa montre yon ID gwoup kòm nimewo moun.
+  if (clean.endsWith("@g.us")) {
+    return "Unknown";
+  }
+
+  // LID se yon idantifyan entèn, se pa nimewo telefòn.
+  if (clean.endsWith("@lid")) {
+    return "Unknown (WhatsApp LID)";
+  }
+
+  // Afiche sèlman JID ki idantifye yon nimewo telefòn.
+  if (clean.endsWith("@s.whatsapp.net")) {
+    const number = clean.split("@")[0];
+
+    if (!/^\d+$/.test(number)) {
+      return "Unknown";
+    }
+
+    return `+${number}`;
+  }
+
+  return "Unknown";
 }
 
 function getMessagePreview(message) {
