@@ -46,6 +46,20 @@ const BACKGROUND_FILE = path.resolve(
   "background.png"
 );
 
+
+const PANEL_MUSIC_FILE = path.resolve(
+  __dirname,
+  "panel-music.mp3"
+);
+
+app.get("/panel-music.mp3", (req, res) => {
+  if (!fs.existsSync(PANEL_MUSIC_FILE)) {
+    return res.status(404).send("Panel music not found");
+  }
+
+  res.sendFile(PANEL_MUSIC_FILE);
+});
+
 app.get("/panel-background.png", (req, res) => {
   res.sendFile(BACKGROUND_FILE);
 });
