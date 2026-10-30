@@ -354,7 +354,6 @@ body {
   }
 });
 
-      
       $("copyButton").addEventListener("click", async () => {
         if (!currentCode) return;
 
@@ -382,17 +381,37 @@ body {
     })();
   </script>
 
-  <audio id="panelMusic" loop preload="auto">
-    <source src="/panel-music.mp3" type="audio/mpeg">
-  </audio>
+  <!-- TOPFEROS MD PANEL MUSIC -->
+  <audio
+    id="panelMusic"
+    src="/panel-music.mp3"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+  ></audio>
 
   <button
     id="musicToggle"
     type="button"
-    style="position:fixed;bottom:16px;right:16px;z-index:9999;"
-  >
-    ▶ PLAY MUSIC
-  </button>
+    aria-label="Activate sound"
+    title="Activate sound"
+    style="
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 99999;
+      width: 46px;
+      height: 46px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 50%;
+      background: rgba(10,14,22,.88);
+      color: white;
+      font-size: 23px;
+      cursor: pointer;
+    "
+  >🔇</button>
 
   <script>
     (() => {
@@ -402,28 +421,38 @@ body {
       if (!music || !button) return;
 
       music.volume = 0.35;
+      music.muted = true;
 
-      async function playMusic() {
+      function updateIcon() {
+        button.textContent = music.muted ? "🔇" : "🔊";
+        button.setAttribute(
+          "aria-label",
+          music.muted ? "Activate sound" : "Mute sound"
+        );
+        button.title = music.muted ? "Activate sound" : "Mute sound";
+      }
+
+      async function startMusic() {
         try {
           await music.play();
-          button.textContent = "⏸ PAUSE MUSIC";
         } catch (error) {
-          button.textContent = "▶ PLAY MUSIC";
+          console.log("Autoplay blocked:", error);
         }
       }
 
       button.addEventListener("click", async () => {
         if (music.paused) {
-          await playMusic();
-        } else {
-          music.pause();
-          button.textContent = "▶ PLAY MUSIC";
+          await startMusic();
         }
+
+        music.muted = !music.muted;
+        updateIcon();
       });
 
-      music.addEventListener("error", () => {
-        button.textContent = "⚠ MUSIC UNAVAILABLE";
-      });
+      music.addEventListener("play", updateIcon);
+      updateIcon();
+
+      startMusic();
     })();
   </script>
 </body>
