@@ -334,9 +334,6 @@ await ctx.send([
   "",
   "🦁 *TECH BY TOPFEROS MD* 🐑"
 ].join("\n"));
-    
-      "🦁 *TECH BY TOPFEROS MD* 🐑"
-    ].join("\n"));
 
   } catch (error) {
     console.error(
