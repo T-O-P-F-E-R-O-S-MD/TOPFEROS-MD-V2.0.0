@@ -839,6 +839,16 @@ app.post(
         return;
       }
 
+if (
+  !settingPanel.isPanelSessionVerified(sessionId)
+) {
+  return sendError(
+    res,
+    401,
+    "Please verify your settings access first."
+  );
+}
+
       if (typeof settingPanel.saveSettings !== "function") {
         return sendError(res, 500, "Settings save service is unavailable.");
       }
