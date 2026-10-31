@@ -486,9 +486,53 @@
             <span class="slider"></span>
 
           </label>
+<!-- AUTO REACT -->
+<div class="switch-row">
+  <span>Auto React</span>
+  <label class="switch">
+    <input id="autoReact" type="checkbox">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="field-group">
+  <label for="autoReactMode">AUTO REACT MODE</label>
+  <select id="autoReactMode">
+    <option value="all">Tout mesaj</option>
+    <option value="private">Mesaj prive sèlman</option>
+    <option value="group">Mesaj gwoup sèlman</option>
+  </select>
+</div>
+
+<div class="field-group">
+  <label for="autoReactEmojis">REACT EMOJIS</label>
+  <textarea
+    id="autoReactEmojis"
+    rows="3"
+    placeholder="Mete emoji ou vle itilize yo"
+  >🤣 🫵 ♥️ 🩵 🫂 🤳 ✍️ 🛌 🌹 🌌 🌑 🪔 🎁 ⚽ 🏆 🛹 🥋 🎧 🎞️ 🎙️ 💎 🕯️ ❓ ❗ 🈶 👁️ 💯 🦻 🌝 ✔️ 🤩 🥳 🤪 🥹 😛 🤗 🫡 💫 💥</textarea>
+  <small>Maximum 40 emojis. Limit sa a obligatwa.</small>
+</div>
 
         </div>
+<!-- ANTI SPAM -->
+<div class="switch-row">
+  <span>Anti Spam</span>
+  <label class="switch">
+    <input id="antiSpam" type="checkbox">
+    <span class="slider"></span>
+  </label>
+</div>
 
+<div class="field-group">
+  <label for="antiSpamMode">ANTI SPAM MODE</label>
+  <select id="antiSpamMode">
+    <option value="warn">Warn</option>
+    <option value="delete">Delete</option>
+    <option value="kick">Kick</option>
+    <option value="warn_delete">Warn + Delete</option>
+  </select>
+</div>
 
         <!-- ANTI DELETE -->
         <div class="switch-row">
@@ -574,6 +618,50 @@
 
         </div>
 
+<!-- ANTI-BOT SYSTEM -->
+<div class="section-title">
+  🤖 ANTI-BOT SYSTEM
+</div>
+
+<div class="switch-row">
+  <span>Bot Detection</span>
+  <label class="switch">
+    <input id="botDetection" type="checkbox">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="switch-row">
+  <span>Auto Scan</span>
+  <label class="switch">
+    <input id="autoScan" type="checkbox">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="switch-row">
+  <span>Bot Score</span>
+  <label class="switch">
+    <input id="botScore" type="checkbox">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="switch-row">
+  <span>Admin Notification</span>
+  <label class="switch">
+    <input id="adminNotification" type="checkbox">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="switch-row">
+  <span>Auto Kick</span>
+  <label class="switch">
+    <input id="autoKick" type="checkbox">
+    <span class="slider"></span>
+  </label>
+</div>
 
         <!-- ANTI BOT FILTER -->
         <div class="switch-row">
