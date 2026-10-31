@@ -329,7 +329,8 @@ function verifySession(sessionId) {
     getPanelSession(id) ||
     createPanelSession(id);
 
-  panelSession.verified = true;
+  // Verifye egzistans sesyon an sèlman.
+  // Pa bay aksè panèl otomatikman.
   panelSession.connected =
     sessionManager.isConnected(id);
 
@@ -339,7 +340,7 @@ function verifySession(sessionId) {
     success: true,
     sessionId: id,
     connected: panelSession.connected,
-    verified: true
+    verified: panelSession.verified === true
   };
 }
 
