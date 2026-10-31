@@ -250,57 +250,6 @@ function findCommand(
   return null;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| TOPFEROS MD V2.0.0
-|
-| ANTI BUG MESSAGE GUARD
-|--------------------------------------------------------------------------
-*/
-
-try {
-  if (
-    !message ||
-    typeof message !== "object" ||
-    Array.isArray(message)
-  ) {
-    return true;
-  }
-
-  if (
-    !message.key ||
-    typeof message.key !== "object" ||
-    Array.isArray(message.key) ||
-    !message.message ||
-    typeof message.message !== "object" ||
-    Array.isArray(message.message)
-  ) {
-    return true;
-  }
-
-  const messageText = extractMessageText(
-    message.message
-  );
-
-  if (
-    typeof messageText === "string" &&
-    messageText.length > 20000
-  ) {
-    return true;
-  }
-
-  return false;
-
-} catch (error) {
-  console.error(
-    "[TOPFEROS MD] ANTI BUG ERROR:",
-    error?.message || error
-  );
-
-  return true;
-}
-
 /*
 |--------------------------------------------------------------------------
 | EXTRACT MESSAGE TEXT
