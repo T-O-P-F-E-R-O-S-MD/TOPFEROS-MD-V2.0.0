@@ -276,32 +276,31 @@ const loginText = [
 const copyMessage = generateWAMessageFromContent(
   ctx.jid,
   {
-    viewOnceMessage: {
-      message: {
-        interactiveMessage:
-          proto.Message.InteractiveMessage.create({
-            body: proto.Message.InteractiveMessage.Body.create({
-              text: loginText
-            }),
+  proto.Message.create({
+  interactiveMessage:
+    proto.Message.InteractiveMessage.create({
+      body: proto.Message.InteractiveMessage.Body.create({
+        text: loginText
+      }),
 
-            footer: proto.Message.InteractiveMessage.Footer.create({
-              text: "🦁 TECH BY TOPFEROS MD 🐑"
-            }),
+      footer: proto.Message.InteractiveMessage.Footer.create({
+        text: "🦁 TECH BY TOPFEROS MD 🐑"
+      }),
 
-            nativeFlowMessage:
-              proto.Message.InteractiveMessage.NativeFlowMessage.create({
-                buttons: [
-                  {
-                    name: "cta_copy",
-                    buttonParamsJson: JSON.stringify({
-                      display_text: "📋 Copy Settings Code",
-                      copy_code: accessCode
-                    })
-                  }
-                ]
+      nativeFlowMessage:
+        proto.Message.InteractiveMessage.NativeFlowMessage.create({
+          buttons: [
+            {
+              name: "cta_copy",
+              buttonParamsJson: JSON.stringify({
+                display_text: "📋 Copy Settings Code",
+                copy_code: accessCode
               })
-          })
-      }
+            }
+          ]
+        })
+    })
+
     }
   },
   {
