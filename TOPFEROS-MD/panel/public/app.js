@@ -487,14 +487,6 @@ function normalizeAutomation(settings = {}) {
       data.antiBotFilter
     );
 
-     antiBotMode:
-  [
-    "Groups Only",
-    "Private Messages Only",
-    "Both"
-  ].includes(settings.antiBotMode)
-    ? settings.antiBotMode
-    : "Both",
 
     setFieldValue(
       "antiDeleteMode",
