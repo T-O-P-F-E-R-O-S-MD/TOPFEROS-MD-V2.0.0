@@ -344,6 +344,38 @@ function verifySession(sessionId) {
   };
 }
 
+function authorizePanelSession(sessionId) {
+  const id = normalizeSessionId(sessionId);
+
+  if (!id || !sessionManager.getSession(id)) {
+    return false;
+  }
+
+  const panelSession =
+    getPanelSession(id) ||
+    createPanelSession(id);
+
+  panelSession.verified = true;
+  touchPanelSession(id);
+
+  return true;
+}
+
+function isPanelSessionVerified(sessionId) {
+  const id = normalizeSessionId(sessionId);
+
+  if (!id || !sessionManager.getSession(id)) {
+    return false;
+  }
+
+  const panelSession = getPanelSession(id);
+
+  return Boolean(
+    panelSession &&
+    panelSession.verified === true
+  );
+}
+
  // ============================================================
  // LANGUAGE — TOPFEROS MD V2.0.0
  // ============================================================
