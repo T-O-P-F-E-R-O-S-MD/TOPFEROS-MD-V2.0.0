@@ -1790,6 +1790,71 @@ const isAIForward =
     const parsed =
       parseCommand(messageText, sessionId);
 
+    /*
+    |--------------------------------------------------------------------------
+    | OWNER COMMAND: UNBLOCK SPAM NUMBER
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      parsed?.command === "unblock" &&
+      isOwner(message)
+    ) {
+      const number = parsed.args?.[0];
+
+      if (!number) {
+        await sendText(
+          sock,
+          jid,
+          "❌ Itilizasyon: .unblock 509XXXXXXXX"
+        );
+
+        return {
+          success: false,
+          command: "unblock"
+        };
+      }
+
+      const result = await antiSpam.unblock(
+        sock,
+        number
+      );
+
+      await sendText(
+        sock,
+        jid,
+        result.success
+          ? `✅ Nimewo ${result.number} debloke avèk siksè.`
+          : `❌ Deblokaj la echwe: ${result.reason}`
+      );
+
+      return {
+        success: result.success,
+        command: "unblock"
+      };
+    }
+
+    if (
+      parsed?.command === "blocklist" &&
+      isOwner(message)
+    ) {
+      const numbers = antiSpam.getBlockedNumbers();
+
+      await sendText(
+        sock,
+        jid,
+        numbers.length
+          ? "🚫 *ANTI-SPAM BLOCKLIST*\n\n" +
+            numbers.map((n, i) => `${i + 1}. ${n}`).join("\n")
+          : "✅ Pa gen nimewo nan lis blokaj la."
+      );
+
+      return {
+        success: true,
+        command: "blocklist"
+      };
+    }
+
     if (!parsed) {
       return {
         success: false,
