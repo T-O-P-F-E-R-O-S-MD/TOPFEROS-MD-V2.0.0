@@ -29,6 +29,8 @@ const sessionManager =
 const settingPanel =
   require("./settingPanel");
 
+const antiSpam = require("../services/antiSpam");
+
 // 🦁 TOPFEROS MD V2.0.0
 // VV2 COMMAND CONNECTION
 
@@ -1457,6 +1459,68 @@ async function handleMessage(sock, message, sessionId) {
         ignored: true,
         reason: "Status handled by statusHandler."
       };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ANTI-SPAM PROTECTION
+    |--------------------------------------------------------------------------
+    */
+
+    try {
+      const spamSettings =
+        settingPanel.getSessionSettings(sessionId) || {};
+
+      const spamAutomation =
+        spamSettings.automation || {};
+
+      // Anti-Spam aktive pa defo.
+      // Mete antiSpam: false nan automation pou dezaktive li.
+
+      if (
+        spamAutomation.antiSpam !== false &&
+        !message?.key?.fromMe &&
+        !isFromBot(message, sock) &&
+        !isOwner(message)
+      ) {
+        const spamResult = antiSpam.checkSpam({
+          sessionId,
+          chatJid: jid,
+          senderJid: getSenderJid(message),
+          text: extractMessageText(message.message)
+        });
+
+        if (!spamResult.allowed) {
+          if (spamResult.notify) {
+            try {
+              await sendText(
+                sock,
+                jid,
+                "⚠️ *TOPFEROS MD — ANTI-SPAM*\n\n" +
+                "Ou voye twòp mesaj youn dèyè lòt.\n" +
+                "Tanpri tann kèk segonn anvan ou voye lòt mesaj."
+              );
+            } catch (sendError) {
+              console.error(
+                "[ANTI-SPAM WARNING]",
+                sendError?.message || sendError
+              );
+            }
+          }
+
+          return {
+            success: false,
+            ignored: true,
+            reason: "Anti-Spam: temporary cooldown.",
+            sessionId: sessionId || null
+          };
+        }
+      }
+    } catch (error) {
+      console.error(
+        "[TOPFEROS MD ANTI-SPAM]",
+        error?.stack || error
+      );
     }
 
     /*
