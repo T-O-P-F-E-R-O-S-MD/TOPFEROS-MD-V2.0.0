@@ -284,54 +284,44 @@
     );
   }
 
-  function normalizeAutomation(settings = {}) {
-    return {
-      alwaysOnline:
-        settings.alwaysOnline !== false,
+function normalizeAutomation(settings = {}) {
+  return {
+    alwaysOnline: settings.alwaysOnline !== false,
+    fakeTyping: settings.fakeTyping === true,
+    fakeRecording: settings.fakeRecording === true,
+    autoStatusSeen: settings.autoStatusSeen !== false,
+    autoStatusReply: settings.autoStatusReply !== false,
+    autoStatusReact: settings.autoStatusReact !== false,
 
-      fakeTyping:
-        settings.fakeTyping === true,
+    autoReact: settings.autoReact === true,
+    autoReactMode: settings.autoReactMode || "all",
+    autoReactEmojis: Array.isArray(settings.autoReactEmojis)
+      ? settings.autoReactEmojis
+      : [],
 
-      fakeRecording:
-        settings.fakeRecording === true,
+    antiSpam: settings.antiSpam === true,
+    antiSpamMode: settings.antiSpamMode || "warn",
 
-      autoStatusSeen:
-        settings.autoStatusSeen !== false,
+    antiDelete: settings.antiDelete !== false,
+    antiCall: settings.antiCall === true,
+    antiBug: settings.antiBug === true,
 
-      autoStatusReply:
-        settings.autoStatusReply !== false,
+    antiBotMode: settings.antiBotMode || "both",
+    botDetection: settings.botDetection === true,
+    autoScan: settings.autoScan === true,
+    botScore: settings.botScore === true,
+    adminNotification: settings.adminNotification === true,
+    autoKick: settings.autoKick === true,
+    antiBotFilter: settings.antiBotFilter === true,
+    antiBotAction: settings.antiBotAction || "Delete",
 
-      autoStatusReact:
-        settings.autoStatusReact !== false,
+    antiDeleteMode: settings.antiDeleteMode || "private",
 
-      antiDelete:
-        settings.antiDelete !== false,
-
-      antiCall:
-        settings.antiCall === true,
-
-      antiBug:
-        settings.antiBug === true,
-
-      antiBotFilter:
-        settings.antiBotFilter === true,
-
-      antiDeleteMode:
-        settings.antiDeleteMode ||
-        "private",
-
-      antiBotAction:
-        settings.antiBotAction ||
-        "Delete",
-
-      antiBlockNumbers:
-        Array.isArray(
-          settings.antiBlockNumbers
-        )
-          ? settings.antiBlockNumbers
-          : []
-    };
-  }
+    antiBlockNumbers: Array.isArray(settings.antiBlockNumbers)
+      ? settings.antiBlockNumbers
+      : []
+  };
+}
 
   function normalizeBot(settings = {}) {
     return {
