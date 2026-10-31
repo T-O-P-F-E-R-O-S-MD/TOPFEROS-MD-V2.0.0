@@ -777,6 +777,16 @@ app.get(
         return;
       }
 
+     if (
+  !settingPanel.isPanelSessionVerified(sessionId)
+) {
+  return sendError(
+    res,
+    401,
+    "Please verify your settings access first."
+  );
+}
+
       if (
         typeof settingPanel.getPanelData !==
         "function"
