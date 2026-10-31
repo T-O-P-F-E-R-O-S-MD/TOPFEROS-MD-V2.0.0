@@ -78,7 +78,7 @@ function buildMenu(message) {
 │ 📞 Anti Call
 │ 🛡️ Anti Delete
 │ 🤖 Anti Bot Protection
-│ 👁️ ViewOnce / VV2
+│ 👁️ ViewOnce / VV2 & VVV
 │ 👥 Group Management
 │ 🕦 Group Automation
 │ 🧠 Smart AI & Auto Chat
