@@ -497,6 +497,15 @@
       data.antiBotFilter
     );
 
+     antiBotMode:
+  [
+    "Groups Only",
+    "Private Messages Only",
+    "Both"
+  ].includes(settings.antiBotMode)
+    ? settings.antiBotMode
+    : "Both",
+
     setFieldValue(
       "antiDeleteMode",
       data.antiDeleteMode
@@ -506,6 +515,11 @@
       "antiBotAction",
       data.antiBotAction
     );
+
+    setFieldValue(
+  "antiBotMode",
+  data.antiBotMode
+);
 
     const numbers =
       Array.isArray(
@@ -701,6 +715,12 @@
             "antiBotFilter"
           )
         ),
+
+      antiBotMode:
+      getFieldValue(
+        "antiBotMode",
+           "Both"
+         ),
 
       antiDeleteMode:
         getFieldValue(
