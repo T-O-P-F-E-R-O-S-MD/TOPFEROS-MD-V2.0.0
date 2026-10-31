@@ -1,1015 +1,616 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TOPFEROS MD V2.0.0 — Settings</title>
-
-  <meta
-    name="description"
-    content="TOPFEROS MD V2.0.0 Settings Panel"
-  >
-
-  <link
-    rel="stylesheet"
-    href="/style.css"
-  >
+  <meta name="description" content="TOPFEROS MD V2.0.0 Settings Panel">
+  <link rel="stylesheet" href="/style.css">
 </head>
-
 <body>
 
 <div class="panel-background"></div>
 
-  <main class="panel-page">
+<main class="panel-page">
+<section class="panel-card">
 
-    <section class="panel-card">
+  <!-- LOGO -->
+  <div class="panel-logo-wrapper">
+    <img
+      id="panelLogo"
+      class="panel-logo"
+      src="/assets/logo.png"
+      alt="TOPFEROS MD"
+      onerror="this.style.display='none'"
+    >
+  </div>
 
-      <!-- LOGO -->
-      <div class="panel-logo-wrapper">
-        <img
-          id="panelLogo"
-          class="panel-logo"
-          src="/assets/logo.png"
-          alt="TOPFEROS MD"
-          onerror="this.style.display='none'"
+  <!-- HEADER -->
+  <header class="panel-header">
+    <h1 data-i18n="panel_title">
+      🦁 TOPFEROS MD PANEL SETTINGS 🐑
+    </h1>
+
+    <p class="panel-version">V2.0.0</p>
+
+    <div
+      id="connectionStatus"
+      class="connection-status disconnected"
+      data-connection-status
+      data-i18n="disconnected"
+    >
+      🔴 DISCONNECTED
+    </div>
+  </header>
+
+  <!-- FIRST INTERFACE: LANGUAGE -->
+  <section class="panel-section">
+    <div class="section-title" data-i18n="language_title">
+      🌐 LANGUAGE
+    </div>
+
+    <div class="field-group">
+      <label for="panelLanguage" data-i18n="panel_language">
+        PANEL LANGUAGE
+      </label>
+
+      <select id="panelLanguage" data-language-select>
+        <option value="en">🇺🇸 English</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="es_do">🇩🇴 Español Dominicano</option>
+        <option value="pt">🇵🇹 Português</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="ht">🇭🇹 Kreyòl Ayisyen</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- FIRST INTERFACE: VERIFICATION -->
+  <section class="panel-section" id="verificationSection">
+    <div class="section-title" data-i18n="session_verification">
+      🔐 SESSION VERIFICATION
+    </div>
+
+    <div class="field-group">
+      <label for="ownerNumber" data-i18n="number">
+        NUMBER
+      </label>
+
+      <input
+        id="ownerNumber"
+        type="text"
+        inputmode="tel"
+        autocomplete="off"
+        placeholder="WhatsApp number"
+      >
+    </div>
+
+    <div class="field-group">
+      <label for="verificationCode" data-i18n="code">
+        CODE
+      </label>
+
+      <input
+        id="verificationCode"
+        type="text"
+        autocomplete="off"
+        placeholder="Verification code"
+      >
+    </div>
+
+    <button
+      type="button"
+      class="panel-button primary"
+      id="verifyButton"
+      data-i18n="verify"
+    >
+      🔐 VERIFY
+    </button>
+  </section>
+
+  <!-- INTRODUCTION: FIRST INTERFACE ONLY -->
+  <section class="panel-section" id="panelIntroduction">
+    <div class="section-title">
+      🦁 WELCOME TO TOPFEROS MD
+    </div>
+
+    <p class="panel-note">
+      Welcome to the TOPFEROS MD Settings Panel.
+      This panel allows you to manage and customize your
+      bot settings. Enter your WhatsApp number and
+      verification code to access the settings.
+    </p>
+  </section>
+
+  <!-- SECOND INTERFACE: HIDDEN UNTIL VERIFIED -->
+  <div id="settingsContent" hidden>
+
+    <!-- BASIC INFO -->
+    <section class="panel-section">
+      <div class="section-title" data-i18n="basic_info">
+        ⚡ INFO BASIC
+      </div>
+
+      <div class="field-group">
+        <label for="botName">BOT NAME</label>
+        <input
+          id="botName"
+          type="text"
+          value="TOPFEROS MD"
+          autocomplete="off"
         >
       </div>
 
-
-      <!-- HEADER -->
-      <header class="panel-header">
-
-        
-        <h1 data-i18n="panel_title">
-          🦁 TOPFEROS MD PANEL SETTINGS 🐑
-        </h1>
-
-        <p class="panel-version">
-          V2.0.0
-        </p>
-
-        
-        <div
-          id="connectionStatus"
-          class="connection-status disconnected"
-          data-connection-status
-          data-i18n="disconnected"
+      <div class="field-group">
+        <label for="location" data-i18n="location">LOCATION</label>
+        <input
+          id="location"
+          type="text"
+          value="HAÏTI"
+          autocomplete="off"
         >
-          🔴 DISCONNECTED
-        </div>
+      </div>
 
-      </header>
-
-
-      <!-- LANGUAGE -->
-      <section class="panel-section">
-
-        
-        <div class="section-title" data-i18n="language_title">
-          🌐 LANGUAGE
-        </div>
-
-        <div class="field-group">
-
-          
-          <label for="panelLanguage" data-i18n="panel_language">
-            PANEL LANGUAGE
-          </label>
-
-          <select
-            id="panelLanguage"
-            data-language-select
-          >
-            <option value="en">
-              🇺🇸 English
-            </option>
-
-            <option value="fr">
-              🇫🇷 Français
-            </option>
-
-            <option value="es">
-              🇪🇸 Español
-            </option>
-
-            <option value="es_do">
-              🇩🇴 Español Dominicano
-            </option>
-
-            <option value="pt">
-              🇵🇹 Português
-            </option>
-
-            <option value="zh">
-              🇨🇳 中文
-            </option>
-
-            <option value="ht">
-              🇭🇹 Kreyòl Ayisyen
-            </option>
-          </select>
-
-        </div>
-
-      </section>
-
-
-      <!-- SESSION VERIFICATION -->
-      <section class="panel-section">
-
-        
-        <div class="section-title" data-i18n="session_verification">
-          🔐 SESSION VERIFICATION
-        </div>
-
-        <div class="field-group">
-
-          
-          <label for="ownerNumber" data-i18n="number">
-            NUMBER
-          </label>
-
-          <input
-            id="ownerNumber"
-            type="text"
-            inputmode="tel"
-            autocomplete="off"
-            placeholder="WhatsApp number"
-          >
-
-        </div>
-
-        <div class="field-group">
-
-          
-          <label for="verificationCode" data-i18n="code">
-            CODE
-          </label>
-
-          <input
-            id="verificationCode"
-            type="text"
-            autocomplete="off"
-            placeholder="Verification code"
-          >
-
-        </div>
-
-        
-        <button
-          type="button"
-          class="panel-button primary"
-          id="verifyButton"
-          data-i18n="verify"
+      <div class="field-group">
+        <label for="age" data-i18n="age">AGE</label>
+        <input
+          id="age"
+          type="number"
+          min="1"
+          value="20"
         >
-          🔐 VERIFY
-        </button>
-
-      </section>
-
-
-      <div id="settingsContent" hidden>
-
-
-      <!-- INFO BASIC -->
-      <section class="panel-section">
-
-        
-<div class="section-title" data-i18n="basic_info">⚡ INFO BASIC</div>
-
-        <div class="field-group">
-
-          
-<label for="location" data-i18n="location">LOCATION</label>
-
-          <input
-            id="botName"
-            type="text"
-            value="TOPFEROS MD"
-            autocomplete="off"
-          >
-          </div>
-        
-        <div class="field-group">
-          <label for="botName">BOT NAME</label>
-          <input
-            id="botName"
-            type="text"
-            value="TOPFEROS MD"
-            autocomplete="off"
-          >
-        </div>
-
-        <div class="field-group">
-          <label for="location">LOCATION</label>
-          <input
-            id="location"
-            type="text"
-            value="HAÏTI"
-            autocomplete="off"
-          >
-        </div>
-
-
-        <div class="field-group">
-
-          
-
-<div class="field-group">
-  <label for="age" data-i18n="age">
-    AGE
-  </label>
-
-  <input
-    id="age"
-    type="number"
-    min="1"
-    value="20"
-  >
-</div>
-
-        </div>
-
-        <div class="field-group">
-
-          <label for="prefix">
-            PREFIX
-          </label>
-
-          <input
-            id="prefix"
-            type="text"
-            value="."
-            maxlength="5"
-          >
-
-        </div>
-
-        <div class="field-group">
-
-          <label for="footer">
-            FOOTER
-          </label>
-
-          <input
-            id="footer"
-            type="text"
-            value="🦁 TECH BY TOPFEROS MD 🐑"
-            autocomplete="off"
-          >
-
-        </div>
-
-        <div class="field-group">
-
-          
-<label for="mode" data-i18n="mode">MODE</label>
-
-          <select id="mode">
-
-            <option value="Public">
-              Public
-            </option>
-
-            <option value="Privé">
-              Privé
-            </option>
-
-            <option value="Group">
-              Group
-            </option>
-
-          </select>
-
-        </div>
-
-        <!-- ANTI-BOT MODE -->
-        <div class="field-group">
-
-          <label for="antiBotMode">
-            ANTI-BOT MODE
-          </label>
-
-          <select id="antiBotMode">
-
-            <option value="groups">
-              Groups Only
-            </option>
-
-            <option value="private">
-              Private Messages Only
-            </option>
-
-            <option value="both" selected>
-              Both
-            </option>
-
-          </select>
-
-        </div>
-
-        <div class="field-group">
-
-          <label for="botLanguage">
-            BOT LANGUAGE
-          </label>
-
-          <select id="botLanguage">
-
-            <option value="en">
-              🇺🇸 English
-            </option>
-
-            <option value="fr">
-              🇫🇷 Français
-            </option>
-
-            <option value="es">
-              🇪🇸 Español
-            </option>
-
-            <option value="es_do">
-              🇩🇴 Español Dominicano
-            </option>
-
-            <option value="pt">
-              🇵🇹 Português
-            </option>
-
-            <option value="zh">
-              🇨🇳 中文
-            </option>
-
-            <option value="ht">
-              🇭🇹 Kreyòl Ayisyen
-            </option>
-
-          </select>
-
-        </div>
-
-      </section>      <!-- AUTOMATISATION -->
-      <section class="panel-section">
-
-        <div class="section-title">
-          ⚡ AUTOMATISATION
-        </div>
-
-
-        <!-- ALWAYS ONLINE -->
-        <div class="switch-row">
-
-          <span>
-            Always Online
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="alwaysOnline"
-              type="checkbox"
-              checked
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-
-        <!-- FAKE TYPING -->
-        <div class="switch-row">
-
-          <span>
-            Fake Typing
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="fakeTyping"
-              type="checkbox"
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-
-        <!-- FAKE RECORDING -->
-        <div class="switch-row">
-
-          <span>
-            Fake Recording
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="fakeRecording"
-              type="checkbox"
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-
-        <!-- STATUS SEEN -->
-        <div class="switch-row">
-
-          <span>
-            Auto Status Seen
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="autoStatusSeen"
-              type="checkbox"
-              checked
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-
-        <!-- STATUS REPLY -->
-        <div class="switch-row">
-
-          <span>
-            Auto Status Reply
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="autoStatusReply"
-              type="checkbox"
-              checked
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-
-        <!-- STATUS REACT -->
-        <div class="switch-row">
-
-          <span>
-            Auto Status React
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="autoStatusReact"
-              type="checkbox"
-              checked
-            >
-
-            <span class="slider"></span>
-
-          </label>
-<!-- AUTO REACT -->
-<div class="switch-row">
-  <span>Auto React</span>
-  <label class="switch">
-    <input id="autoReact" type="checkbox">
-    <span class="slider"></span>
-  </label>
-</div>
-
-<div class="field-group">
-  <label for="autoReactMode">AUTO REACT MODE</label>
-  <select id="autoReactMode">
-    <option value="all">Tout mesaj</option>
-    <option value="private">Mesaj prive sèlman</option>
-    <option value="group">Mesaj gwoup sèlman</option>
-  </select>
-</div>
-
-<div class="field-group">
-  <label for="autoReactEmojis">REACT EMOJIS</label>
-  <textarea
-    id="autoReactEmojis"
-    rows="3"
-    placeholder="Mete emoji ou vle itilize yo"
-  >🤣 🫵 ♥️ 🩵 🫂 🤳 ✍️ 🛌 🌹 🌌 🌑 🪔 🎁 ⚽ 🏆 🛹 🥋 🎧 🎞️ 🎙️ 💎 🕯️ ❓ ❗ 🈶 👁️ 💯 🦻 🌝 ✔️ 🤩 🥳 🤪 🥹 😛 🤗 🫡 💫 💥</textarea>
-  <small>Maximum 40 emojis. Limit sa a obligatwa.</small>
-</div>
-
-        </div>
-<!-- ANTI SPAM -->
-<div class="switch-row">
-  <span>Anti Spam</span>
-  <label class="switch">
-    <input id="antiSpam" type="checkbox">
-    <span class="slider"></span>
-  </label>
-</div>
-
-<div class="field-group">
-  <label for="antiSpamMode">ANTI SPAM MODE</label>
-  <select id="antiSpamMode">
-    <option value="warn">Warn</option>
-    <option value="delete">Delete</option>
-    <option value="kick">Kick</option>
-    <option value="warn_delete">Warn + Delete</option>
-  </select>
-</div>
-
-        <!-- ANTI DELETE -->
-        <div class="switch-row">
-
-          <span>
-            Anti Delete
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="antiDelete"
-              type="checkbox"
-              checked
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-
-        <div class="field-group">
-
-          <label for="antiDeleteMode">
-            ANTI DELETE MODE
-          </label>
-
-          <select id="antiDeleteMode">
-
-            <option value="private">
-              An privé
-            </option>
-
-            <option value="same_chat">
-              Nan menm chat la
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- ANTI CALL -->
-        <div class="switch-row">
-
-          <span>
-            Anti-Call
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="antiCall"
-              type="checkbox"
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-
-        <!-- ANTI BUG -->
-        <div class="switch-row">
-
-          <span>
-            Anti-Bug Protection
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="antiBug"
-              type="checkbox"
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-<!-- ANTI-BOT SYSTEM -->
-<div class="section-title">
-  🤖 ANTI-BOT SYSTEM
-</div>
-
-<div class="switch-row">
-  <span>Bot Detection</span>
-  <label class="switch">
-    <input id="botDetection" type="checkbox">
-    <span class="slider"></span>
-  </label>
-</div>
-
-<div class="switch-row">
-  <span>Auto Scan</span>
-  <label class="switch">
-    <input id="autoScan" type="checkbox">
-    <span class="slider"></span>
-  </label>
-</div>
-
-<div class="switch-row">
-  <span>Bot Score</span>
-  <label class="switch">
-    <input id="botScore" type="checkbox">
-    <span class="slider"></span>
-  </label>
-</div>
-
-<div class="switch-row">
-  <span>Admin Notification</span>
-  <label class="switch">
-    <input id="adminNotification" type="checkbox">
-    <span class="slider"></span>
-  </label>
-</div>
-
-<div class="switch-row">
-  <span>Auto Kick</span>
-  <label class="switch">
-    <input id="autoKick" type="checkbox">
-    <span class="slider"></span>
-  </label>
-</div>
-
-        <!-- ANTI BOT FILTER -->
-        <div class="switch-row">
-
-          <span>
-            Anti-Bot Filtre
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="antiBotFilter"
-              type="checkbox"
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-     <select id="antiBotAction">
-  <option value="Delete" selected>
-    Delete
-  </option>
-  <option value="Warn">Warn</option>
-  <option value="Block">Block</option>
-</select>
-
-            <option value="Block">
-              Block
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- ANTI BLOCK -->
-        <div class="field-group">
-
-          <label for="antiBlockNumbers">
-            ANTI-BLOCK LIST
-          </label>
-
-          <textarea
-            id="antiBlockNumbers"
-            rows="5"
-            placeholder="One number per line"
-          ></textarea>
-
-        </div>
-
-      </section>      <!-- GROUP AUTOMATISATIONS -->
-      <section class="panel-section">
-
-        <div class="section-title">
-          🕦 GROUPE AUTOMATISATIONS
-        </div>
-
-
-        <div class="switch-row">
-
-          <span>
-            Group Automation
-          </span>
-
-          <label class="switch">
-
-            <input
-              id="groupAutomationEnabled"
-              type="checkbox"
-            >
-
-            <span class="slider"></span>
-
-          </label>
-
-        </div>
-
-
-        <div class="field-group">
-
-          <label for="groupGid">
-            GROUP GID / ADMIN LINK
-          </label>
-
-          <input
-            id="groupGid"
-            type="text"
-            autocomplete="off"
-            placeholder="Group ID or admin link"
-          >
-
-        </div>
-
-
-        <div class="field-group">
-
-          <label for="timezone">
-            TIME ZONE
-          </label>
-
-          <select id="timezone">
-
-            <option value="Atlantic/Port-au-Prince">
-              l'Atlantique UTC-04
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="field-row">
-
-          <div class="field-group">
-
-            <label for="closeTime">
-              CLOSE TIME
-            </label>
-
-            <input
-              id="closeTime"
-              type="time"
-              value="15:00"
-            >
-
-          </div>
-
-
-          <div class="field-group">
-
-            <label for="openTime">
-              OPEN TIME
-            </label>
-
-            <input
-              id="openTime"
-              type="time"
-              value="06:00"
-            >
-
-          </div>
-
-        </div>
-
-
-        <div class="field-group">
-
-          <label for="groupPrinciples">
-            GROUP BIO / PRINCIPLES
-          </label>
-
-          <textarea
-            id="groupPrinciples"
-            rows="6"
-            placeholder="Group rules and principles"
-          ></textarea>
-
-        </div>
-
-
-        <div class="field-group">
-
-          <label for="warningLimit">
-            VIOLATION LIMIT
-          </label>
-
-          <input
-            id="warningLimit"
-            type="number"
-            min="1"
-            value="3"
-          >
-
-          <small>
-            1️⃣ WARNING → 2️⃣ WARNING → 3️⃣ REMOVE
-          </small>
-
-        </div>
-
-      </section>
-
-
-      <!-- BOT LOGO -->
-      <section class="panel-section">
-
-        <div class="section-title">
-          🖼️ BOT LOGO
-        </div>
-
-        <div class="field-group">
-
-          <label for="logoUrl">
-            LOGO LINK
-          </label>
-
-          <input
-            id="logoUrl"
-            type="url"
-            placeholder="https://..."
-            autocomplete="off"
-          >
-
-        </div>
-
-        <div class="field-group">
-
-          <label for="logoFile">
-            UPLOAD IMAGE
-          </label>
-
-          <input
-            id="logoFile"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-          >
-
-        </div>
-
-        <p class="panel-note">
-          Supported formats: PNG, JPG and WEBP.
-        </p>
-
-      </section>
-
-
-      <!-- SAVE -->
-      <section class="panel-actions">
-
-        <button
-          type="button"
-          class="panel-button save"
-          data-action="save"
-          id="saveButton"
+      </div>
+
+      <div class="field-group">
+        <label for="prefix">PREFIX</label>
+        <input
+          id="prefix"
+          type="text"
+          value="."
+          maxlength="5"
         >
-          💾 SAVE
-        </button>
+      </div>
 
-      </section>
+      <div class="field-group">
+        <label for="footer">FOOTER</label>
+        <input
+          id="footer"
+          type="text"
+          value="🦁TECH BY TOPFEROS MD🐑"
+          autocomplete="off"
+        >
+      </div>
 
+      <div class="field-group">
+        <label for="mode" data-i18n="mode">MODE</label>
+        <select id="mode">
+          <option value="Public">Public</option>
+          <option value="Privé">Privé</option>
+          <option value="Group">Group</option>
+        </select>
+      </div>
 
-      </div>      <!-- FOOTER -->
-      <footer class="panel-footer">
-
-        🦁 TECH BY TOPFEROS MD 🐑
-
-      </footer>
-
+      <div class="field-group">
+        <label for="botLanguage">BOT LANGUAGE</label>
+        <select id="botLanguage">
+          <option value="en">🇺🇸 English</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="es_do">🇩🇴 Español Dominicano</option>
+          <option value="pt">🇵🇹 Português</option>
+          <option value="zh">🇨🇳 中文</option>
+          <option value="ht">🇭🇹 Kreyòl Ayisyen</option>
+        </select>
+      </div>
     </section>
 
-  </main>
+    <!-- AUTOMATISATION -->
+    <section class="panel-section">
+      <div class="section-title">⚡ AUTOMATISATION</div>
 
+      <div class="switch-row">
+        <span>Always Online</span>
+        <label class="switch">
+          <input id="alwaysOnline" type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
 
-  <!-- APP -->
-  <script src="/app.js"></script>
+      <div class="switch-row">
+        <span>Fake Typing</span>
+        <label class="switch">
+          <input id="fakeTyping" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-  <script>
-    /*
-     * Verify the owner and reveal settings only after
-     * successful verification.
-     *
-     * Session credentials remain managed by app.js.
-     * No visible SESSION ID field is required.
-     */
+      <div class="switch-row">
+        <span>Fake Recording</span>
+        <label class="switch">
+          <input id="fakeRecording" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-    document.addEventListener("DOMContentLoaded", () => {
+      <div class="switch-row">
+        <span>Auto Status Seen</span>
+        <label class="switch">
+          <input id="autoStatusSeen" type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
 
-      const verifyButton =
-        document.getElementById("verifyButton");
+      <div class="switch-row">
+        <span>Auto Status Reply</span>
+        <label class="switch">
+          <input id="autoStatusReply" type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
 
-      const numberInput =
-        document.getElementById("ownerNumber");
+      <div class="switch-row">
+        <span>Auto Status React</span>
+        <label class="switch">
+          <input id="autoStatusReact" type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
 
-      const codeInput =
-        document.getElementById("verificationCode");
+      <!-- AUTO REACT -->
+      <div class="switch-row">
+        <span>Auto React</span>
+        <label class="switch">
+          <input id="autoReact" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-      const verificationSection =
-        verifyButton?.closest(".panel-section");
+      <div class="field-group">
+        <label for="autoReactMode">AUTO REACT MODE</label>
+        <select id="autoReactMode">
+          <option value="all">Tout mesaj</option>
+          <option value="private">Mesaj prive sèlman</option>
+          <option value="group">Mesaj gwoup sèlman</option>
+        </select>
+      </div>
 
-      const settingsContent =
-        document.getElementById("settingsContent");
+      <div class="field-group">
+        <label for="autoReactEmojis">REACT EMOJIS</label>
+        <textarea id="autoReactEmojis" rows="3" placeholder="Mete emoji ou vle itilize yo">🤣 🫵 ♥️ 🩵 🫂 🤳 ✍️ 🛌 🌹 🌌 🌑 🪔 🎁 ⚽ 🏆 🛹 🥋 🎧 🎞️ 🎙️ 💎 🕯️ ❓ ❗ 🈶 👁️ 💯 🦻 🌝 ✔️ 🤩 🥳 🤪 🥹 😛 🤗 🫡 💫 💥</textarea>
+        <small>Maximum 40 emojis. Limit sa a obligatwa.</small>
+      </div>
 
-      if (!verifyButton) return;
+      <!-- ANTI SPAM -->
+      <div class="switch-row">
+        <span>Anti Spam</span>
+        <label class="switch">
+          <input id="antiSpam" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-      verifyButton.addEventListener("click", async () => {
+      <div class="field-group">
+        <label for="antiSpamMode">ANTI SPAM MODE</label>
+        <select id="antiSpamMode">
+          <option value="warn">Warn</option>
+          <option value="delete">Delete</option>
+          <option value="kick">Kick</option>
+          <option value="warn_delete">Warn + Delete</option>
+        </select>
+      </div>
 
-        const number =
-          numberInput?.value?.trim();
+      <!-- ANTI DELETE -->
+      <div class="switch-row">
+        <span>Anti Delete</span>
+        <label class="switch">
+          <input id="antiDelete" type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
 
-        const code =
-          codeInput?.value?.trim();
+      <div class="field-group">
+        <label for="antiDeleteMode">ANTI DELETE MODE</label>
+        <select id="antiDeleteMode">
+          <option value="private">An privé</option>
+          <option value="same_chat">Nan menm chat la</option>
+        </select>
+      </div>
 
-        if (!number || !code) {
-          window.TOPFEROS?.notify(
-            "NUMBER and CODE are required.",
-            "error"
-          );
+      <!-- ANTI CALL -->
+      <div class="switch-row">
+        <span>Anti-Call</span>
+        <label class="switch">
+          <input id="antiCall" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-          return;
-        }
+      <!-- ANTI BUG -->
+      <div class="switch-row">
+        <span>Anti-Bug Protection</span>
+        <label class="switch">
+          <input id="antiBug" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
 
-        verifyButton.disabled = true;
-        verifyButton.textContent = "VERIFYING...";
+    <!-- ANTI-BOT SYSTEM -->
+    <section class="panel-section">
+      <div class="section-title">🤖 ANTI-BOT SYSTEM</div>
 
-        try {
+      <div class="field-group">
+        <label for="antiBotMode">ANTI-BOT MODE</label>
+        <select id="antiBotMode">
+          <option value="groups">Groups Only</option>
+          <option value="private">Private Messages Only</option>
+          <option value="both" selected>Both</option>
+        </select>
+      </div>
 
-          const success =
-            await window.TOPFEROS.verifyNumberAndCode(
-              number,
-              code
-            );
+      <div class="switch-row">
+        <span>Bot Detection</span>
+        <label class="switch">
+          <input id="botDetection" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-          if (!success) return;
+      <div class="switch-row">
+        <span>Auto Scan</span>
+        <label class="switch">
+          <input id="autoScan" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-          await window.TOPFEROS.loadSettings();
+      <div class="switch-row">
+        <span>Bot Score</span>
+        <label class="switch">
+          <input id="botScore" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-if (settingsContent) {
-  settingsContent.hidden = false;
-}
+      <div class="switch-row">
+        <span>Admin Notification</span>
+        <label class="switch">
+          <input id="adminNotification" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-if (verificationSection) {
-  verificationSection.hidden = true;
-}
+      <div class="switch-row">
+        <span>Auto Kick</span>
+        <label class="switch">
+          <input id="autoKick" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-          if (settingsContent) {
-            settingsContent.hidden = false;
-          }
+      <div class="switch-row">
+        <span>Anti-Bot Filter</span>
+        <label class="switch">
+          <input id="antiBotFilter" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-        } catch (error) {
+      <div class="field-group">
+        <label for="antiBotAction">ANTI-BOT ACTION</label>
+        <select id="antiBotAction">
+          <option value="Delete" selected>Delete</option>
+          <option value="Warn">Warn</option>
+          <option value="Block">Block</option>
+        </select>
+      </div>
 
-          window.TOPFEROS?.notify(
-            error?.message || "Verification failed.",
-            "error"
-          );
+      <div class="field-group">
+        <label for="antiBlockNumbers">ANTI-BLOCK LIST</label>
+        <textarea
+          id="antiBlockNumbers"
+          rows="5"
+          placeholder="One number per line"
+        ></textarea>
+      </div>
+    </section>
 
-        } finally {
+    <!-- GROUP AUTOMATIONS -->
+    <section class="panel-section">
+      <div class="section-title">🕦 GROUPE AUTOMATISATIONS</div>
 
-          verifyButton.disabled = false;
-          verifyButton.textContent = "🔐 VERIFY";
+      <div class="switch-row">
+        <span>Group Automation</span>
+        <label class="switch">
+          <input id="groupAutomationEnabled" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-        }
+      <div class="field-group">
+        <label for="groupGid">GROUP GID / ADMIN LINK</label>
+        <input
+          id="groupGid"
+          type="text"
+          autocomplete="off"
+          placeholder="Group ID or admin link"
+        >
+      </div>
 
-      });
+      <div class="field-group">
+        <label for="timezone">TIME ZONE</label>
+        <select id="timezone">
+          <option value="Atlantic/Port-au-Prince">
+            l'Atlantique UTC-04
+          </option>
+        </select>
+      </div>
 
-    });
-  </script>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="closeTime">CLOSE TIME</label>
+          <input id="closeTime" type="time" value="15:00">
+        </div>
+
+        <div class="field-group">
+          <label for="openTime">OPEN TIME</label>
+          <input id="openTime" type="time" value="06:00">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="groupPrinciples">GROUP BIO / PRINCIPLES</label>
+        <textarea
+          id="groupPrinciples"
+          rows="6"
+          placeholder="Group rules and principles"
+        ></textarea>
+      </div>
+
+      <div class="field-group">
+        <label for="warningLimit">VIOLATION LIMIT</label>
+        <input
+          id="warningLimit"
+          type="number"
+          min="1"
+          value="3"
+        >
+        <small>1️⃣ WARNING → 2️⃣ WARNING → 3️⃣ REMOVE</small>
+      </div>
+    </section>
+
+    <!-- BOT LOGO -->
+    <section class="panel-section">
+      <div class="section-title">🖼️ BOT LOGO</div>
+
+      <div class="field-group">
+        <label for="logoUrl">LOGO LINK</label>
+        <input
+          id="logoUrl"
+          type="url"
+          placeholder="https://..."
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="field-group">
+        <label for="logoFile">UPLOAD IMAGE</label>
+        <input
+          id="logoFile"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+        >
+      </div>
+
+      <p class="panel-note">
+        Supported formats: PNG, JPG and WEBP.
+      </p>
+    </section>
+
+    <!-- SAVE -->
+    <section class="panel-actions">
+      <button
+        type="button"
+        class="panel-button save"
+        data-action="save"
+        id="saveButton"
+      >
+        💾 SAVE
+      </button>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="panel-footer">
+    🦁TECH BY TOPFEROS MD🐑
+  </footer>
+
+</section>
+</main>
+
+<!-- APP -->
+<script src="/app.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const verifyButton = document.getElementById("verifyButton");
+  const numberInput = document.getElementById("ownerNumber");
+  const codeInput = document.getElementById("verificationCode");
+
+  const verificationSection =
+    document.getElementById("verificationSection");
+
+  const panelIntroduction =
+    document.getElementById("panelIntroduction");
+
+  const settingsContent =
+    document.getElementById("settingsContent");
+
+  if (!verifyButton) return;
+
+  verifyButton.addEventListener("click", async () => {
+    const number = numberInput?.value?.trim();
+    const code = codeInput?.value?.trim();
+
+    if (!number || !code) {
+      window.TOPFEROS?.notify(
+        "NUMBER and CODE are required.",
+        "error"
+      );
+      return;
+    }
+
+    if (
+      !window.TOPFEROS ||
+      typeof window.TOPFEROS.verifyNumberAndCode !== "function"
+    ) {
+      window.TOPFEROS?.notify(
+        "Verification service is unavailable.",
+        "error"
+      );
+      return;
+    }
+
+    verifyButton.disabled = true;
+    verifyButton.textContent = "VERIFYING...";
+
+    try {
+      const success =
+        await window.TOPFEROS.verifyNumberAndCode(number, code);
+
+      if (!success) return;
+
+      if (typeof window.TOPFEROS.loadSettings === "function") {
+        await window.TOPFEROS.loadSettings();
+      }
+
+      if (settingsContent) {
+        settingsContent.hidden = false;
+      }
+
+      if (verificationSection) {
+        verificationSection.hidden = true;
+      }
+
+      if (panelIntroduction) {
+        panelIntroduction.hidden = true;
+      }
+
+    } catch (error) {
+      window.TOPFEROS?.notify(
+        error?.message || "Verification failed.",
+        "error"
+      );
+    } finally {
+      verifyButton.disabled = false;
+      verifyButton.textContent = "🔐 VERIFY";
+    }
+  });
+});
+</script>
 
 </body>
 </html>
