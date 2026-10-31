@@ -554,16 +554,6 @@ if (!session) {
   );
 }
 
-      const session = getSession(sessionId);
-
-      if (!session) {
-        return sendError(
-          res,
-          404,
-          "No session found for this number."
-        );
-      }
-
       const actualNumber = cleanNumber(
         session.number || sessionId
       );
