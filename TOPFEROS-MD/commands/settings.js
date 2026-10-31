@@ -251,7 +251,7 @@ async function settingsCommand(ctx) {
     await sendOverviewWithLogo(ctx, overview);
 
 // ============================================================
-// MESSAGE 2: SETTINGS LOGIN + COPY CODE BUTTON
+// MESSAGE 2: SETTINGS LOGIN + ACCESS CODE
 // ============================================================
 
 const accessCode = String(code).toUpperCase();
@@ -273,45 +273,60 @@ const loginText = [
   "🦁 *TECH BY TOPFEROS MD* 🐑"
 ].join("\n");
 
-const copyMessage = generateWAMessageFromContent(
-  ctx.jid,
-  proto.Message.create({
-    interactiveMessage:
-      proto.Message.InteractiveMessage.create({
-        body: proto.Message.InteractiveMessage.Body.create({
-          text: loginText
-        }),
+// Voye kòd la kòm mesaj nòmal an premye.
+await ctx.send(loginText);
 
-        footer: proto.Message.InteractiveMessage.Footer.create({
-          text: "🦁 TECH BY TOPFEROS MD 🐑"
-        }),
+// Eseye voye bouton Copy Code la apa.
+try {
+  const copyMessage = generateWAMessageFromContent(
+    ctx.jid,
+    {
+      viewOnceMessage: {
+        message: {
+          interactiveMessage:
+            proto.Message.InteractiveMessage.create({
+              body: proto.Message.InteractiveMessage.Body.create({
+                text: "📋 Peze bouton an pou kopye kòd Settings la."
+              }),
 
-        nativeFlowMessage:
-          proto.Message.InteractiveMessage.NativeFlowMessage.create({
-            buttons: [
-              {
-                name: "cta_copy",
-                buttonParamsJson: JSON.stringify({
-                  display_text: "📋 Copy Settings Code",
-                  copy_code: accessCode
+              footer: proto.Message.InteractiveMessage.Footer.create({
+                text: "🦁 TECH BY TOPFEROS MD 🐑"
+              }),
+
+              nativeFlowMessage:
+                proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                  buttons: [
+                    {
+                      name: "cta_copy",
+                      buttonParamsJson: JSON.stringify({
+                        display_text: "📋 Copy Settings Code",
+                        copy_code: accessCode
+                      })
+                    }
+                  ]
                 })
-              }
-            ]
-          })
-      })
-  }),
-  {
-    userJid: ctx.sock.user.id
-  }
-);
+            })
+        }
+      }
+    },
+    {
+      userJid: ctx.sock.user.id
+    }
+  );
 
-await ctx.sock.relayMessage(
-  ctx.jid,
-  copyMessage.message,
-  {
-    messageId: copyMessage.key.id
-  }
-);
+  await ctx.sock.relayMessage(
+    ctx.jid,
+    copyMessage.message,
+    {
+      messageId: copyMessage.key.id
+    }
+  );
+} catch (copyError) {
+  console.error(
+    "[SETTINGS COPY BUTTON ERROR]",
+    copyError?.stack || copyError
+  );
+}
 
 // ============================================================
 // MESSAGE 3: SETTINGS INSTRUCTIONS
