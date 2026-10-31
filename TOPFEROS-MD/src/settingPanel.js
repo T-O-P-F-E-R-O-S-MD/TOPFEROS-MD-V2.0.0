@@ -1155,6 +1155,9 @@ module.exports = {
 
   verifySession,
 
+  authorizePanelSession,
+  isPanelSessionVerified,
+
   setPanelLanguage,
   getPanelLanguage,
   getLanguages,
