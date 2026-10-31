@@ -1,5 +1,10 @@
 "use strict";
 
+const {
+  generateWAMessageFromContent,
+  proto
+} = require("@whiskeysockets/baileys");
+
 const fs = require("fs");
 const path = require("path");
 
@@ -245,67 +250,91 @@ async function settingsCommand(ctx) {
 
     await sendOverviewWithLogo(ctx, overview);
 
-    // Message 2: Settings login with native Copy Code button.
-    const accessCode = String(code).toUpperCase();
+// ============================================================
+// MESSAGE 2: SETTINGS LOGIN + COPY CODE BUTTON
+// ============================================================
 
-    const loginText = [
-      "🦁✧･ﾟ: *✧･ﾟ:* 🔐 *TOPFEROS MD SETTINGS LOGIN* 🔐 *:･ﾟ✧*:･ﾟ✧🐑",
-      "",
-      "📱 *Bot Session Number*",
-      `╰┈➤ ${sessionId}`,
-      "",
-      "🔐 *6-Character Settings Code*",
-      `╰┈➤ ${accessCode}`,
-      "",
-      "🌐 *Web Settings Panel*",
-      `╰┈➤ ${panelUrl}`,
-      "",
-      "✨ Kòd aksè a dwe rete prive.",
-      "",
-      "🦁 *TECH BY TOPFEROS MD* 🐑"
-    ].join("\n");
+const accessCode = String(code).toUpperCase();
 
-    await ctx.sock.sendMessage(ctx.jid, {
-      interactiveMessage: {
-        body: {
-          text: loginText
-        },
-        footer: {
-          text: "🦁 TECH BY TOPFEROS MD 🐑"
-        },
-        nativeFlowMessage: {
-          buttons: [
-            {
-              name: "cta_copy",
-              buttonParamsJson: JSON.stringify({
-                display_text: "📋 Copy Settings Code",
-                copy_code: accessCode
+const loginText = [
+  "🦁✧･ﾟ: *✧･ﾟ:* 🔐 *TOPFEROS MD SETTINGS LOGIN* 🔐 *:･ﾟ✧*:･ﾟ✧🐑",
+  "",
+  "📱 *Bot Session Number*",
+  `╰┈➤ ${sessionId}`,
+  "",
+  "🔐 *6-Character Settings Code*",
+  `╰┈➤ ${accessCode}`,
+  "",
+  "🌐 *Web Settings Panel*",
+  `╰┈➤ ${panelUrl}`,
+  "",
+  "✨ Kòd aksè a dwe rete prive.",
+  "",
+  "🦁 *TECH BY TOPFEROS MD* 🐑"
+].join("\n");
+
+const copyMessage = generateWAMessageFromContent(
+  ctx.jid,
+  {
+    viewOnceMessage: {
+      message: {
+        interactiveMessage:
+          proto.Message.InteractiveMessage.create({
+            body: proto.Message.InteractiveMessage.Body.create({
+              text: loginText
+            }),
+
+            footer: proto.Message.InteractiveMessage.Footer.create({
+              text: "🦁 TECH BY TOPFEROS MD 🐑"
+            }),
+
+            nativeFlowMessage:
+              proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                buttons: [
+                  {
+                    name: "cta_copy",
+                    buttonParamsJson: JSON.stringify({
+                      display_text: "📋 Copy Settings Code",
+                      copy_code: accessCode
+                    })
+                  }
+                ]
               })
-            }
-          ]
-        }
+          })
       }
-    });
+    }
+  },
+  {
+    userJid: ctx.sock.user.id
+  }
+);
 
-    // Message 3: Instructions.
-    await ctx.send([
-      "To change your bot settings, open the Settings Panel link above.",
-      "",
-      "Enter the bot session number and the 6-character code.",
-      "",
-      "The panel must verify that the code is valid and that the matching bot session is active.",
-      "",
-      "🦁 *TECH BY TOPFEROS MD* 🐑"
-    ].join("\n"));
+await ctx.sock.relayMessage(
+  ctx.jid,
+  copyMessage.message,
+  {
+    messageId: copyMessage.key.id
+  }
+);
 
-    // Message 4: instructions.
-    await ctx.send([
-      "To change your bot settings, open the Settings Panel link above.",
-      "",
-      "Enter the bot session number and the 6-character code.",
-      "",
-      "The panel must verify that the code is valid and that the matching bot session is active.",
-      "",
+// ============================================================
+// MESSAGE 3: SETTINGS INSTRUCTIONS
+// ============================================================
+
+await ctx.send([
+  "📌 *HOW TO USE SETTINGS PANEL*",
+  "",
+  "1️⃣ Open the Settings Panel link above.",
+  "",
+  "2️⃣ Enter your bot session number.",
+  "",
+  "3️⃣ Enter the 6-character Settings Code.",
+  "",
+  "4️⃣ Verify your session to access the settings.",
+  "",
+  "🦁 *TECH BY TOPFEROS MD* 🐑"
+].join("\n"));
+    
       "🦁 *TECH BY TOPFEROS MD* 🐑"
     ].join("\n"));
 
