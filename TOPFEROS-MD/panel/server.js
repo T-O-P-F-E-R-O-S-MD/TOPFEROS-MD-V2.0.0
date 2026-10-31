@@ -614,6 +614,17 @@ app.post(
         );
       }
 
+      const authorized =
+  settingPanel.authorizePanelSession(sessionId);
+
+if (!authorized) {
+  return sendError(
+    res,
+    401,
+    "Unable to authorize settings session."
+  );
+}
+
       // Verifye sesyon panèl la.
       const sessionVerification =
         await Promise.resolve(
