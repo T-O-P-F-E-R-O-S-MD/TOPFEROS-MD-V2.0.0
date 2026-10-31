@@ -31,6 +31,10 @@ const settingPanel =
 
 const antiSpam = require("../services/antiSpam");
 
+const {
+  isUnsafeMessageStructure
+} = require("../services/antiBug");
+
 // 🦁 TOPFEROS MD V2.0.0
 // VV2 COMMAND CONNECTION
 
@@ -246,45 +250,55 @@ function findCommand(
   return null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | TOPFEROS MD V2.0.0
-
-ANTI BUG MESSAGE GUARD
+|
+| ANTI BUG MESSAGE GUARD
+|--------------------------------------------------------------------------
 */
 
-function isUnsafeMessageStructure(message) {
 try {
-if (!message || typeof message !== "object") {
-return true;
-}
+  if (
+    !message ||
+    typeof message !== "object" ||
+    Array.isArray(message)
+  ) {
+    return true;
+  }
 
-if (
-  !message.key ||
-  typeof message.key !== "object" ||
-  !message.message ||
-  typeof message.message !== "object" ||
-  Array.isArray(message.message)
-) {
-  return true;
-}
+  if (
+    !message.key ||
+    typeof message.key !== "object" ||
+    Array.isArray(message.key) ||
+    !message.message ||
+    typeof message.message !== "object" ||
+    Array.isArray(message.message)
+  ) {
+    return true;
+  }
 
-const messageText = extractMessageText(
-  message.message
-);
+  const messageText = extractMessageText(
+    message.message
+  );
 
-if (
-  typeof messageText === "string" &&
-  messageText.length > 20000
-) {
-  return true;
-}
+  if (
+    typeof messageText === "string" &&
+    messageText.length > 20000
+  ) {
+    return true;
+  }
 
-return false;
+  return false;
 
 } catch (error) {
-return true;
-}
+  console.error(
+    "[TOPFEROS MD] ANTI BUG ERROR:",
+    error?.message || error
+  );
+
+  return true;
 }
 
 /*
