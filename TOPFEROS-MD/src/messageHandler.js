@@ -1460,69 +1460,49 @@ async function handleMessage(sock, message, sessionId) {
         reason: "Status handled by statusHandler."
       };
     }
+/*
+|--------------------------------------------------------------------------
+| ANTI-SPAM PROTECTION
+|--------------------------------------------------------------------------
+*/
 
-    /*
-    |--------------------------------------------------------------------------
-    | ANTI-SPAM PROTECTION
-    |--------------------------------------------------------------------------
-    */
+try {
+  const spamSettings =
+    settingPanel.getSessionSettings(sessionId) || {};
 
-    try {
-      const spamSettings =
-        settingPanel.getSessionSettings(sessionId) || {};
+  const spamAutomation =
+    spamSettings.automation || {};
 
-      const spamAutomation =
-        spamSettings.automation || {};
+  if (
+    spamAutomation.antiSpam !== false &&
+    !message?.key?.fromMe &&
+    !isFromBot(message, sock) &&
+    !isOwner(message)
+  ) {
+    const spamResult = await antiSpam.punish({
+      sock,
+      message,
+      sessionId
+    });
 
-      // Anti-Spam aktive pa defo.
-      // Mete antiSpam: false nan automation pou dezaktive li.
-
-      if (
-        spamAutomation.antiSpam !== false &&
-        !message?.key?.fromMe &&
-        !isFromBot(message, sock) &&
-        !isOwner(message)
-      ) {
-        const spamResult = antiSpam.checkSpam({
-          sessionId,
-          chatJid: jid,
-          senderJid: getSenderJid(message),
-          text: extractMessageText(message.message)
-        });
-
-        if (!spamResult.allowed) {
-          if (spamResult.notify) {
-            try {
-              await sendText(
-                sock,
-                jid,
-                "⚠️ *TOPFEROS MD — ANTI-SPAM*\n\n" +
-                "Ou voye twòp mesaj youn dèyè lòt.\n" +
-                "Tanpri tann kèk segonn anvan ou voye lòt mesaj."
-              );
-            } catch (sendError) {
-              console.error(
-                "[ANTI-SPAM WARNING]",
-                sendError?.message || sendError
-              );
-            }
-          }
-
-          return {
-            success: false,
-            ignored: true,
-            reason: "Anti-Spam: temporary cooldown.",
-            sessionId: sessionId || null
-          };
-        }
-      }
-    } catch (error) {
-      console.error(
-        "[TOPFEROS MD ANTI-SPAM]",
-        error?.stack || error
-      );
+    if (spamResult.handled) {
+      return {
+        success: false,
+        ignored: true,
+        reason: spamResult.spam
+          ? "Anti-Spam: user blocked."
+          : "Anti-Spam: sender already blocked.",
+        antiSpam: spamResult,
+        sessionId: sessionId || null
+      };
     }
-
+  }
+} catch (error) {
+  console.error(
+    "[TOPFEROS MD ANTI-SPAM]",
+    error?.stack || error
+  );
+}
     /*
     |--------------------------------------------------------------------------
     | BOT MODE
@@ -1789,6 +1769,71 @@ const isAIForward =
 
     const parsed =
       parseCommand(messageText, sessionId);
+
+    /*
+    |--------------------------------------------------------------------------
+    | OWNER COMMAND: UNBLOCK SPAM NUMBER
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      parsed?.command === "unblock" &&
+      isOwner(message)
+    ) {
+      const number = parsed.args?.[0];
+
+      if (!number) {
+        await sendText(
+          sock,
+          jid,
+          "❌ Itilizasyon: .unblock 509XXXXXXXX"
+        );
+
+        return {
+          success: false,
+          command: "unblock"
+        };
+      }
+
+      const result = await antiSpam.unblock(
+        sock,
+        number
+      );
+
+      await sendText(
+        sock,
+        jid,
+        result.success
+          ? `✅ Nimewo ${result.number} debloke avèk siksè.`
+          : `❌ Deblokaj la echwe: ${result.reason}`
+      );
+
+      return {
+        success: result.success,
+        command: "unblock"
+      };
+    }
+
+    if (
+      parsed?.command === "blocklist" &&
+      isOwner(message)
+    ) {
+      const numbers = antiSpam.getBlockedNumbers();
+
+      await sendText(
+        sock,
+        jid,
+        numbers.length
+          ? "🚫 *ANTI-SPAM BLOCKLIST*\n\n" +
+            numbers.map((n, i) => `${i + 1}. ${n}`).join("\n")
+          : "✅ Pa gen nimewo nan lis blokaj la."
+      );
+
+      return {
+        success: true,
+        command: "blocklist"
+      };
+    }
 
     /*
     |--------------------------------------------------------------------------
