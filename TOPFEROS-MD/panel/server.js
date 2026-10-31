@@ -540,30 +540,19 @@ app.post(
         .trim()
         .toUpperCase();
 
-      let sessionId = cleanSessionId(
-        req.body?.sessionId
-      );
+      // Toujou jwenn sesyon an apati nimewo itilizatè a antre a.
+const sessionId =
+  sessionManager.getSessionId(number);
 
-      if (!number) {
-        return sendError(
-          res,
-          400,
-          "Phone number is required."
-        );
-      }
+const session = getSession(sessionId);
 
-      if (!/^[A-Z0-9]{6}$/.test(code)) {
-        return sendError(
-          res,
-          400,
-          "Enter the 6-character settings code."
-        );
-      }
-
-      if (!sessionId) {
-        sessionId =
-          sessionManager.getSessionId(number);
-      }
+if (!session) {
+  return sendError(
+    res,
+    404,
+    "No session found for this number."
+  );
+}
 
       const session = getSession(sessionId);
 
