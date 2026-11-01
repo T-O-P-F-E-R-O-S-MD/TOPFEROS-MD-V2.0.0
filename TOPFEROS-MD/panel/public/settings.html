@@ -562,6 +562,8 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+const verifiedSessionControls =
+  document.getElementById("verifiedSessionControls");
 const verifyButton = document.getElementById("verifyButton");
 const numberInput = document.getElementById("verificationNumber");
 const codeInput = document.getElementById("verificationCode");
@@ -616,6 +618,10 @@ const codeInput = document.getElementById("verificationCode");
       if (settingsContent) {
         settingsContent.hidden = false;
       }
+
+if (verifiedSessionControls) {
+  verifiedSessionControls.hidden = false;
+}
 
       if (verificationSection) {
         verificationSection.hidden = true;
