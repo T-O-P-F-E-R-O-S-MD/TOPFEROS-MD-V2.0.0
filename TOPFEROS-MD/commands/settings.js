@@ -223,7 +223,7 @@ async function settingsCommand(ctx) {
     }
 
     // Generate the access code for this bot session.
-    const code = settingPanel.generatePanelAccessCode(sessionId);
+    const code = await settingPanel.generatePanelAccessCode(sessionId);
 
     if (
       !code ||
