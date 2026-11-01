@@ -21,8 +21,8 @@
     panelData: null,
     languages: {},
     verified: false,
-    saving: false
-  };
+    saving: false,
+pendingConnectionAction: null
 
   const API = {
     panel: "/api/panel",
