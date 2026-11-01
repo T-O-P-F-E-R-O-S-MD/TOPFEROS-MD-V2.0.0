@@ -172,28 +172,6 @@ async function generatePanelAccessCode(sessionId) {
   );
 }
 
-  // Kenbe menm kòd la pou sesyon sa a.
-  const existingCode =
-    panelAccessCodes.get(id);
-
-  if (existingCode) {
-    return existingCode;
-  }
-
-  const code = createPanelAccessCode();
-
-  panelAccessCodes.set(id, code);
-
-  try {
-    savePanelAccessCodes();
-  } catch (error) {
-    panelAccessCodes.delete(id);
-    throw error;
-  }
-
-  return code;
-}
-
 // ============================================================
 // VERIFY ACCESS CODE
 // ============================================================
@@ -211,22 +189,6 @@ async function verifyPanelAccessCode(
   return panelAccessCodeStore.verifyAccessCode(
     id,
     submittedCode
-  );
-}
-
-  // Pa itilize isConnected() isit la:
-  // dekoneksyon tanporè poukont li pa anile kòd la.
-  const savedCode =
-    panelAccessCodes.get(id);
-
-  if (!savedCode) {
-    return false;
-  }
-
-  return (
-    String(submittedCode || "")
-      .trim()
-      .toUpperCase() === savedCode
   );
 }
 
