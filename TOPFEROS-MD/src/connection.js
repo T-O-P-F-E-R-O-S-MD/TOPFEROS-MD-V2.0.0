@@ -1361,9 +1361,9 @@ if (
    * Invalidate the old panel access code.
    */
 
-  settingPanel.clearPanelAccessCode(
-    sessionId
-  );
+  await settingPanel.clearPanelAccessCode(
+  sessionId
+);
 
   settingPanel.removePanelSession(
     sessionId
