@@ -405,16 +405,21 @@
           <option value="Warn">Warn</option>
           <option value="Block">Block</option>
         </select>
-      </div>
-
       <div class="field-group">
-        <label for="antiBlockNumbers">ANTI-BLOCK LIST</label>
-        <textarea
-          id="antiBlockNumbers"
-          rows="5"
-          placeholder="One number per line"
-        ></textarea>
-      </div>
+  <label for="antiBlockNumbers">
+    ANTI-BOT EXEMPTION LIST
+  </label>
+
+  <textarea
+    id="antiBlockNumbers"
+    rows="5"
+    placeholder="Enter WhatsApp numbers, one per line&#10;Example: 509XXXXXXXX"
+  ></textarea>
+
+  <small>
+    Numbers listed here will be excluded from Anti-Bot actions.
+  </small>
+</div>
     </section>
 
     <!-- GROUP AUTOMATIONS -->
