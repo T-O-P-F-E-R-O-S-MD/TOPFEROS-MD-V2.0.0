@@ -46,15 +46,25 @@
   };
 
   function getSessionId() {
-    const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);
 
-    return (
-      params.get("sessionId") ||
-      params.get("session") ||
-      localStorage.getItem("topferos_session_id") ||
-      ""
-    ).trim();
+  const urlSessionId = (
+    params.get("sessionId") ||
+    params.get("session") ||
+    ""
+  ).trim();
+
+  // Pa itilize ansyen sesyon lokal sou Settings Panel.
+  if (document.getElementById("verificationNumber")) {
+    return urlSessionId;
   }
+
+  return (
+    urlSessionId ||
+    localStorage.getItem("topferos_session_id") ||
+    ""
+  ).trim();
+}
 
   function setSessionId(sessionId) {
   state.sessionId = String(sessionId || "").trim();
@@ -64,6 +74,10 @@
       "topferos_session_id",
       state.sessionId
     );
+  } else if (
+    document.getElementById("verificationNumber")
+  ) {
+    localStorage.removeItem("topferos_session_id");
   }
 
   const sessionInput = $("#sessionId");
