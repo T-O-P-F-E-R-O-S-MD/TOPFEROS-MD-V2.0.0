@@ -341,6 +341,134 @@ function setConnectionStatus(connected) {
 
     setPreviewIndicator("invalid");
   }
+  let previewTimer = null;
+  let previewRequestId = 0;
+
+  function showPreviewStatus(status, message) {
+    let indicator = $("#verificationPreviewStatus");
+
+    if (!indicator) {
+      indicator = document.createElement("div");
+      indicator.id = "verificationPreviewStatus";
+
+      indicator.style.cssText =
+        "display:flex;align-items:center;gap:9px;margin:12px 0;padding:10px;font-weight:600;border-radius:8px;";
+
+      const verifyButton = $("#verifyButton");
+
+      if (verifyButton) {
+        verifyButton.before(indicator);
+      }
+    }
+
+    indicator.textContent = message;
+
+    indicator.style.color =
+      status === "valid" ? "#16c96b" : "#e53935";
+  }
+
+  async function previewVerification() {
+    const number =
+      $("#verificationNumber")?.value.trim() || "";
+
+    const code =
+      $("#verificationCode")?.value.trim() || "";
+
+    const requestId = ++previewRequestId;
+
+    clearTimeout(previewTimer);
+
+    if (!number || !code) {
+      showPreviewStatus(
+        "invalid",
+        "🔴 ENTER NUMBER AND CODE"
+      );
+      return;
+    }
+
+    showPreviewStatus(
+      "checking",
+      "🟡 VERIFYING NUMBER AND CODE..."
+    );
+
+    previewTimer = setTimeout(async () => {
+      try {
+        const result = await request(
+          API.verifyPreview,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              number,
+              code
+            })
+          }
+        );
+
+        if (requestId !== previewRequestId) {
+          return;
+        }
+
+        if (result?.valid !== true) {
+          showPreviewStatus(
+            "invalid",
+            "🔴 INVALID NUMBER OR CODE"
+          );
+          return;
+        }
+
+        if (result.connected === true) {
+          showPreviewStatus(
+            "valid",
+            "🟢 NUMBER AND CODE VERIFIED — WHATSAPP CONNECTED"
+          );
+        } else {
+          showPreviewStatus(
+            "invalid",
+            "🔴 NUMBER AND CODE VERIFIED — WHATSAPP DISCONNECTED"
+          );
+        }
+
+      } catch (error) {
+        if (requestId !== previewRequestId) {
+          return;
+        }
+
+        showPreviewStatus(
+          "invalid",
+          "🔴 VERIFICATION UNAVAILABLE"
+        );
+
+        console.error(
+          "Automatic preview verification:",
+          error
+        );
+      }
+    }, 350);
+  }
+
+  function bindVerificationPreview() {
+    const numberInput = $("#verificationNumber");
+    const codeInput = $("#verificationCode");
+
+    if (numberInput) {
+      numberInput.addEventListener(
+        "input",
+        previewVerification
+      );
+    }
+
+    if (codeInput) {
+      codeInput.addEventListener(
+        "input",
+        previewVerification
+      );
+    }
+
+    showPreviewStatus(
+      "invalid",
+      "🔴 ENTER NUMBER AND CODE"
+    );
+  }
 
   function setFieldValue(id, value) {
     const element = document.getElementById(id);
