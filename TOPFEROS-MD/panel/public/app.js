@@ -1252,33 +1252,134 @@ function normalizeAutomation(settings = {}) {
     return settings;
   }
 
-  function selectConnectionAction(action) {
-  state.pendingConnectionAction = action;
+    function selectConnectionAction(action) {
+    if (!["connect", "disconnect"].includes(action)) {
+      return;
+    }
 
-  const connectButton = $("#reconnectButton");
-  const disconnectButton = $("#disconnectButton");
+    state.pendingConnectionAction = action;
 
-  if (connectButton) {
-    connectButton.classList.toggle(
-      "selected",
+    const connectButton = $("#reconnectButton");
+    const disconnectButton = $("#disconnectButton");
+
+    if (connectButton) {
+      connectButton.classList.toggle(
+        "selected",
+        action === "connect"
+      );
+    }
+
+    if (disconnectButton) {
+      disconnectButton.classList.toggle(
+        "selected",
+        action === "disconnect"
+      );
+    }
+
+    notify(
       action === "connect"
+        ? "CONNECT selected. Press SAVE to apply."
+        : "DISCONNECT selected. Press SAVE to apply.",
+      "success"
     );
   }
 
-  if (disconnectButton) {
-    disconnectButton.classList.toggle(
-      "selected",
-      action === "disconnect"
-    );
-  }
+  async function saveSettings() {
+    if (!state.sessionId) {
+      notify("No session selected.", "error");
+      return false;
+    }
 
-  notify(
-    action === "connect"
-      ? "CONNECT selected. Press SAVE to apply."
-      : "DISCONNECT selected. Press SAVE to apply.",
-    "success"
-  );
-}
+    if (state.saving) return false;
+
+    const settings = collectSettings();
+    const validationError = validateSettings(settings);
+
+    if (validationError) {
+      notify(validationError, "error");
+      return false;
+    }
+
+    const buttons = $$(
+      "[data-action='save'], #saveButton"
+    );
+
+    state.saving = true;
+
+    buttons.forEach((button) => {
+      setLoading(button, true, "Saving...");
+    });
+
+    try {
+      await request(API.settings, {
+        method: "POST",
+        body: JSON.stringify({
+          sessionId: state.sessionId,
+          bot: settings.bot,
+          automation: settings.automation,
+          groupAutomation: settings.groupAutomation,
+          settings
+        })
+      });
+
+      if (state.pendingConnectionAction === "disconnect") {
+        await request(API.disconnect, {
+          method: "POST",
+          body: JSON.stringify({
+            sessionId: state.sessionId
+          })
+        });
+
+        state.pendingConnectionAction = null;
+        setConnectionStatus(false);
+
+        notify(
+          "Settings saved. WhatsApp disconnected; credentials kept.",
+          "success"
+        );
+
+        return true;
+      }
+
+      if (state.pendingConnectionAction === "connect") {
+        await request(API.reconnect, {
+          method: "POST",
+          body: JSON.stringify({
+            sessionId: state.sessionId
+          })
+        });
+
+        state.pendingConnectionAction = null;
+
+        await new Promise((resolve) => {
+          setTimeout(resolve, 1500);
+        });
+
+        await verifySession();
+
+        notify(
+          "Settings saved. Reconnect requested.",
+          "success"
+        );
+
+        return true;
+      }
+
+      notify("Settings saved successfully.", "success");
+      return true;
+
+    } catch (error) {
+      notify(error.message, "error");
+      return false;
+
+    } finally {
+      state.saving = false;
+
+      buttons.forEach((button) => {
+        setLoading(button, false);
+      });
+    }
+  }
     try {
       await request(
         API.settings,
@@ -1366,59 +1467,68 @@ function normalizeAutomation(settings = {}) {
 
       return false;
     }
+  function bindButtons() {
+    $$("[data-action]").forEach((button) => {
+      if (button.dataset.bound === "true") return;
 
-    const buttons = $$(
-      "[data-action='disconnect'], #disconnectButton"
-    );
+      button.dataset.bound = "true";
 
-    buttons.forEach(
-      (button) => {
-        setLoading(
-          button,
-          true,
-          "Disconnecting..."
-        );
+      const action = button.dataset.action;
+
+      if (action === "save") {
+        button.addEventListener("click", saveSettings);
+
+      } else if (action === "disconnect") {
+        button.addEventListener("click", () => {
+          selectConnectionAction("disconnect");
+        });
+
+      } else if (action === "reconnect") {
+        button.addEventListener("click", () => {
+          selectConnectionAction("connect");
+        });
+
+      } else if (action === "connect") {
+        button.addEventListener("click", requestPairingCode);
       }
-    );
+    });
 
-    try {
-      await request(
-        API.disconnect,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            sessionId:
-              state.sessionId
-          })
-        }
-      );
+    const saveButton = $("#saveButton");
 
-      setConnectionStatus(
-        false
-      );
+    if (saveButton && saveButton.dataset.bound !== "true") {
+      saveButton.dataset.bound = "true";
+      saveButton.addEventListener("click", saveSettings);
+    }
 
-      notify(
-        "Disconnected. Session credentials were kept.",
-        "success"
-      );
+    const disconnectButton = $("#disconnectButton");
 
-      return true;
-    } catch (error) {
-      notify(
-        error.message,
-        "error"
-      );
+    if (
+      disconnectButton &&
+      disconnectButton.dataset.bound !== "true"
+    ) {
+      disconnectButton.dataset.bound = "true";
+      disconnectButton.addEventListener("click", () => {
+        selectConnectionAction("disconnect");
+      });
+    }
 
-      return false;
-    } finally {
-      buttons.forEach(
-        (button) => {
-          setLoading(
-            button,
-            false
-          );
-        }
-      );
+    const reconnectButton = $("#reconnectButton");
+
+    if (
+      reconnectButton &&
+      reconnectButton.dataset.bound !== "true"
+    ) {
+      reconnectButton.dataset.bound = "true";
+      reconnectButton.addEventListener("click", () => {
+        selectConnectionAction("connect");
+      });
+    }
+
+    const copyButton = $("#copyPairingCode");
+
+    if (copyButton && copyButton.dataset.bound !== "true") {
+      copyButton.dataset.bound = "true";
+      copyButton.addEventListener("click", copyPairingCode);
     }
   }
 
