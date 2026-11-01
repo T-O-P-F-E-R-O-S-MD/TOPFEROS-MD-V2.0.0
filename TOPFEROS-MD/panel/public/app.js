@@ -15,14 +15,15 @@
  */
 
 (() => {
-  const state = {
+    const state = {
     sessionId: "",
     language: "en",
     panelData: null,
     languages: {},
     verified: false,
     saving: false,
-pendingConnectionAction: null
+    pendingConnectionAction: null
+  };
 
   const API = {
     panel: "/api/panel",
@@ -1901,14 +1902,9 @@ async function copyPairingCode() {
 
     saveSettings,
 
-    connect:
-      reconnectSession,
-
-    reconnect:
-      reconnectSession,
-
-    disconnect:
-      disconnectSession,
+        connect: () => selectConnectionAction("connect"),
+    reconnect: () => selectConnectionAction("connect"),
+    disconnect: () => selectConnectionAction("disconnect"),
 
     changeLanguage,
     translatePage,
@@ -1930,11 +1926,11 @@ async function copyPairingCode() {
   window.saveSettings =
     saveSettings;
 
-  window.reconnectSettings =
-    reconnectSession;
+    window.reconnectSettings =
+    () => selectConnectionAction("connect");
 
   window.disconnectSettings =
-    disconnectSession;
+    () => selectConnectionAction("disconnect");
 
   window.selectSettingsLanguage =
     changeLanguage;
