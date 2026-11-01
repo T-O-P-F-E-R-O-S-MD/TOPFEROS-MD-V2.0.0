@@ -22,7 +22,9 @@
     languages: {},
     verified: false,
     saving: false,
-    pendingConnectionAction: null
+    pendingConnectionAction: null,
+    previewTimer: null,
+    previewRequestId: 0
   };
 
   const API = {
@@ -31,6 +33,7 @@
     language: "/api/language",
     translate: "/api/translate",
     verify: "/api/verify",
+    verifyPreview: "/api/verify-preview",
     pair: "/api/pair",
     settings: "/api/settings",
     session: (id) => `/api/session/${encodeURIComponent(id)}`,
