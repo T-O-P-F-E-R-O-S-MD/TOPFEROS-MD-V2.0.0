@@ -778,3 +778,49 @@ input[type="file"]::file-selector-button {
     font-size: clamp(20px, 5.5vw, 26px);
   }
 }
+
+/* SESSION CONTROL BUTTONS */
+
+.session-control-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 7px;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.session-control {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 3px;
+  border: none;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.session-control.connect {
+  background: #16c96b;
+  color: #06150b;
+}
+
+.session-control.disconnect {
+  background: #e53935;
+  color: #ffffff;
+}
+
+.session-control.exit {
+  background: #f5a623;
+  color: #201500;
+}
+
+.session-control:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
