@@ -182,7 +182,6 @@
       }
     }
   }
-
 function setConnectionStatus(connected) {
   const statusElements = $$(
     "[data-connection-status], #connectionStatus, .connection-status"
@@ -206,18 +205,29 @@ function setConnectionStatus(connected) {
   );
 
   connectButtons.forEach((button) => {
-    button.classList.toggle("session-active", connected);
-    button.classList.toggle("session-inactive", !connected);
-    button.setAttribute("aria-pressed", String(connected));
+    button.classList.remove(
+      "session-active",
+      "session-inactive"
+    );
+
+    button.setAttribute(
+      "aria-pressed",
+      String(state.pendingConnectionAction === "connect")
+    );
   });
 
   disconnectButtons.forEach((button) => {
-    button.classList.toggle("session-active", connected);
-    button.classList.toggle("session-inactive", !connected);
-    button.setAttribute("aria-pressed", String(!connected));
+    button.classList.remove(
+      "session-active",
+      "session-inactive"
+    );
+
+    button.setAttribute(
+      "aria-pressed",
+      String(state.pendingConnectionAction === "disconnect")
+    );
   });
 }
-
   function setFieldValue(id, value) {
     const element = document.getElementById(id);
 
