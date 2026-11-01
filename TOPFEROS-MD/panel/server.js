@@ -951,70 +951,39 @@ app.post(
 // RECONNECT
 // ============================================================
 
-async function handleReconnect(
-  req,
-  res,
-  sessionId
-) {
+async function handleReconnect(req, res, sessionId) {
   try {
-    const cleanId =
-      cleanSessionId(sessionId);
+    const cleanId = cleanSessionId(sessionId);
 
-    if (!cleanId) {
-      return sendError(
-        res,
-        400,
-        "Invalid session ID."
-      );
+    if (!cleanId || cleanId.length < 8 || cleanId.length > 15) {
+      return sendError(res, 400, "Invalid session ID.");
     }
 
-    if (
-      !getSessionOrFail(
-        res,
-        cleanId
-      )
-    ) {
-      return;
+    if (typeof connection.reconnectSession !== "function") {
+      return sendError(res, 500, "Reconnect is not available.");
     }
 
-    if (
-      typeof connection.reconnectSession !==
-      "function"
-    ) {
-      return sendError(
-        res,
-        500,
-        "Reconnect is not available."
-      );
-    }
+    // Pa rele getSessionOrFail() isit la.
+    // Sesyon an retire nan activeSessions pandan li ap dòmi.
+    // Authentication li toujou konsève nan Neon.
 
-    await connection.reconnectSession(
-      cleanId
-    );
+    await connection.reconnectSession(cleanId);
 
     return res.json({
       success: true,
-
-      connected:
-        sessionManager.isConnected(
-          cleanId
-        ),
-
-      message:
-        "Session reconnect started."
+      connected: false,
+      reconnecting: true,
+      credentialsKept: true,
+      message: "Session wake-up started."
     });
 
   } catch (error) {
-    logger.error(
-      error,
-      "❌ RECONNECT ERROR"
-    );
+    logger.error(error, "❌ RECONNECT ERROR");
 
     return sendError(
       res,
       500,
-      error.message ||
-        "Unable to reconnect session."
+      error.message || "Unable to reconnect session."
     );
   }
 }
