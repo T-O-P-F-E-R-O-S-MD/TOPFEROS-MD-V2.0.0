@@ -9,6 +9,9 @@ const config = require("./config");
 const sessionManager = require("./sessionManager");
 const language = require("./language");
 
+const panelAccessCodeStore =
+  require("../services/panelAccessCodeStore");
+
 const whatsappTranslator = require("./whatsappTranslator");
 
 // ============================================================
@@ -156,14 +159,18 @@ function createPanelAccessCode() {
 // GENERATE ACCESS CODE
 // ============================================================
 
-function generatePanelAccessCode(sessionId) {
+async function generatePanelAccessCode(sessionId) {
   const id = normalizeSessionId(sessionId);
 
   if (!id || !sessionManager.getSession(id)) {
-    throw new Error(
-      "WhatsApp session does not exist."
-    );
+    throw new Error("WhatsApp session does not exist.");
   }
+
+  return panelAccessCodeStore.getOrCreateAccessCode(
+    id,
+    createPanelAccessCode
+  );
+}
 
   // Kenbe menm kòd la pou sesyon sa a.
   const existingCode =
@@ -191,7 +198,7 @@ function generatePanelAccessCode(sessionId) {
 // VERIFY ACCESS CODE
 // ============================================================
 
-function verifyPanelAccessCode(
+async function verifyPanelAccessCode(
   sessionId,
   submittedCode
 ) {
@@ -200,6 +207,12 @@ function verifyPanelAccessCode(
   if (!id || !sessionManager.getSession(id)) {
     return false;
   }
+
+  return panelAccessCodeStore.verifyAccessCode(
+    id,
+    submittedCode
+  );
+}
 
   // Pa itilize isConnected() isit la:
   // dekoneksyon tanporè poukont li pa anile kòd la.
@@ -221,21 +234,10 @@ function verifyPanelAccessCode(
 // CLEAR ACCESS CODE
 // ============================================================
 
-function clearPanelAccessCode(sessionId) {
-  const id = normalizeSessionId(sessionId);
-
-  if (!id) {
-    return false;
-  }
-
-  const deleted =
-    panelAccessCodes.delete(id);
-
-  if (deleted) {
-    savePanelAccessCodes();
-  }
-
-  return deleted;
+async function clearPanelAccessCode(sessionId) {
+  return panelAccessCodeStore.deleteAccessCode(
+    normalizeSessionId(sessionId)
+  );
 }
 
 // ============================================================
