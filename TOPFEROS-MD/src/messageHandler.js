@@ -1492,6 +1492,21 @@ try {
     const filterAutomation =
       filterSettings.automation || {};
 
+const senderNumber = String(
+  message?.key?.participant ||
+  message?.key?.remoteJid ||
+  ""
+).split("@")[0].replace(/\D/g, "");
+
+const antiBotExemptNumbers = (
+  filterAutomation.antiBlockNumbers || []
+).map(number =>
+  String(number).replace(/\D/g, "")
+);
+
+const isAntiBotExempt =
+  antiBotExemptNumbers.includes(senderNumber);
+
     if (filterAutomation.antiBotFilter === true) {
       // Bot detection is not connected yet.
       // Do not delete or warn users based on guesses.
