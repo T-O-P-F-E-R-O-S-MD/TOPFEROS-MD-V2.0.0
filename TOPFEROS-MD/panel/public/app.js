@@ -231,6 +231,117 @@ function setConnectionStatus(connected) {
     );
   });
 }
+
+  function setPreviewIndicator(status) {
+    let indicator = $("#verificationStatus");
+
+    if (!indicator) {
+      indicator = document.createElement("div");
+      indicator.id = "verificationStatus";
+      indicator.style.cssText =
+        "display:flex;align-items:center;gap:9px;margin:12px 0;font-weight:600;";
+
+      const verifyButton = $("#verifyButton");
+
+      if (verifyButton) {
+        verifyButton.before(indicator);
+      }
+    }
+
+    if (status === "valid") {
+      indicator.innerHTML =
+        '<span style="color:#16c96b;font-size:20px">🟢</span><span style="color:#16c96b">ACCESS CODE VALID</span>';
+    } else if (status === "checking") {
+      indicator.innerHTML =
+        '<span style="color:#f5a623;font-size:20px">🟡</span><span>CHECKING...</span>';
+    } else {
+      indicator.innerHTML =
+        '<span style="color:#e53935;font-size:20px">🔴</span><span style="color:#e53935">NOT VERIFIED</span>';
+    }
+  }
+
+  async function previewVerification() {
+    const number = $("#verificationNumber")?.value?.trim() || "";
+    const code = $("#verificationCode")?.value?.trim() || "";
+
+    const requestId = ++state.previewRequestId;
+
+    if (state.previewTimer) {
+      clearTimeout(state.previewTimer);
+    }
+
+    if (!number || !code) {
+      setPreviewIndicator("invalid");
+      return;
+    }
+
+    setPreviewIndicator("checking");
+
+    state.previewTimer = setTimeout(async () => {
+      try {
+        const result = await request(
+          API.verifyPreview,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              number,
+              code
+            })
+          }
+        );
+
+        if (requestId !== state.previewRequestId) {
+          return;
+        }
+
+        if (result?.valid === true) {
+          setPreviewIndicator("valid");
+          setConnectionStatus(
+            result.connected === true
+          );
+        } else {
+          setPreviewIndicator("invalid");
+          setConnectionStatus(false);
+        }
+      } catch (error) {
+        if (requestId !== state.previewRequestId) {
+          return;
+        }
+
+        setPreviewIndicator("invalid");
+        setConnectionStatus(false);
+
+        console.error(
+          "Preview verification error:",
+          error
+        );
+      }
+    }, 450);
+  }
+
+  function bindVerificationPreview() {
+    const numberInput = $("#verificationNumber");
+    const codeInput = $("#verificationCode");
+
+    if (numberInput && numberInput.dataset.previewBound !== "true") {
+      numberInput.dataset.previewBound = "true";
+      numberInput.addEventListener(
+        "input",
+        previewVerification
+      );
+    }
+
+    if (codeInput && codeInput.dataset.previewBound !== "true") {
+      codeInput.dataset.previewBound = "true";
+      codeInput.addEventListener(
+        "input",
+        previewVerification
+      );
+    }
+
+    setPreviewIndicator("invalid");
+  }
+
   function setFieldValue(id, value) {
     const element = document.getElementById(id);
 
@@ -1776,6 +1887,7 @@ async function copyPairingCode() {
     bindButtons();
     bindSwitches();
     bindLanguageControls();
+    bindVerificationPreview();
 
     try {
       await loadPanelData();
