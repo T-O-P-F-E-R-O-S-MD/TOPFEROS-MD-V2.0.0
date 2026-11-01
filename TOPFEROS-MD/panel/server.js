@@ -580,10 +580,10 @@ if (!session) {
 
       // Verifye kòd aksè panèl la.
       const validCode =
-        settingPanel.verifyPanelAccessCode(
-          sessionId,
-          code
-        );
+  await settingPanel.verifyPanelAccessCode(
+    sessionId,
+    code
+  );
 
       if (!validCode) {
         return sendError(
