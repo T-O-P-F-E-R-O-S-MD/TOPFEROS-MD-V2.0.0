@@ -34,14 +34,36 @@
 
     <p class="panel-version">V2.0.0</p>
 
-    <div
-      id="connectionStatus"
-      class="connection-status disconnected"
-      data-connection-status
-      data-i18n="disconnected"
-    >
-      🔴 DISCONNECTED
-    </div>
+    <div class="session-control-row">
+
+  <button
+    type="button"
+    id="reconnectButton"
+    class="session-control connect"
+    data-action="reconnect"
+  >
+    🟢 CONNECT
+  </button>
+
+  <button
+    type="button"
+    id="disconnectButton"
+    class="session-control disconnect"
+    data-action="disconnect"
+  >
+    🔴 DISCONNECT
+  </button>
+
+  <button
+    type="button"
+    id="exitPanelButton"
+    class="session-control exit"
+    onclick="window.location.href='/'"
+  >
+    🟠 EXIT PANEL
+  </button>
+
+</div>
   </header>
 
   <!-- FIRST INTERFACE: LANGUAGE -->
