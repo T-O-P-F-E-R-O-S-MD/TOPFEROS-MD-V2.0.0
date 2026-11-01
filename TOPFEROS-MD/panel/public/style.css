@@ -779,7 +779,9 @@ input[type="file"]::file-selector-button {
   }
 }
 
-/* SESSION CONTROL BUTTONS */
+/* =========================================
+   TOPFEROS MD SESSION CONTROL
+========================================= */
 
 .session-control-row {
   display: flex;
@@ -796,31 +798,71 @@ input[type="file"]::file-selector-button {
   min-width: 0;
   min-height: 44px;
   padding: 10px 3px;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 10px;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  opacity: 0.35;
+  transition: all 0.2s ease;
 }
 
+/* CONNECT */
 .session-control.connect {
+  background: rgba(22, 201, 107, 0.12);
+  color: #19d66b;
+  border-color: rgba(25, 214, 107, 0.25);
+}
+
+/* DISCONNECT */
+.session-control.disconnect {
+  background: rgba(229, 57, 53, 0.12);
+  color: #ff5252;
+  border-color: rgba(255, 61, 77, 0.25);
+}
+
+/* EXIT */
+.session-control.exit {
+  background: rgba(245, 166, 35, 0.15);
+  color: #ffc04d;
+  border-color: rgba(245, 166, 35, 0.35);
+  opacity: 1;
+}
+
+/* ACTUAL WHATSAPP STATE */
+.session-control.connect.session-active {
+  opacity: 1;
   background: #16c96b;
   color: #06150b;
+  box-shadow: 0 0 14px rgba(22, 201, 107, 0.45);
 }
 
-.session-control.disconnect {
+.session-control.disconnect.session-inactive {
+  opacity: 1;
   background: #e53935;
   color: #ffffff;
+  box-shadow: 0 0 14px rgba(229, 57, 53, 0.45);
 }
 
-.session-control.exit {
-  background: #f5a623;
-  color: #201500;
+/* SELECTED ACTION */
+.session-control.selected {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+  opacity: 1;
 }
 
 .session-control:disabled {
-  opacity: 0.45;
   cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 380px) {
+  .session-control-row {
+    gap: 4px;
+  }
+
+  .session-control {
+    font-size: 9px;
+  }
 }
