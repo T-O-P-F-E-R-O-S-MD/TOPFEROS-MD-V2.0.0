@@ -1607,14 +1607,15 @@ async function copyPairingCode() {
 
       if (action === "save") {
         button.addEventListener("click", saveSettings);
-      } else if (action === "disconnect") {
-        button.addEventListener("click", disconnectSession);
-      } else if (action === "connect") {
-        button.addEventListener("click", requestPairingCode);
+           } else if (action === "disconnect") {
+        button.addEventListener("click", () => {
+          selectConnectionAction("disconnect");
+        });
       } else if (action === "reconnect") {
-        button.addEventListener("click", reconnectSession);
+        button.addEventListener("click", () => {
+          selectConnectionAction("connect");
+        });
       }
-    });
 
     const saveButton = $("#saveButton");
 
