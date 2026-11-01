@@ -1252,53 +1252,33 @@ function normalizeAutomation(settings = {}) {
     return settings;
   }
 
-  async function saveSettings() {
-    if (state.saving) {
-      return false;
-    }
+  function selectConnectionAction(action) {
+  state.pendingConnectionAction = action;
 
-    if (!state.sessionId) {
-      notify(
-        "No session selected.",
-        "error"
-      );
+  const connectButton = $("#reconnectButton");
+  const disconnectButton = $("#disconnectButton");
 
-      return false;
-    }
-
-    const settings =
-      collectSettings();
-
-    const validationError =
-      validateSettings(
-        settings
-      );
-
-    if (validationError) {
-      notify(
-        validationError,
-        "error"
-      );
-
-      return false;
-    }
-
-    state.saving = true;
-
-    const buttons = $$(
-      "[data-action='save'], #saveButton"
+  if (connectButton) {
+    connectButton.classList.toggle(
+      "selected",
+      action === "connect"
     );
+  }
 
-    buttons.forEach(
-      (button) => {
-        setLoading(
-          button,
-          true,
-          "Saving..."
-        );
-      }
+  if (disconnectButton) {
+    disconnectButton.classList.toggle(
+      "selected",
+      action === "disconnect"
     );
+  }
 
+  notify(
+    action === "connect"
+      ? "CONNECT selected. Press SAVE to apply."
+      : "DISCONNECT selected. Press SAVE to apply.",
+    "success"
+  );
+}
     try {
       await request(
         API.settings,
