@@ -221,16 +221,10 @@ function getDefaultAutomationSettings() {
       automation.antiBotAction ||
       "Delete",
 
-    antiBlock:
-      Array.isArray(
-        config?.security
-          ?.antiBlockNumbers
-      )
-        ? [
-            ...config.security
-              .antiBlockNumbers
-          ]
-        : []
+    antiBlockNumbers:
+  Array.isArray(automation.antiBlockNumbers)
+    ? [...automation.antiBlockNumbers]
+    : []
   };
 }
 
