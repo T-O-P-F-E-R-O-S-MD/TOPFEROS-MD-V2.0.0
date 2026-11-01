@@ -1302,6 +1302,34 @@ function normalizeAutomation(settings = {}) {
         }
       );
 
+      if (state.pendingConnectionAction === "disconnect") {
+        await request(API.disconnect, {
+          method: "POST",
+          body: JSON.stringify({
+            sessionId: state.sessionId
+          })
+        });
+
+        state.pendingConnectionAction = null;
+        setConnectionStatus(false);
+      }
+
+      if (state.pendingConnectionAction === "connect") {
+        await request(API.reconnect, {
+          method: "POST",
+          body: JSON.stringify({
+            sessionId: state.sessionId
+          })
+        });
+
+        state.pendingConnectionAction = null;
+
+        await new Promise((resolve) => {
+          setTimeout(resolve, 1500);
+        });
+
+        await verifySession();
+      }
       notify(
         "Settings saved successfully.",
         "success"
