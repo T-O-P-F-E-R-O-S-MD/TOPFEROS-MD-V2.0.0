@@ -523,6 +523,109 @@ app.post(
   }
 );
 
+// ============================================================
+// PREVIEW SETTINGS ACCESS + CONNECTION STATUS
+// ============================================================
+
+app.post(
+  "/api/verify-preview",
+  async (req, res) => {
+    try {
+      const number = cleanNumber(req.body?.number);
+
+      const code = String(req.body?.code || "")
+        .trim()
+        .toUpperCase();
+
+      if (!number || !code) {
+        return res.json({
+          success: false,
+          valid: false,
+          connected: false
+        });
+      }
+
+      const sessionId =
+        sessionManager.getSessionId(number);
+
+      if (!sessionId) {
+        return res.json({
+          success: true,
+          valid: false,
+          connected: false
+        });
+      }
+
+      const session = getSession(sessionId);
+
+      if (!session) {
+        return res.json({
+          success: true,
+          valid: false,
+          connected: false
+        });
+      }
+
+      const actualNumber = cleanNumber(
+        session.number || sessionId
+      );
+
+      if (actualNumber !== number) {
+        return res.json({
+          success: true,
+          valid: false,
+          connected: false
+        });
+      }
+
+      if (
+        typeof settingPanel.verifyPanelAccessCode !==
+        "function"
+      ) {
+        return sendError(
+          res,
+          500,
+          "Settings access-code verification is unavailable."
+        );
+      }
+
+      const validCode =
+        await settingPanel.verifyPanelAccessCode(
+          sessionId,
+          code
+        );
+
+      if (!validCode) {
+        return res.json({
+          success: true,
+          valid: false,
+          connected: false
+        });
+      }
+
+      return res.json({
+        success: true,
+        valid: true,
+        sessionId,
+        connected: Boolean(
+          sessionManager.isConnected(sessionId)
+        )
+      });
+
+    } catch (error) {
+      logger.error(
+        error,
+        "❌ SETTINGS PREVIEW VERIFICATION ERROR"
+      );
+
+      return sendError(
+        res,
+        500,
+        "Unable to check settings access."
+      );
+    }
+  }
+);
 
 // ============================================================
 // VERIFY SETTINGS SESSION
