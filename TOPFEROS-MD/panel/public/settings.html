@@ -109,8 +109,6 @@
 
   </section>
 
-</section>
-
   <!-- INTRODUCTION: FIRST INTERFACE ONLY -->
   <section class="panel-section" id="panelIntroduction">
     <div class="section-title">
@@ -619,18 +617,40 @@ const codeInput = document.getElementById("verificationCode");
     verifyButton.textContent = "VERIFYING...";
 
     try {
-      const success =
-        await window.TOPFEROS.verifyNumberAndCode(number, code);
+    const success =
+  await window.TOPFEROS.verifyNumberAndCode(number, code);
 
-      if (!success) return;
+if (!success) return;
 
-      if (typeof window.TOPFEROS.loadSettings === "function") {
-        await window.TOPFEROS.loadSettings();
-      }
+// Ouvri entèfas fonksyon yo apre verifikasyon reyisi.
+if (settingsContent) {
+  settingsContent.hidden = false;
+}
 
-      if (settingsContent) {
-        settingsContent.hidden = false;
-      }
+if (verifiedSessionControls) {
+  verifiedSessionControls.hidden = false;
+}
+
+if (verificationSection) {
+  verificationSection.hidden = true;
+}
+
+if (panelIntroduction) {
+  panelIntroduction.hidden = true;
+}
+
+// Chaje paramèt yo san bloke ouvèti entèfas la.
+if (typeof window.TOPFEROS.loadSettings === "function") {
+  try {
+    await window.TOPFEROS.loadSettings();
+  } catch (error) {
+    window.TOPFEROS.notify(
+      "Settings opened, but some settings could not load: " +
+      (error?.message || "Unknown error"),
+      "error"
+    );
+  }
+}
 
 if (verifiedSessionControls) {
   verifiedSessionControls.hidden = false;
