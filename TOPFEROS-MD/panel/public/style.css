@@ -901,3 +901,8 @@ input[type="file"]::file-selector-button {
   background: rgba(245, 166, 35, 0.12);
   border-color: #f5a623;
 }
+
+/* KACHE ENDIKATÈ VERIFICATION LÈ SETTINGS OUVRI */
+#settingsContent:not([hidden]) ~ .verification-preview-status {
+  display: none !important;
+}
