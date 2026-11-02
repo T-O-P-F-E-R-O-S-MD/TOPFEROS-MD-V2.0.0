@@ -259,10 +259,41 @@ function setConnectionStatus(connected) {
         '<span style="color:#e53935;font-size:20px">🔴</span><span style="color:#e53935">NOT VERIFIED</span>';
     }
   }
+  function showPreviewStatus(status, message) {
+    const indicator = $("#verificationPreviewStatus");
+
+    if (!indicator) return;
+
+    indicator.textContent = message;
+
+    indicator.style.color =
+      status === "connected"
+        ? "#16c96b"
+        : status === "checking"
+          ? "#f5a623"
+          : "#e53935";
+
+    indicator.style.background =
+      status === "connected"
+        ? "rgba(22,201,107,0.08)"
+        : status === "checking"
+          ? "rgba(245,166,35,0.08)"
+          : "rgba(229,57,53,0.08)";
+
+    indicator.style.borderColor =
+      status === "connected"
+        ? "rgba(22,201,107,0.35)"
+        : status === "checking"
+          ? "rgba(245,166,35,0.35)"
+          : "rgba(229,57,53,0.35)";
+  }
 
   async function previewVerification() {
-    const number = $("#verificationNumber")?.value?.trim() || "";
-    const code = $("#verificationCode")?.value?.trim() || "";
+    const number =
+      $("#verificationNumber")?.value.trim() || "";
+
+    const code =
+      $("#verificationCode")?.value.trim() || "";
 
     const requestId = ++state.previewRequestId;
 
@@ -271,11 +302,17 @@ function setConnectionStatus(connected) {
     }
 
     if (!number || !code) {
-      setPreviewIndicator("invalid");
+      showPreviewStatus(
+        "disconnected",
+        "🔴 DISCONNECTED"
+      );
       return;
     }
 
-    setPreviewIndicator("checking");
+    showPreviewStatus(
+      "checking",
+      "🟡 CHECKING..."
+    );
 
     state.previewTimer = setTimeout(async () => {
       try {
@@ -294,21 +331,35 @@ function setConnectionStatus(connected) {
           return;
         }
 
-        if (result?.valid === true) {
-          setPreviewIndicator("valid");
-          setConnectionStatus(
-            result.connected === true
+        if (
+          result?.valid === true &&
+          result?.connected === true
+        ) {
+          showPreviewStatus(
+            "connected",
+            "🟢 CONNECTED"
           );
+
+          setConnectionStatus(true);
         } else {
-          setPreviewIndicator("invalid");
+          showPreviewStatus(
+            "disconnected",
+            "🔴 DISCONNECTED"
+          );
+
           setConnectionStatus(false);
         }
+
       } catch (error) {
         if (requestId !== state.previewRequestId) {
           return;
         }
 
-        setPreviewIndicator("invalid");
+        showPreviewStatus(
+          "disconnected",
+          "🔴 DISCONNECTED"
+        );
+
         setConnectionStatus(false);
 
         console.error(
@@ -316,20 +367,40 @@ function setConnectionStatus(connected) {
           error
         );
       }
-    }, 450);
+    }, 350);
   }
 
   function bindVerificationPreview() {
     const numberInput = $("#verificationNumber");
     const codeInput = $("#verificationCode");
 
-    if (numberInput && numberInput.dataset.previewBound !== "true") {
+    if (
+      numberInput &&
+      numberInput.dataset.previewBound !== "true"
+    ) {
       numberInput.dataset.previewBound = "true";
       numberInput.addEventListener(
         "input",
         previewVerification
       );
     }
+
+    if (
+      codeInput &&
+      codeInput.dataset.previewBound !== "true"
+    ) {
+      codeInput.dataset.previewBound = "true";
+      codeInput.addEventListener(
+        "input",
+        previewVerification
+      );
+    }
+
+    showPreviewStatus(
+      "disconnected",
+      "🔴 DISCONNECTED"
+    );
+  }
 
     if (codeInput && codeInput.dataset.previewBound !== "true") {
       codeInput.dataset.previewBound = "true";
