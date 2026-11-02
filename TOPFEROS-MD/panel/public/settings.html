@@ -144,15 +144,35 @@
 
   <!-- SECOND INTERFACE: HIDDEN UNTIL VERIFIED -->
   <div id="settingsContent" hidden>
+<div class="session-control-row" id="verifiedSessionControls" hidden>
 
-<button
-  type="button"
-  id="exitPanelButton"
-  class="session-control exit"
->
-  🟠 EXIT PANEL
-</button>
+  <button
+    type="button"
+    id="reconnectButton"
+    class="session-control connect"
+    data-action="reconnect"
+  >
+    🟢 CONNECTED
+  </button>
 
+  <button
+    type="button"
+    id="disconnectButton"
+    class="session-control disconnect"
+    data-action="disconnect"
+  >
+    🔴 DISCONNECTED
+  </button>
+
+  <button
+    type="button"
+    id="exitPanelButton"
+    class="session-control exit"
+  >
+    🟠 EXIT PANEL
+  </button>
+
+</div>
     <!-- BASIC INFO -->
     <section class="panel-section">
       <div class="section-title" data-i18n="basic_info">
