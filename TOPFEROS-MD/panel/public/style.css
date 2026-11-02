@@ -866,3 +866,38 @@ input[type="file"]::file-selector-button {
     font-size: 9px;
   }
 }
+.verification-preview-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 65px;
+  box-sizing: border-box;
+  margin: 22px 0;
+  padding: 15px;
+  border: 2px solid;
+  border-radius: 18px;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+  transition: all 0.25s ease;
+}
+
+.verification-preview-status.disconnected {
+  color: #ff3838;
+  background: rgba(229, 57, 53, 0.12);
+  border-color: rgba(229, 57, 53, 0.65);
+}
+
+.verification-preview-status.connected {
+  color: #19e879;
+  background: rgba(22, 201, 107, 0.15);
+  border-color: #16c96b;
+  box-shadow: 0 0 14px rgba(22, 201, 107, 0.25);
+}
+
+.verification-preview-status.checking {
+  color: #ffc04d;
+  background: rgba(245, 166, 35, 0.12);
+  border-color: #f5a623;
+}
