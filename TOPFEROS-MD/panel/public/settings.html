@@ -119,25 +119,36 @@
         placeholder="Verification code"
       >
     </div>
+<div
+  id="verificationPreviewStatus"
+  role="status"
+  aria-live="polite"
+  style="
+    display:block;
+    width:100%;
+    box-sizing:border-box;
+    margin:15px 0;
+    padding:12px;
+    text-align:center;
+    font-size:14px;
+    font-weight:700;
+    color:#e53935;
+    background:rgba(229,57,53,0.08);
+    border:1px solid rgba(229,57,53,0.35);
+    border-radius:12px;
+  "
+>
+  🔴 ENTER NUMBER AND CODE
+</div>
 
-    <button
-      type="button"
-      class="panel-button primary"
-      id="verifyButton"
-      data-i18n="verify"
-    <div
-      id="verificationPreviewStatus"
-      role="status"
-      aria-live="polite"
-      style="display:flex;align-items:center;gap:9px;margin:12px 0;padding:10px;font-weight:600;border-radius:8px;"
-    >
-      <span style="color:#e53935;">🔴</span>
-      <span>ENTER NUMBER AND CODE</span>
-    </div>
-    >
-      🔐 VERIFY
-    </button>
-  </section>
+<button
+  type="button"
+  class="panel-button primary"
+  id="verifyButton"
+  style="display:block;width:100%;min-height:55px;"
+>
+  🔐 VERIFY & OPEN SETTINGS PANEL
+</button>
 
   <!-- INTRODUCTION: FIRST INTERFACE ONLY -->
   <section class="panel-section" id="panelIntroduction">
