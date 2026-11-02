@@ -232,314 +232,121 @@ function setConnectionStatus(connected) {
   });
 }
 
-  function setPreviewIndicator(status) {
-    let indicator = $("#verificationStatus");
+function setPreviewIndicator(status) {
+  const indicator = $("#verificationPreviewStatus");
 
-    if (!indicator) {
-      indicator = document.createElement("div");
-      indicator.id = "verificationStatus";
-      indicator.style.cssText =
-        "display:flex;align-items:center;gap:9px;margin:12px 0;font-weight:600;";
+  if (!indicator) return;
 
-      const verifyButton = $("#verifyButton");
+  indicator.classList.remove(
+    "connected",
+    "disconnected",
+    "checking"
+  );
 
-      if (verifyButton) {
-        verifyButton.before(indicator);
-      }
-    }
-
-    if (status === "valid") {
-      indicator.innerHTML =
-        '<span style="color:#16c96b;font-size:20px">🟢</span><span style="color:#16c96b">ACCESS CODE VALID</span>';
-    } else if (status === "checking") {
-      indicator.innerHTML =
-        '<span style="color:#f5a623;font-size:20px">🟡</span><span>CHECKING...</span>';
-    } else {
-      indicator.innerHTML =
-        '<span style="color:#e53935;font-size:20px">🔴</span><span style="color:#e53935">NOT VERIFIED</span>';
-    }
+  if (status === "connected") {
+    indicator.classList.add("connected");
+    indicator.textContent = "🟢 CONNECTED";
+  } else if (status === "checking") {
+    indicator.classList.add("checking");
+    indicator.textContent = "🟡 CHECKING...";
+  } else {
+    indicator.classList.add("disconnected");
+    indicator.textContent = "🔴 DISCONNECTED";
   }
-  function showPreviewStatus(status, message) {
-    const indicator = $("#verificationPreviewStatus");
+}
 
-    if (!indicator) return;
+async function previewVerification() {
+  const number =
+    $("#verificationNumber")?.value.trim() || "";
 
-    indicator.textContent = message;
+  const code =
+    $("#verificationCode")?.value.trim() || "";
 
-    indicator.style.color =
-      status === "connected"
-        ? "#16c96b"
-        : status === "checking"
-          ? "#f5a623"
-          : "#e53935";
+  const requestId = ++state.previewRequestId;
 
-    indicator.style.background =
-      status === "connected"
-        ? "rgba(22,201,107,0.08)"
-        : status === "checking"
-          ? "rgba(245,166,35,0.08)"
-          : "rgba(229,57,53,0.08)";
+  clearTimeout(state.previewTimer);
 
-    indicator.style.borderColor =
-      status === "connected"
-        ? "rgba(22,201,107,0.35)"
-        : status === "checking"
-          ? "rgba(245,166,35,0.35)"
-          : "rgba(229,57,53,0.35)";
+  if (!number || !code) {
+    setPreviewIndicator("disconnected");
+    return;
   }
 
-  async function previewVerification() {
-    const number =
-      $("#verificationNumber")?.value.trim() || "";
+  setPreviewIndicator("checking");
 
-    const code =
-      $("#verificationCode")?.value.trim() || "";
-
-    const requestId = ++state.previewRequestId;
-
-    if (state.previewTimer) {
-      clearTimeout(state.previewTimer);
-    }
-
-    if (!number || !code) {
-      showPreviewStatus(
-        "disconnected",
-        "🔴 DISCONNECTED"
+  state.previewTimer = setTimeout(async () => {
+    try {
+      const result = await request(
+        API.verifyPreview,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            number,
+            code
+          })
+        }
       );
-      return;
-    }
 
-    showPreviewStatus(
-      "checking",
-      "🟡 CHECKING..."
-    );
+      if (requestId !== state.previewRequestId) {
+        return;
+      }
 
-    state.previewTimer = setTimeout(async () => {
-      try {
-        const result = await request(
-          API.verifyPreview,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              number,
-              code
-            })
-          }
-        );
-
-        if (requestId !== state.previewRequestId) {
-          return;
-        }
-
-        if (
-          result?.valid === true &&
-          result?.connected === true
-        ) {
-          showPreviewStatus(
-            "connected",
-            "🟢 CONNECTED"
-          );
-
-          setConnectionStatus(true);
-        } else {
-          showPreviewStatus(
-            "disconnected",
-            "🔴 DISCONNECTED"
-          );
-
-          setConnectionStatus(false);
-        }
-
-      } catch (error) {
-        if (requestId !== state.previewRequestId) {
-          return;
-        }
-
-        showPreviewStatus(
-          "disconnected",
-          "🔴 DISCONNECTED"
-        );
-
+      if (
+        result?.valid === true &&
+        result?.connected === true
+      ) {
+        setPreviewIndicator("connected");
+        setConnectionStatus(true);
+      } else {
+        setPreviewIndicator("disconnected");
         setConnectionStatus(false);
-
-        console.error(
-          "Preview verification error:",
-          error
-        );
       }
-    }, 350);
-  }
 
-  function bindVerificationPreview() {
-    const numberInput = $("#verificationNumber");
-    const codeInput = $("#verificationCode");
+    } catch (error) {
+      if (requestId !== state.previewRequestId) {
+        return;
+      }
 
-    if (
-      numberInput &&
-      numberInput.dataset.previewBound !== "true"
-    ) {
-      numberInput.dataset.previewBound = "true";
-      numberInput.addEventListener(
-        "input",
-        previewVerification
+      setPreviewIndicator("disconnected");
+      setConnectionStatus(false);
+
+      console.error(
+        "Automatic verification error:",
+        error
       );
     }
+  }, 350);
+}
 
-    if (
-      codeInput &&
-      codeInput.dataset.previewBound !== "true"
-    ) {
-      codeInput.dataset.previewBound = "true";
-      codeInput.addEventListener(
-        "input",
-        previewVerification
-      );
-    }
+function bindVerificationPreview() {
+  const numberInput = $("#verificationNumber");
+  const codeInput = $("#verificationCode");
 
-    showPreviewStatus(
-      "disconnected",
-      "🔴 DISCONNECTED"
+  if (
+    numberInput &&
+    numberInput.dataset.previewBound !== "true"
+  ) {
+    numberInput.dataset.previewBound = "true";
+
+    numberInput.addEventListener(
+      "input",
+      previewVerification
     );
   }
 
-    if (codeInput && codeInput.dataset.previewBound !== "true") {
-      codeInput.dataset.previewBound = "true";
-      codeInput.addEventListener(
-        "input",
-        previewVerification
-      );
-    }
+  if (
+    codeInput &&
+    codeInput.dataset.previewBound !== "true"
+  ) {
+    codeInput.dataset.previewBound = "true";
 
-    setPreviewIndicator("invalid");
-  }
-  let previewTimer = null;
-  let previewRequestId = 0;
-
-  function showPreviewStatus(status, message) {
-    let indicator = $("#verificationPreviewStatus");
-
-    if (!indicator) {
-      indicator = document.createElement("div");
-      indicator.id = "verificationPreviewStatus";
-
-      indicator.style.cssText =
-        "display:flex;align-items:center;gap:9px;margin:12px 0;padding:10px;font-weight:600;border-radius:8px;";
-
-      const verifyButton = $("#verifyButton");
-
-      if (verifyButton) {
-        verifyButton.before(indicator);
-      }
-    }
-
-    indicator.textContent = message;
-
-    indicator.style.color =
-      status === "valid" ? "#16c96b" : "#e53935";
-  }
-
-  async function previewVerification() {
-    const number =
-      $("#verificationNumber")?.value.trim() || "";
-
-    const code =
-      $("#verificationCode")?.value.trim() || "";
-
-    const requestId = ++previewRequestId;
-
-    clearTimeout(previewTimer);
-
-    if (!number || !code) {
-      showPreviewStatus(
-        "invalid",
-        "🔴 ENTER NUMBER AND CODE"
-      );
-      return;
-    }
-
-    showPreviewStatus(
-      "checking",
-      "🟡 VERIFYING NUMBER AND CODE..."
-    );
-
-    previewTimer = setTimeout(async () => {
-      try {
-        const result = await request(
-          API.verifyPreview,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              number,
-              code
-            })
-          }
-        );
-
-        if (requestId !== previewRequestId) {
-          return;
-        }
-
-        if (result?.valid !== true) {
-          showPreviewStatus(
-            "invalid",
-            "🔴 INVALID NUMBER OR CODE"
-          );
-          return;
-        }
-
-        if (result.connected === true) {
-          showPreviewStatus(
-            "valid",
-            "🟢 NUMBER AND CODE VERIFIED — WHATSAPP CONNECTED"
-          );
-        } else {
-          showPreviewStatus(
-            "invalid",
-            "🔴 NUMBER AND CODE VERIFIED — WHATSAPP DISCONNECTED"
-          );
-        }
-
-      } catch (error) {
-        if (requestId !== previewRequestId) {
-          return;
-        }
-
-        showPreviewStatus(
-          "invalid",
-          "🔴 VERIFICATION UNAVAILABLE"
-        );
-
-        console.error(
-          "Automatic preview verification:",
-          error
-        );
-      }
-    }, 350);
-  }
-
-  function bindVerificationPreview() {
-    const numberInput = $("#verificationNumber");
-    const codeInput = $("#verificationCode");
-
-    if (numberInput) {
-      numberInput.addEventListener(
-        "input",
-        previewVerification
-      );
-    }
-
-    if (codeInput) {
-      codeInput.addEventListener(
-        "input",
-        previewVerification
-      );
-    }
-
-    showPreviewStatus(
-      "invalid",
-      "🔴 ENTER NUMBER AND CODE"
+    codeInput.addEventListener(
+      "input",
+      previewVerification
     );
   }
+
+  setPreviewIndicator("disconnected");
+}
 
   function setFieldValue(id, value) {
     const element = document.getElementById(id);
