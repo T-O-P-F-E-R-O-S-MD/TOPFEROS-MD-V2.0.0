@@ -33,26 +33,13 @@
     </h1>
 
     <p class="panel-version">V2.0.0</p>
-<div class="session-control-row" id="verifiedSessionControls" hidden>
-
-  <button
-    type="button"
-    id="reconnectButton"
-    class="session-control connect"
-    data-action="reconnect"
-  >
-    🟢 CONNECT
-  </button>
-
-  <button
-    type="button"
-    id="disconnectButton"
-    class="session-control disconnect"
-    data-action="disconnect"
-  >
-    🔴 DISCONNECT
-  </button>
-
+<div
+  id="verificationPreviewStatus"
+  class="verification-preview-status disconnected"
+  role="status"
+  aria-live="polite"
+>
+  🔴 DISCONNECTED
 </div>
   </header>
 
