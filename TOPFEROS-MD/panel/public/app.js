@@ -664,6 +664,23 @@ function normalizeAutomation(settings = {}) {
     bindSwitches();
   }
 
+    setFieldValue("autoReact", data.autoReact);
+    setFieldValue("autoReactMode", data.autoReactMode);
+
+    setFieldValue(
+      "autoReactEmojis",
+      data.autoReactEmojis.join(" ")
+    );
+
+    setFieldValue("antiSpam", data.antiSpam);
+    setFieldValue("antiSpamMode", data.antiSpamMode);
+
+    setFieldValue("botDetection", data.botDetection);
+    setFieldValue("autoScan", data.autoScan);
+    setFieldValue("botScore", data.botScore);
+    setFieldValue("adminNotification", data.adminNotification);
+    setFieldValue("autoKick", data.autoKick);
+
   function fillGroupSettings(group = {}) {
     const data =
       normalizeGroupAutomation(group);
