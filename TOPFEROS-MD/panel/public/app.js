@@ -185,51 +185,55 @@
       }
     }
   }
+
 function setConnectionStatus(connected) {
+  const isConnected = connected === true;
+
+  // Mete eta koneksyon an sou tout endikatè ki egziste.
   const statusElements = $$(
     "[data-connection-status], #connectionStatus, .connection-status"
   );
 
   statusElements.forEach((element) => {
-    element.textContent = connected
+    element.textContent = isConnected
       ? "🟢 CONNECTED"
       : "🔴 DISCONNECTED";
 
-    element.classList.toggle("connected", connected);
-    element.classList.toggle("disconnected", !connected);
+    element.classList.toggle("connected", isConnected);
+    element.classList.toggle("disconnected", !isConnected);
   });
 
-  const connectButtons = $$(
-    "[data-action='reconnect'], [data-action='connect'], #connectButton, #reconnectButton"
-  );
+  // Bouton CONNECTED ak DISCONNECTED yo.
+  const connectButton = $("#reconnectButton");
+  const disconnectButton = $("#disconnectButton");
 
-  const disconnectButtons = $$(
-    "[data-action='disconnect'], #disconnectButton"
-  );
-
-  connectButtons.forEach((button) => {
-    button.classList.remove(
+  if (connectButton) {
+    connectButton.classList.toggle(
       "session-active",
-      "session-inactive"
+      isConnected
     );
 
-    button.setAttribute(
+    connectButton.classList.remove("session-inactive");
+
+    connectButton.setAttribute(
       "aria-pressed",
       String(state.pendingConnectionAction === "connect")
     );
-  });
+  }
 
-  disconnectButtons.forEach((button) => {
-    button.classList.remove(
-      "session-active",
-      "session-inactive"
+  if (disconnectButton) {
+    disconnectButton.classList.toggle(
+      "session-inactive",
+      !isConnected
     );
 
-    button.setAttribute(
+    disconnectButton.classList.remove("session-active");
+
+    disconnectButton.setAttribute(
       "aria-pressed",
       String(state.pendingConnectionAction === "disconnect")
     );
-  });
+  }
 }
 
 function setPreviewIndicator(status) {
