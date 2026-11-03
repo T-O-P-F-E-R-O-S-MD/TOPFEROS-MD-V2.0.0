@@ -408,96 +408,78 @@ function getLanguages() {
 // DEFAULT SETTINGS
 // ============================================================
 
-function getDefaultSettings() {
-  return {
-    bot: {
-      name: config.bot.name,
-      version: BOT_VERSION,
-      location: config.bot.location,
-      age: config.bot.age,
-      prefix: config.bot.prefix,
-      footer: config.bot.footer,
-      mode: config.bot.mode,
-      ownerNumber: config.bot.ownerNumber || ""
-    },
+function buildAutomationSettings(settings) {
+  const source = settings || {};
 
-    automation: {
-      alwaysOnline:
-        config.automation.alwaysOnline,
+  const automation = {
+    alwaysOnline: source.alwaysOnline !== false,
+    fakeTyping: source.fakeTyping === true,
+    fakeRecording: source.fakeRecording === true,
 
-      fakeTyping:
-        config.automation.fakeTyping,
+    autoStatusSeen: source.autoStatusSeen !== false,
+    autoStatusReply: source.autoStatusReply !== false,
+    autoStatusReact: source.autoStatusReact !== false,
 
-      fakeRecording:
-        config.automation.fakeRecording,
+    // AUTO REACT
+    autoReact: source.autoReact === true,
+    autoReactMode: ["all", "private", "group"].includes(source.autoReactMode)
+      ? source.autoReactMode
+      : "all",
 
-      autoStatusSeen:
-        config.automation.autoStatusSeen,
+    autoReactEmojis: Array.isArray(source.autoReactEmojis)
+      ? source.autoReactEmojis.slice(0, 40).map(String).filter(Boolean)
+      : [],
 
-      autoStatusReply:
-        config.automation.autoStatusReply,
+    // ANTI SPAM
+    antiSpam: source.antiSpam === true,
+    antiSpamMode: [
+      "warn",
+      "delete",
+      "kick",
+      "warn_delete"
+    ].includes(source.antiSpamMode)
+      ? source.antiSpamMode
+      : "warn",
 
-      autoStatusReact:
-        config.automation.autoStatusReact,
+    // ANTI DELETE
+    antiDelete: source.antiDelete !== false,
+    antiDeleteMode:
+      source.antiDeleteMode ||
+      config.automation.antiDeleteMode,
 
-      antiDelete:
-        config.automation.antiDelete,
+    // ANTI CALL / BUG
+    antiCall: source.antiCall === true,
+    antiBug: source.antiBug === true,
 
-      antiDeleteMode:
-        config.automation.antiDeleteMode,
+    // ANTI BOT
+    antiBotMode: ["groups", "private", "both"].includes(source.antiBotMode)
+      ? source.antiBotMode
+      : "both",
 
-      antiCall:
-        config.automation.antiCall,
+    botDetection: source.botDetection === true,
+    autoScan: source.autoScan === true,
+    botScore: source.botScore === true,
+    adminNotification: source.adminNotification === true,
+    autoKick: source.autoKick === true,
 
-      antiBug:
-        config.automation.antiBug,
+    antiBotFilter: source.antiBotFilter === true,
 
-      antiBotFilter:
-        config.automation.antiBotFilter,
+    antiBotAction: ["Delete", "Warn", "Kick"].includes(source.antiBotAction)
+      ? source.antiBotAction
+      : "Delete",
 
-      antiBotAction:
-        config.automation.antiBotAction,
-
-      antiBlockNumbers:
-        Array.isArray(config.security.antiBlockNumbers)
-          ? [...config.security.antiBlockNumbers]
-          : []
-    },
-
-    groupAutomation: {
-      enabled:
-        config.groupAutomation.enabled,
-
-      groupGid:
-        config.groupAutomation.groupGid,
-
-      timezone:
-        config.groupAutomation.timezone,
-
-      closeTime:
-        config.groupAutomation.closeTime,
-
-      openTime:
-        config.groupAutomation.openTime,
-
-      principles:
-        config.groupAutomation.principles,
-
-      warningLimit:
-        config.groupAutomation.warningLimit
-    },
-
-    logo: {
-      path: LOGO_PATH,
-      exists: fs.existsSync(LOGO_PATH)
-    },
-
-    background: {
-      path: BACKGROUND_PATH,
-      exists: fs.existsSync(BACKGROUND_PATH)
-    }
+    antiBlockNumbers: cleanNumberList(
+      source.antiBlockNumbers
+    )
   };
+
+  if (!validateAntiDeleteMode(automation.antiDeleteMode)) {
+    throw new Error("Invalid Anti Delete mode.");
+  }
+
+  return automation;
 }
+
 // ============================================================
 // SESSION SETTINGS — TOPFEROS MD V2.0.0
 // ============================================================
