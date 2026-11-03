@@ -577,151 +577,55 @@ function normalizeAutomation(settings = {}) {
     );
   }
 
-  function fillAutomationSettings(
-    automation = {}
-  ) {
-    const data =
-      normalizeAutomation(automation);
+function fillAutomationSettings(automation = {}) {
+  const data = normalizeAutomation(automation);
 
-    setFieldValue(
-      "alwaysOnline",
-      data.alwaysOnline
-    );
+  setFieldValue("alwaysOnline", data.alwaysOnline);
+  setFieldValue("fakeTyping", data.fakeTyping);
+  setFieldValue("fakeRecording", data.fakeRecording);
 
-    setFieldValue(
-      "fakeTyping",
-      data.fakeTyping
-    );
+  setFieldValue("autoStatusSeen", data.autoStatusSeen);
+  setFieldValue("autoStatusReply", data.autoStatusReply);
+  setFieldValue("autoStatusReact", data.autoStatusReact);
 
-    setFieldValue(
-      "fakeRecording",
-      data.fakeRecording
-    );
+  // AUTO REACT
+  setFieldValue("autoReact", data.autoReact);
+  setFieldValue("autoReactMode", data.autoReactMode);
+  setFieldValue(
+    "autoReactEmojis",
+    data.autoReactEmojis.join(" ")
+  );
 
-    setFieldValue(
-      "autoStatusSeen",
-      data.autoStatusSeen
-    );
+  // ANTI SPAM
+  setFieldValue("antiSpam", data.antiSpam);
+  setFieldValue("antiSpamMode", data.antiSpamMode);
 
-    setFieldValue(
-      "autoStatusReply",
-      data.autoStatusReply
-    );
+  // ANTI DELETE
+  setFieldValue("antiDelete", data.antiDelete);
+  setFieldValue("antiDeleteMode", data.antiDeleteMode);
 
-    setFieldValue(
-      "autoStatusReact",
-      data.autoStatusReact
-    );
+  // ANTI CALL / BUG
+  setFieldValue("antiCall", data.antiCall);
+  setFieldValue("antiBug", data.antiBug);
 
-    setFieldValue(
-      "antiDelete",
-      data.antiDelete
-    );
+  // ANTI BOT
+  setFieldValue("antiBotFilter", data.antiBotFilter);
+  setFieldValue("antiBotAction", data.antiBotAction);
+  setFieldValue("antiBotMode", data.antiBotMode);
+  setFieldValue("botDetection", data.botDetection);
+  setFieldValue("autoScan", data.autoScan);
+  setFieldValue("botScore", data.botScore);
+  setFieldValue("adminNotification", data.adminNotification);
+  setFieldValue("autoKick", data.autoKick);
 
-    setFieldValue(
-      "antiCall",
-      data.antiCall
-    );
+  const numbers = Array.isArray(data.antiBlockNumbers)
+    ? data.antiBlockNumbers.join("\n")
+    : "";
 
-    setFieldValue(
-      "antiBug",
-      data.antiBug
-    );
+  setFieldValue("antiBlockNumbers", numbers);
 
-    setFieldValue(
-      "antiBotFilter",
-      data.antiBotFilter
-    );
-
-
-    setFieldValue(
-      "antiDeleteMode",
-      data.antiDeleteMode
-    );
-
-    setFieldValue(
-      "antiBotAction",
-      data.antiBotAction
-    );
-
-    setFieldValue(
-  "antiBotMode",
-  data.antiBotMode
-);
-
-    const numbers =
-      Array.isArray(
-        data.antiBlockNumbers
-      )
-        ? data.antiBlockNumbers.join("\n")
-        : "";
-
-    setFieldValue(
-      "antiBlockNumbers",
-      numbers
-    );
-
-    bindSwitches();
-  }
-
-    setFieldValue("autoReact", data.autoReact);
-    setFieldValue("autoReactMode", data.autoReactMode);
-
-    setFieldValue(
-      "autoReactEmojis",
-      data.autoReactEmojis.join(" ")
-    );
-
-    setFieldValue("antiSpam", data.antiSpam);
-    setFieldValue("antiSpamMode", data.antiSpamMode);
-
-    setFieldValue("botDetection", data.botDetection);
-    setFieldValue("autoScan", data.autoScan);
-    setFieldValue("botScore", data.botScore);
-    setFieldValue("adminNotification", data.adminNotification);
-    setFieldValue("autoKick", data.autoKick);
-
-  function fillGroupSettings(group = {}) {
-    const data =
-      normalizeGroupAutomation(group);
-
-    setFieldValue(
-      "groupAutomationEnabled",
-      data.enabled
-    );
-
-    setFieldValue(
-      "groupGid",
-      data.groupGid
-    );
-
-    setFieldValue(
-      "timezone",
-      data.timezone
-    );
-
-    setFieldValue(
-      "closeTime",
-      data.closeTime
-    );
-
-    setFieldValue(
-      "openTime",
-      data.openTime
-    );
-
-    setFieldValue(
-      "groupPrinciples",
-      data.principles
-    );
-
-    setFieldValue(
-      "warningLimit",
-      data.warningLimit
-    );
-
-    bindSwitches();
-  }
+  bindSwitches();
+}
 
   function collectBotSettings() {
     const age = Number(
