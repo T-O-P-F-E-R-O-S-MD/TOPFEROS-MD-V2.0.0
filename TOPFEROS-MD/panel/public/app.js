@@ -833,6 +833,43 @@ function normalizeAutomation(settings = {}) {
           )
         ),
 
+      autoReact:
+        Boolean(getFieldValue("autoReact")),
+
+      autoReactMode:
+        getFieldValue("autoReactMode", "all"),
+
+      autoReactEmojis:
+        getFieldValue("autoReactEmojis", "")
+          .split(/[\s,]+/)
+          .map(value => value.trim())
+          .filter(Boolean)
+          .slice(0, 40),
+
+      antiSpam:
+        Boolean(getFieldValue("antiSpam")),
+
+      antiSpamMode:
+        getFieldValue("antiSpamMode", "warn"),
+
+      botDetection:
+        Boolean(getFieldValue("botDetection")),
+
+      autoScan:
+        Boolean(getFieldValue("autoScan")),
+
+      botScore:
+        Boolean(getFieldValue("botScore")),
+
+      adminNotification:
+        Boolean(getFieldValue("adminNotification")),
+
+      autoKick:
+        Boolean(getFieldValue("autoKick")),
+
+      antiBotMode:
+        getFieldValue("antiBotMode", "both"),
+
       antiDelete:
         Boolean(
           getFieldValue(
