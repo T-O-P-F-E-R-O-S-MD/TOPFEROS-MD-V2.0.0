@@ -906,3 +906,8 @@ input[type="file"]::file-selector-button {
 #settingsContent:not([hidden]) ~ .verification-preview-status {
   display: none !important;
 }
+
+/* KACHE ENDIKATÈ PREVIEW LÈ LI GEN HIDDEN */
+#verificationPreviewStatus[hidden] {
+  display: none !important;
+}
