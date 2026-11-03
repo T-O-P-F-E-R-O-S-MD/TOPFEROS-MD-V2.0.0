@@ -580,65 +580,119 @@ function cleanNumberList(numbers) {
   ];
 }
 
-function buildAutomationSettings(settings) {
+function buildAutomationSettings(settings = {}) {
   const source = settings || {};
+  const defaults = config.automation || {};
 
   const automation = {
     alwaysOnline:
-      source.alwaysOnline !== false,
+      source.alwaysOnline ?? defaults.alwaysOnline ?? true,
 
     fakeTyping:
-      source.fakeTyping === true,
+      source.fakeTyping ?? defaults.fakeTyping ?? false,
 
     fakeRecording:
-      source.fakeRecording === true,
+      source.fakeRecording ?? defaults.fakeRecording ?? false,
 
     autoStatusSeen:
-      source.autoStatusSeen !== false,
+      source.autoStatusSeen ?? defaults.autoStatusSeen ?? true,
 
     autoStatusReply:
-      source.autoStatusReply !== false,
+      source.autoStatusReply ?? defaults.autoStatusReply ?? true,
 
     autoStatusReact:
-      source.autoStatusReact !== false,
+      source.autoStatusReact ?? defaults.autoStatusReact ?? true,
 
+    // AUTO REACT
+    autoReact: source.autoReact === true,
+
+    autoReactMode:
+      ["all", "private", "group"].includes(source.autoReactMode)
+        ? source.autoReactMode
+        : "all",
+
+    autoReactEmojis:
+      Array.isArray(source.autoReactEmojis)
+        ? source.autoReactEmojis.slice(0, 40).map(String).filter(Boolean)
+        : [],
+
+    // ANTI SPAM
+    antiSpam: source.antiSpam === true,
+
+    antiSpamMode:
+      ["warn", "delete", "kick", "warn_delete"].includes(source.antiSpamMode)
+        ? source.antiSpamMode
+        : "warn",
+
+    // ANTI DELETE
     antiDelete:
-      source.antiDelete !== false,
+      source.antiDelete ?? defaults.antiDelete ?? true,
 
     antiDeleteMode:
       source.antiDeleteMode ||
-      config.automation.antiDeleteMode,
+      defaults.antiDeleteMode ||
+      "private",
 
+    // ANTI CALL / BUG
     antiCall:
-      source.antiCall === true,
+      source.antiCall ?? defaults.antiCall ?? false,
 
     antiBug:
-      source.antiBug === true,
+      source.antiBug ?? defaults.antiBug ?? false,
 
+    // ANTI BOT
     antiBotFilter:
-      source.antiBotFilter === true,
+      source.antiBotFilter ?? defaults.antiBotFilter ?? false,
+
+    antiBotMode:
+      ["groups", "private", "both"].includes(source.antiBotMode)
+        ? source.antiBotMode
+        : "both",
+
+    botDetection: source.botDetection === true,
+    autoScan: source.autoScan === true,
+    botScore: source.botScore === true,
+    adminNotification: source.adminNotification === true,
+    autoKick: source.autoKick === true,
 
     antiBotAction:
-      source.antiBotAction ||
-      config.automation.antiBotAction,
+      ["Delete", "Warn", "Block"].includes(source.antiBotAction)
+        ? source.antiBotAction
+        : "Delete",
 
     antiBlockNumbers:
       cleanNumberList(
-        source.antiBlockNumbers
+        source.antiBlockNumbers ??
+        config.security?.antiBlockNumbers ??
+        []
       )
   };
 
-  if (
-    !validateAntiDeleteMode(
-      automation.antiDeleteMode
-    )
-  ) {
-    throw new Error(
-      "Invalid Anti Delete mode."
-    );
+  if (!validateAntiDeleteMode(automation.antiDeleteMode)) {
+    throw new Error("Invalid Anti Delete mode.");
   }
 
   return automation;
+}
+
+function getDefaultSettings() {
+  return {
+    bot: {
+      ...config.bot
+    },
+
+    automation: buildAutomationSettings(
+      config.automation
+    ),
+
+    groupAutomation: {
+      ...config.groupAutomation
+    },
+
+    logo: LOGO_PATH,
+
+    background: BACKGROUND_PATH
+  };
 }
 
 function buildGroupAutomationSettings(settings) {
