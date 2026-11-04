@@ -452,14 +452,24 @@ function normalizeAutomation(settings = {}) {
     antiCall: settings.antiCall === true,
     antiBug: settings.antiBug === true,
 
-    antiBotMode: settings.antiBotMode || "both",
-    botDetection: settings.botDetection === true,
-    autoScan: settings.autoScan === true,
-    botScore: settings.botScore === true,
-    adminNotification: settings.adminNotification === true,
-    autoKick: settings.autoKick === true,
-    antiBotFilter: settings.antiBotFilter === true,
-    antiBotAction: settings.antiBotAction || "Delete",
+   antiBotMode: ["groups", "private", "both"].includes(
+  settings.antiBotMode
+)
+  ? settings.antiBotMode
+  : "groups",
+
+botDetection: settings.botDetection === true,
+autoScan: settings.autoScan === true,
+botScore: settings.botScore === true,
+adminNotification: settings.adminNotification === true,
+autoKick: settings.autoKick === true,
+antiBotFilter: settings.antiBotFilter === true,
+
+antiBotAction: ["Delete", "Warn", "Kick"].includes(
+  settings.antiBotAction
+)
+  ? settings.antiBotAction
+  : "Delete",
 
     antiDeleteMode: settings.antiDeleteMode || "private",
 
