@@ -365,17 +365,105 @@
     </section>
     
     <!-- ANTI-BOT SYSTEM -->
- <div class="field-group">
-  <label for="antiBotMode">ANTI-BOT MODE</label>
-  <select id="antiBotMode">
-    <option value="groups" selected>Groups Only</option>
-    <option value="private">Private Messages Only</option>
-    <option value="both">Both</option>
-  </select>
-  <small>
-    Anti-Bot works in groups where TOPFEROS MD is an administrator.
-  </small>
-</div>
+<section class="panel-section">
+  <div class="section-title">🤖 ANTI-BOT SYSTEM</div>
+
+  <!-- ANTI-BOT MODE -->
+  <div class="field-group">
+    <label for="antiBotMode">ANTI-BOT MODE</label>
+    <select id="antiBotMode">
+      <option value="groups" selected>Groups Only</option>
+      <option value="private">Private Messages Only</option>
+      <option value="both">Both</option>
+    </select>
+    <small>
+      Anti-Bot monitoring works in WhatsApp groups where TOPFEROS MD is an administrator.
+    </small>
+  </div>
+
+  <!-- BOT DETECTION -->
+  <div class="switch-row">
+    <span>Bot Detection</span>
+    <label class="switch">
+      <input id="botDetection" type="checkbox">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- AUTO SCAN -->
+  <div class="switch-row">
+    <span>Auto Scan</span>
+    <label class="switch">
+      <input id="autoScan" type="checkbox">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- BOT SCORE -->
+  <div class="switch-row">
+    <span>Bot Score</span>
+    <label class="switch">
+      <input id="botScore" type="checkbox">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- ADMIN NOTIFICATION -->
+  <div class="switch-row">
+    <span>Admin Notification</span>
+    <label class="switch">
+      <input id="adminNotification" type="checkbox">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- AUTO KICK -->
+  <div class="switch-row">
+    <span>Auto Kick</span>
+    <label class="switch">
+      <input id="autoKick" type="checkbox">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- ANTI-BOT FILTER -->
+  <div class="switch-row">
+    <span>Anti-Bot Filter</span>
+    <label class="switch">
+      <input id="antiBotFilter" type="checkbox">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- ANTI-BOT ACTION -->
+  <div class="field-group">
+    <label for="antiBotAction">ANTI-BOT ACTION</label>
+    <select id="antiBotAction">
+      <option value="Delete" selected>Delete</option>
+      <option value="Warn">Warn</option>
+      <option value="Kick">Kick</option>
+    </select>
+  </div>
+
+  <!-- ANTI-BOT EXEMPTION LIST -->
+  <div class="field-group">
+    <label for="antiBlockNumbers">
+      ANTI-BOT EXEMPTION LIST
+    </label>
+
+    <textarea
+      id="antiBlockNumbers"
+      rows="5"
+      placeholder="Enter WhatsApp numbers, one per line&#10;Example: 509XXXXXXXX"
+    ></textarea>
+
+    <small>
+      Numbers listed here will be excluded from Anti-Bot actions.
+    </small>
+  </div>
+
+</section>
+<!-- END ANTI-BOT SYSTEM -->
 
     <!-- GROUP AUTOMATIONS -->
     <section class="panel-section">
