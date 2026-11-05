@@ -781,8 +781,11 @@ function fillAutomationSettings(automation = {}) {
       autoKick:
         Boolean(getFieldValue("autoKick")),
 
-      antiBotMode:
-        getFieldValue("antiBotMode", "both"),
+      antiBotMode: ["groups", "private", "both"].includes(
+  getFieldValue("antiBotMode", "groups")
+)
+  ? getFieldValue("antiBotMode", "groups")
+  : "groups",
 
       antiDelete:
         Boolean(
@@ -811,12 +814,6 @@ function fillAutomationSettings(automation = {}) {
             "antiBotFilter"
           )
         ),
-
-      antiBotMode:
-      getFieldValue(
-        "antiBotMode",
-           "Both"
-         ),
 
       antiDeleteMode:
         getFieldValue(
