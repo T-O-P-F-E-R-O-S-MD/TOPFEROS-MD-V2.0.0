@@ -1226,31 +1226,54 @@ function fillAutomationSettings(automation = {}) {
     }
   }
 
-  async function verifyNumberAndCode(
-    number,
-    code
-  ) {
-    const cleanNumber =
-      String(
-        number || ""
-      ).trim();
+  
+async function verifyNumberAndCode(number, code) {
+  const cleanNumber = String(number || "").trim();
+  const cleanCode = String(code || "").trim().toUpperCase();
 
-    const cleanCode =
-      String(
-        code || ""
-      ).trim();
+  if (!cleanNumber || !cleanCode) {
+    notify("NUMBER and CODE are required.", "error");
+    return false;
+  }
 
-    if (
-      !cleanNumber ||
-      !cleanCode
-    ) {
-      notify(
-        "NUMBER and CODE are required.",
-        "error"
+  try {
+    const data = await request(API.verify, {
+      method: "POST",
+      body: JSON.stringify({
+        number: cleanNumber,
+        code: cleanCode,
+        sessionId: state.sessionId
+      })
+    });
+
+    // Pa bay aksè si backend la pa konfime verifikasyon an.
+    if (data?.success !== true || !data?.sessionId) {
+      throw new Error(
+        data?.message || "Verification was not successful."
       );
-
-      return false;
     }
+
+    setSessionId(data.sessionId);
+    state.verified = true;
+
+    // Konsève done panèl la.
+    state.panelData = data;
+
+    notify("Session verified successfully.", "success");
+
+    return true;
+
+  } catch (error) {
+    state.verified = false;
+
+    notify(
+      error?.message || "Verification failed.",
+      "error"
+    );
+
+    return false;
+  }
+}
 
     try {
       const data =
